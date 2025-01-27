@@ -1,11 +1,41 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Market.Views.SignInPage"
-             Title="Sign In">
-    <StackLayout Padding="30">
-        <Entry Placeholder="Email" Text="{Binding Email}" />
-        <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
-        <Button Text="Sign In" Command="{Binding SignInCommand}" />
-        <Button Text="Register" Command="{Binding RegisterCommand}" />
-    </StackLayout>
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            x:Class="Market.Views.SignInPage"
+            Title="Sign In"
+            BackgroundColor="White">
+
+    <VerticalStackLayout Padding="30" Spacing="20">
+        <!-- Email and Password entries -->
+        <Entry Placeholder="Email" 
+              Text="{Binding Email}"
+              Margin="0,0,0,10"/>
+
+        <Entry Placeholder="Password" 
+              Text="{Binding Password}"
+              IsPassword="True"
+              Margin="0,0,0,20"/>
+
+        <!-- Sign In Button -->
+        <Button Text="Sign In"
+               Command="{Binding SignInCommand}"
+               BackgroundColor="#6B4EFF"
+               TextColor="White"
+               HeightRequest="50"
+               CornerRadius="25"/>
+
+        <!-- Register Section -->
+        <StackLayout Spacing="10" 
+                    HorizontalOptions="Center"
+                    Margin="0,20,0,0">
+            <Label Text="Not a member yet?"
+                  HorizontalOptions="Center"
+                  TextColor="#666666"/>
+            <Button Text="Create an account"
+                   Command="{Binding RegisterCommand}"
+                   BackgroundColor="Transparent"
+                   TextColor="#6B4EFF"
+                   FontAttributes="Bold"/>
+        </StackLayout>
+
+    </VerticalStackLayout>
 </ContentPage>
