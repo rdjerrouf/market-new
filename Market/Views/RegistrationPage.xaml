@@ -1,0 +1,11 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Market.Views.RegistrationPage"
+             Title="Register">
+    <StackLayout Padding="30">
+        <Entry Placeholder="Email" Text="{Binding Email}" />
+        <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
+        <Entry Placeholder="Confirm Password" Text="{Binding ConfirmPassword}" IsPassword="True" />
+        <Button Text="Register" Command="{Binding RegisterCommand}" />
+    </StackLayout>
+</ContentPage>
