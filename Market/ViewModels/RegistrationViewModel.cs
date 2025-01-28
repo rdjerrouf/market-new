@@ -2,6 +2,7 @@
 using Market.Models;
 using Market.Services;
 using System.Windows.Input;
+using Market.Helpers;
 
 namespace Market.ViewModels
 {
@@ -61,22 +62,47 @@ namespace Market.ViewModels
         private async Task RegisterAsync()
         {
             if (IsBusy) return;
-
             try
             {
                 IsBusy = true;
-
                 // Basic validation
                 if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
                 {
-                    await Shell.Current.DisplayAlert("Error", "Please fill in all fields", "OK");
+                    if (Application.Current?.MainPage != null)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error", "Please fill in all fields", "OK");
+                    }
+                    return;
+                }
+
+                // Email validation
+                if (!InputValidator.IsValidEmail(Email))
+                {
+                    if (Application.Current?.MainPage != null)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error", "Please enter a valid email address", "OK");
+                    }
+                    return;
+                }
+
+                // Password validation
+                if (!InputValidator.IsValidPassword(Password))
+                {
+                    if (Application.Current?.MainPage != null)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error",
+                            "Password must be at least 8 characters and contain uppercase, lowercase, and numbers", "OK");
+                    }
                     return;
                 }
 
                 // Check if passwords match
                 if (Password != ConfirmPassword)
                 {
-                    await Shell.Current.DisplayAlert("Error", "Passwords do not match", "OK");
+                    if (Application.Current?.MainPage != null)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error", "Passwords do not match", "OK");
+                    }
                     return;
                 }
 
@@ -84,26 +110,22 @@ namespace Market.ViewModels
                 var user = new User
                 {
                     Email = Email,
-                    PasswordHash = Password // Note: Should implement proper hashing
+                    PasswordHash = Password
                 };
 
                 // Attempt registration
                 bool success = await _authService.RegisterUserAsync(user);
                 if (success)
                 {
-                    await MainThread.InvokeOnMainThreadAsync(async () =>
-                    {
-                        await Shell.Current.GoToAsync("//MainPage");
-                    });
-                }
-                else
-                {
-                    await Shell.Current.DisplayAlert("Error", "Registration failed", "OK");
+                    await Shell.Current.GoToAsync("//MainPage");
                 }
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Error", $"Registration error: {ex.Message}", "OK");
+                if (Application.Current?.MainPage != null)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", $"Registration error: {ex.Message}", "OK");
+                }
             }
             finally
             {

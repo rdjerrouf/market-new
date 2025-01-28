@@ -1,6 +1,7 @@
 ﻿using System.Windows.Input;
 using Market.Models;
 using Market.Services;
+using Market.Views;
 
 namespace Market.ViewModels
 {
@@ -34,17 +35,21 @@ namespace Market.ViewModels
 
         private async Task SignInAsync()
         {
-            // Hash the password before comparing
-            var hashedPassword = PasswordHasher.HashPassword(Password);
-            var user = await _authService.SignInAsync(Email, hashedPassword);
-
-            if (user is not null)
+            try
             {
-                await Shell.Current.GoToAsync("//MainPage");
+                var user = await _authService.SignInAsync(Email, Password);
+                if (user is not null)
+                {
+                    await Shell.Current.GoToAsync("//MainPage");
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert("Error", "Invalid credentials", "OK");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Error", "Invalid credentials", "OK");
+                await Shell.Current.DisplayAlert("Error", $"Sign in error: {ex.Message}", "OK");
             }
         }
 

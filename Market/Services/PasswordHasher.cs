@@ -1,37 +1,36 @@
 ﻿// Services/PasswordHasher.cs
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Market.Services
 {
-    /// <summary>
-    /// Handles password hashing operations
-    /// Note: This is a basic implementation. In production, use a proper hashing library like BCrypt
-    /// </summary>
     public static class PasswordHasher
     {
-        /// <summary>
-        /// Creates a hash from a password
-        /// </summary>
-        /// <param name="password">The password to hash</param>
-        /// <returns>The hashed password</returns>
+        private const int SaltSize = 16;
+        private const int HashSize = 20;
+
         public static string HashPassword(string password)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            // Use modern RandomNumberGenerator instead of RNGCryptoServiceProvider
+            byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
+            byte[] hash = GetHash(password, salt);
+
+            byte[] hashBytes = new byte[SaltSize + HashSize];
+            Array.Copy(salt, 0, hashBytes, 0, SaltSize);
+            Array.Copy(hash, 0, hashBytes, SaltSize, HashSize);
+
+            return Convert.ToBase64String(hashBytes);
         }
 
-        /// <summary>
-        /// Verifies a password against a hash
-        /// </summary>
-        /// <param name="password">The password to verify</param>
-        /// <param name="hashedPassword">The hash to verify against</param>
-        /// <returns>True if the password matches the hash, false otherwise</returns>
-        public static bool VerifyPassword(string password, string hashedPassword)
+        private static byte[] GetHash(string password, byte[] salt)
         {
-            var hashOfInput = HashPassword(password);
-            return hashOfInput == hashedPassword;
+            // Use modern constructor with SHA256 and proper iteration count
+            using var pbkdf2 = new Rfc2898DeriveBytes(
+                password,
+                salt,
+                100000, // Increased iterations for security
+                HashAlgorithmName.SHA256);
+
+            return pbkdf2.GetBytes(HashSize);
         }
     }
 }

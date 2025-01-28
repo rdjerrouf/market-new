@@ -6,21 +6,13 @@ namespace Market.Views
 {
     public partial class SignInPage : ContentPage
     {
-        // Initialize field directly to ensure non-null
-        private readonly SignInViewModel _viewModel = new SignInViewModel(new AuthService());
+        private readonly SignInViewModel _viewModel;
 
-        public SignInPage()
+        public SignInPage(SignInViewModel viewModel)
         {
             InitializeComponent();
-            try
-            {
-                // Set binding context
-                BindingContext = _viewModel;
-            }
-            catch (Exception ex)
-            {
-                DisplayAlert("Error", "Failed to initialize: " + ex.Message, "OK");
-            }
+            _viewModel = viewModel;
+            BindingContext = _viewModel;
         }
     }
 }

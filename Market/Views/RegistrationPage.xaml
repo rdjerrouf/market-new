@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Market.Views.RegistrationPage"
              Title="Registration">
-
+ 
     <!-- Main layout container with padding and spacing -->
     <VerticalStackLayout Padding="30" Spacing="20">
         <!-- Email input field -->
