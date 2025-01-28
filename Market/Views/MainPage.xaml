@@ -2,9 +2,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Market.Views.MainPage"
              Title="Main Page">
-    <StackLayout>
+    <StackLayout Padding="30" Spacing="20">
+        <!-- Welcome message -->
         <Label Text="Welcome to the Main Page" 
                HorizontalOptions="Center" 
-               VerticalOptions="CenterAndExpand" />
+               VerticalOptions="CenterAndExpand" 
+               FontSize="24"/>
+
+        <!-- Sign out button -->
+        <Button Text="Sign Out"
+                Command="{Binding SignOutCommand}"
+                BackgroundColor="#6B4EFF"
+                TextColor="White"
+                HeightRequest="50"
+                CornerRadius="25"
+                VerticalOptions="End"/>
     </StackLayout>
 </ContentPage>

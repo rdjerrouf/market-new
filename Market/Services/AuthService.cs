@@ -10,31 +10,28 @@ namespace Market.Services
     public class AuthService : IAuthService
     {
         // Temporary in-memory storage - will be replaced with database
-        private readonly List<User> _users = new();
+        private readonly List<User> _users;
 
-        /// <summary>
-        /// Registers a new user in the system
-        /// </summary>
-        /// <param name="user">User object containing registration information</param>
-        /// <returns>True if registration successful, false otherwise</returns>
+        public AuthService()
+        {
+            _users = new List<User>();  // Proper initialization
+        }
         public Task<bool> RegisterUserAsync(User user)
         {
-            // Check if email is already registered
-            if (_users.Any(u => u.Email == user.Email))
+            try
+            {
+                if (_users.Any(u => u.Email == user.Email))
+                {
+                    return Task.FromResult(false);
+                }
+
+                _users.Add(user);
+                return Task.FromResult(true);
+            }
+            catch (Exception)
             {
                 return Task.FromResult(false);
             }
-
-            // Validate password complexity
-            // Note: In production, this would validate the raw password before hashing
-            if (!IsValidPassword(user.PasswordHash))
-            {
-                return Task.FromResult(false);
-            }
-
-            // Add user to storage
-            _users.Add(user);
-            return Task.FromResult(true);
         }
 
         /// <summary>

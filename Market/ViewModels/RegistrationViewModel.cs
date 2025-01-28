@@ -11,14 +11,18 @@ namespace Market.ViewModels
     public class RegistrationViewModel : BindableObject
     {
         private readonly IAuthService _authService;
+
+        // Fields to store user input
         private string _email = string.Empty;
         private string _password = string.Empty;
         private string _confirmPassword = string.Empty;
+        private bool _isBusy;
 
         public RegistrationViewModel(IAuthService authService)
         {
             _authService = authService;
-            RegisterCommand = new Command(async () => await RegisterAsync());
+            // Initialize the register command with canExecute parameter
+            RegisterCommand = new Command(async () => await RegisterAsync(), () => !IsBusy);
         }
 
         // Bindable properties for the registration form
@@ -40,39 +44,70 @@ namespace Market.ViewModels
             set { _confirmPassword = value; OnPropertyChanged(); }
         }
 
-        // Command bound to the register button
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                _isBusy = value;
+                OnPropertyChanged();
+                (RegisterCommand as Command)?.ChangeCanExecute();
+            }
+        }
+
         public ICommand RegisterCommand { get; }
 
-        /// <summary>
-        /// Handles the user registration process
-        /// </summary>
+        // Handles the registration process
         private async Task RegisterAsync()
         {
-            // Validate password match
-            if (Password != ConfirmPassword)
-            {
-                await Shell.Current.DisplayAlert("Error", "Passwords do not match", "OK");
-                return;
-            }
+            if (IsBusy) return;
 
-            // Create new user object
-            // Note: In production, password should be hashed here
-            var user = new User
+            try
             {
-                Email = Email,
-                PasswordHash = Password, // TODO: Implement proper password hashing
-            };
+                IsBusy = true;
 
-            // Attempt registration
-            bool success = await _authService.RegisterUserAsync(user);
-            if (success)
-            {
-                // Navigate to main page on success
-                await Shell.Current.GoToAsync("//MainPage");
+                // Basic validation
+                if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+                {
+                    await Shell.Current.DisplayAlert("Error", "Please fill in all fields", "OK");
+                    return;
+                }
+
+                // Check if passwords match
+                if (Password != ConfirmPassword)
+                {
+                    await Shell.Current.DisplayAlert("Error", "Passwords do not match", "OK");
+                    return;
+                }
+
+                // Create new user object
+                var user = new User
+                {
+                    Email = Email,
+                    PasswordHash = Password // Note: Should implement proper hashing
+                };
+
+                // Attempt registration
+                bool success = await _authService.RegisterUserAsync(user);
+                if (success)
+                {
+                    await MainThread.InvokeOnMainThreadAsync(async () =>
+                    {
+                        await Shell.Current.GoToAsync("//MainPage");
+                    });
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert("Error", "Registration failed", "OK");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Error", "Registration failed", "OK");
+                await Shell.Current.DisplayAlert("Error", $"Registration error: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
     }

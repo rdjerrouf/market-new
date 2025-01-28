@@ -1,11 +1,34 @@
+<!-- Views/RegistrationPage.xaml -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Market.Views.RegistrationPage"
-             Title="Register">
-    <StackLayout Padding="30">
-        <Entry Placeholder="Email" Text="{Binding Email}" />
-        <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
-        <Entry Placeholder="Confirm Password" Text="{Binding ConfirmPassword}" IsPassword="True" />
-        <Button Text="Register" Command="{Binding RegisterCommand}" />
-    </StackLayout>
+             Title="Registration">
+
+    <!-- Main layout container with padding and spacing -->
+    <VerticalStackLayout Padding="30" Spacing="20">
+        <!-- Email input field -->
+        <Entry Placeholder="Email" 
+               Text="{Binding Email}"
+               Margin="0,0,0,10"/>
+
+        <!-- Password input field -->
+        <Entry Placeholder="Password" 
+               Text="{Binding Password}"
+               IsPassword="True"
+               Margin="0,0,0,10"/>
+
+        <!-- Password confirmation field -->
+        <Entry Placeholder="Confirm Password" 
+               Text="{Binding ConfirmPassword}"
+               IsPassword="True"
+               Margin="0,0,0,20"/>
+
+        <!-- Registration button -->
+        <Button Text="Create Account"
+                Command="{Binding RegisterCommand}"
+                BackgroundColor="#6B4EFF"
+                TextColor="White"
+                HeightRequest="50"
+                CornerRadius="25"/>
+    </VerticalStackLayout>
 </ContentPage>
