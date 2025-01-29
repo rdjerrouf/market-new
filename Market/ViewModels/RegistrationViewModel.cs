@@ -1,5 +1,5 @@
 ﻿// ViewModels/RegistrationViewModel.cs
-using Market.Models;
+using Market.DataAccess.Models;
 using Market.Services;
 using System.Windows.Input;
 using Market.Helpers;
@@ -117,7 +117,18 @@ namespace Market.ViewModels
                 bool success = await _authService.RegisterUserAsync(user);
                 if (success)
                 {
+                    if (Application.Current?.MainPage != null)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Success", "Registration successful!", "OK");
+                    }
                     await Shell.Current.GoToAsync("//MainPage");
+                }
+                else
+                {
+                    if (Application.Current?.MainPage != null)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error", "Registration failed. Email might already be in use.", "OK");
+                    }
                 }
             }
             catch (Exception ex)

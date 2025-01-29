@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Market.Models;
+using Market.DataAccess.Models;
 
 namespace Market.Services
 {

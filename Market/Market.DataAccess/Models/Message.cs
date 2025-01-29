@@ -2,7 +2,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Market.Models
+namespace Market.DataAccess.Models
 {
     /// <summary>
     /// Represents a message between users

@@ -2,8 +2,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Market.Models
+namespace Market.DataAccess.Models
 {
+
     /// <summary>
     /// Represents a user in the marketplace system
     /// Stores all user-related information and authentication details

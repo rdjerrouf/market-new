@@ -1,47 +1,62 @@
 ﻿// Services/AuthService.cs
-using Market.Models;
-
+using Market.DataAccess.Data;
+using Market.DataAccess.Models;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
 namespace Market.Services
 {
     public class AuthService : IAuthService
     {
-        // In-memory user storage (temporary solution)
-        private readonly List<User> _users = new();
+        private readonly AppDbContext _context;
 
-        // Handle user registration
-        public async Task<bool> RegisterUserAsync(User user)
+        public AuthService(AppDbContext context)
         {
-            // Use Task.Run since this is a CPU-bound operation
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    // Check for existing email
-                    if (_users.Any(u => u.Email.Equals(user.Email, StringComparison.OrdinalIgnoreCase)))
-                        return false;
-
-                    // Add user to storage
-                    _users.Add(user);
-                    return true;
-                }
-                catch
-                {
-                    // Return false on any errors
-                    return false;
-                }
-            });
+            _context = context;
         }
 
-        // Handle user sign in
+        public async Task<bool> RegisterUserAsync(User user)
+        {
+            try
+            {
+                // Modify this line to use string comparison
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u =>
+                    u.Email.ToLower() == user.Email.ToLower());
+
+                if (existingUser != null)
+                    return false;
+
+                // Hash the password
+                user.PasswordHash = PasswordHasher.HashPassword(user.PasswordHash);
+
+                // Add and save
+                await _context.Users.AddAsync(user);
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Registration error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                return false;
+            }
+        }
+
         public async Task<User?> SignInAsync(string email, string password)
         {
-            // Use Task.Run since this is a CPU-bound operation
-            return await Task.Run(() =>
-            {
-                // Find and return user with matching credentials
-                return _users.FirstOrDefault(u =>
-                    u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-            });
+            // Find user with matching email
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+
+            if (user == null)
+                return null;
+
+            // Verify password (you'll need to add password verification to PasswordHasher)
+            if (!PasswordHasher.VerifyPassword(password, user.PasswordHash))
+                return null;
+
+            return user;
         }
     }
 }

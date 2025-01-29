@@ -1,9 +1,10 @@
 ﻿// Data/AppDbContext.cs
 using Microsoft.EntityFrameworkCore;
-using Market.Models;
+using Market.DataAccess.Models;
 
-namespace Market.Data
+namespace Market.DataAccess.Data
 {
+
     public class AppDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
@@ -12,6 +13,17 @@ namespace Market.Data
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
+            Database.EnsureCreated();
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string dbPath = Path.Combine(folderPath, "Market", "market.db");
+                optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,4 +40,5 @@ namespace Market.Data
             });
         }
     }
+
 }

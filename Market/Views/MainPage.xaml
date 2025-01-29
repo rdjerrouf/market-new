@@ -1,21 +1,69 @@
-﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" 
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Market.Views.MainPage"
-             Title="Main Page">
-    <StackLayout Padding="30" Spacing="20">
-        <!-- Welcome message -->
-        <Label Text="Welcome to the Main Page" 
-               HorizontalOptions="Center" 
-               VerticalOptions="CenterAndExpand" 
-               FontSize="24"/>
+             x:Class="Market.Views.MainPage">
+    <StackLayout>
+        <!-- Search Bar -->
+        <SearchBar Placeholder="Search" TextChanged="OnSearchBarTextChanged" x:Name="searchBar" />
 
-        <!-- Sign out button -->
-        <Button Text="Sign Out"
-                Command="{Binding SignOutCommand}"
-                BackgroundColor="#6B4EFF"
-                TextColor="White"
-                HeightRequest="50"
-                CornerRadius="25"
-                VerticalOptions="End"/>
+        <!-- Top ImageButtons with titles -->
+        <Grid HorizontalOptions="FillAndExpand" ColumnDefinitions="*,*,*,*">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackLayout Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" VerticalOptions="Center">
+                <ImageButton Source="sellicon.png" Command="{Binding ForSaleCommand}" WidthRequest="50" HeightRequest="50" />
+                <Label Text="For Sale" HorizontalOptions="Center" />
+            </StackLayout>
+            <StackLayout Grid.Row="0" Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
+                <ImageButton Source="jobsicon.png" Command="{Binding JobsCommand}" WidthRequest="50" HeightRequest="50" />
+                <Label Text="Jobs" HorizontalOptions="Center" />
+            </StackLayout>
+            <StackLayout Grid.Row="0" Grid.Column="2" HorizontalOptions="Center" VerticalOptions="Center">
+                <ImageButton Source="servicesicon.png" Command="{Binding ServicesCommand}" WidthRequest="50" HeightRequest="50" />
+                <Label Text="Services" HorizontalOptions="Center" />
+            </StackLayout>
+            <StackLayout Grid.Row="0" Grid.Column="3" HorizontalOptions="Center" VerticalOptions="Center">
+                <ImageButton Source="renticon.png" Command="{Binding RentalsCommand}" WidthRequest="50" HeightRequest="50" />
+                <Label Text="Rentals" HorizontalOptions="Center" />
+            </StackLayout>
+        </Grid>
+
+        <!-- Main Content -->
+        <CollectionView ItemsSource="{Binding Items}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <StackLayout>
+                        <Label Text="{Binding Name}" />
+                        <!-- Add more item details here -->
+                    </StackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Bottom ImageButtons with titles -->
+        <Grid HorizontalOptions="FillAndExpand" VerticalOptions="EndAndExpand" ColumnDefinitions="*,*,*,*">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackLayout Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" VerticalOptions="Center">
+                <ImageButton Source="homeicon.png" Command="{Binding HomeCommand}" WidthRequest="50" HeightRequest="50" />
+                <Label Text="Home" HorizontalOptions="Center" />
+            </StackLayout>
+            <StackLayout Grid.Row="0" Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
+                <ImageButton Source="inboxicon.png" Command="{Binding InboxCommand}" WidthRequest="50" HeightRequest="50" />
+                <Label Text="Inbox" HorizontalOptions="Center" />
+            </StackLayout>
+            <StackLayout Grid.Row="0" Grid.Column="2" HorizontalOptions="Center" VerticalOptions="Center">
+                <ImageButton Source="addicon.png" Command="{Binding PostCommand}" WidthRequest="50" HeightRequest="50" />
+                <Label Text="Post" HorizontalOptions="Center" />
+            </StackLayout>
+            <StackLayout Grid.Row="0" Grid.Column="3" HorizontalOptions="Center" VerticalOptions="Center">
+                <ImageButton Source="listicon.png" Command="{Binding MyListingsCommand}" WidthRequest="50" HeightRequest="50" />
+                <Label Text="Listings" HorizontalOptions="Center" />
+            </StackLayout>
+        </Grid>
     </StackLayout>
 </ContentPage>
