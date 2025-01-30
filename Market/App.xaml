@@ -2,13 +2,19 @@
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:Market"
+             xmlns:converters="clr-namespace:Market.Converters"
              x:Class="Market.App">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Merge existing styles -->
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Add converters -->
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:StringNotNullOrEmptyBoolConverter x:Key="StringNotNullOrEmptyBoolConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

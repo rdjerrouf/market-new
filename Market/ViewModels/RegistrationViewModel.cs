@@ -1,19 +1,14 @@
-﻿// ViewModels/RegistrationViewModel.cs
-using Market.DataAccess.Models;
+﻿using Market.DataAccess.Models;
 using Market.Services;
 using System.Windows.Input;
 using Market.Helpers;
+using System.Diagnostics;
 
 namespace Market.ViewModels
 {
-    /// <summary>
-    /// ViewModel handling user registration logic and UI interactions
-    /// </summary>
     public class RegistrationViewModel : BindableObject
     {
         private readonly IAuthService _authService;
-
-        // Fields to store user input
         private string _email = string.Empty;
         private string _password = string.Empty;
         private string _confirmPassword = string.Empty;
@@ -22,11 +17,9 @@ namespace Market.ViewModels
         public RegistrationViewModel(IAuthService authService)
         {
             _authService = authService;
-            // Initialize the register command with canExecute parameter
             RegisterCommand = new Command(async () => await RegisterAsync(), () => !IsBusy);
         }
 
-        // Bindable properties for the registration form
         public string Email
         {
             get => _email;
@@ -58,89 +51,100 @@ namespace Market.ViewModels
 
         public ICommand RegisterCommand { get; }
 
-        // Handles the registration process
         private async Task RegisterAsync()
         {
             if (IsBusy) return;
+
             try
             {
+                Debug.WriteLine("\nStarting registration process");
                 IsBusy = true;
-                // Basic validation
+
+                // Validation
                 if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
                 {
-                    if (Application.Current?.MainPage != null)
-                    {
-                        await Application.Current.MainPage.DisplayAlert("Error", "Please fill in all fields", "OK");
-                    }
+                    Debug.WriteLine("Validation failed: Empty fields");
+                    await ShowError("Please fill in all fields");
                     return;
                 }
 
-                // Email validation
                 if (!InputValidator.IsValidEmail(Email))
                 {
-                    if (Application.Current?.MainPage != null)
-                    {
-                        await Application.Current.MainPage.DisplayAlert("Error", "Please enter a valid email address", "OK");
-                    }
+                    Debug.WriteLine("Validation failed: Invalid email");
+                    await ShowError("Please enter a valid email address");
                     return;
                 }
 
-                // Password validation
                 if (!InputValidator.IsValidPassword(Password))
                 {
-                    if (Application.Current?.MainPage != null)
-                    {
-                        await Application.Current.MainPage.DisplayAlert("Error",
-                            "Password must be at least 8 characters and contain uppercase, lowercase, and numbers", "OK");
-                    }
+                    Debug.WriteLine("Validation failed: Invalid password");
+                    await ShowError("Password must be at least 8 characters and contain uppercase, lowercase, and numbers");
                     return;
                 }
 
-                // Check if passwords match
                 if (Password != ConfirmPassword)
                 {
-                    if (Application.Current?.MainPage != null)
-                    {
-                        await Application.Current.MainPage.DisplayAlert("Error", "Passwords do not match", "OK");
-                    }
+                    Debug.WriteLine("Validation failed: Passwords don't match");
+                    await ShowError("Passwords do not match");
                     return;
                 }
 
-                // Create new user object
+                Debug.WriteLine("All validation passed, creating user object");
+
+                // Create user object
                 var user = new User
                 {
                     Email = Email,
-                    PasswordHash = Password
+                    PasswordHash = Password,
+                    CreatedAt = DateTime.UtcNow
                 };
 
-                // Attempt registration
+                Debug.WriteLine("Attempting to register user");
                 bool success = await _authService.RegisterUserAsync(user);
+
                 if (success)
                 {
-                    if (Application.Current?.MainPage != null)
-                    {
-                        await Application.Current.MainPage.DisplayAlert("Success", "Registration successful!", "OK");
-                    }
+                    Debug.WriteLine("Registration successful");
+                    await ShowMessage("Success", "Registration successful!");
                     await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {
-                    if (Application.Current?.MainPage != null)
-                    {
-                        await Application.Current.MainPage.DisplayAlert("Error", "Registration failed. Email might already be in use.", "OK");
-                    }
+                    Debug.WriteLine("Registration failed: User might already exist");
+                    await ShowError("Registration failed. Email might already be in use.");
                 }
             }
             catch (Exception ex)
             {
-                if (Application.Current?.MainPage != null)
+                Debug.WriteLine($"Registration error: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
                 {
-                    await Application.Current.MainPage.DisplayAlert("Error", $"Registration error: {ex.Message}", "OK");
+                    Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
                 }
+
+                // Show the actual error message
+                await ShowError($"Registration failed: {ex.Message}");
             }
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        private async Task ShowError(string message)
+        {
+            if (Application.Current?.MainPage != null)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", message, "OK");
+            }
+        }
+
+        private async Task ShowMessage(string title, string message)
+        {
+            if (Application.Current?.MainPage != null)
+            {
+                await Application.Current.MainPage.DisplayAlert(title, message, "OK");
             }
         }
     }

@@ -1,8 +1,7 @@
-﻿// Data/AppDbContextFactory.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using System;
-using System.IO;
+using System.Diagnostics;
 
 namespace Market.DataAccess.Data
 {
@@ -12,25 +11,46 @@ namespace Market.DataAccess.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-            // Get the app's local data directory
-            string folderPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Market");
-
-            // Ensure the path exists and is not null
-            if (!string.IsNullOrEmpty(folderPath))
+            try
             {
-                Directory.CreateDirectory(folderPath);
+                // Get the app's local data directory
+                string folderPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Market");
+
+                Debug.WriteLine($"Database folder path: {folderPath}");
+
+                // Ensure the directory exists
+                if (!Directory.Exists(folderPath))
+                {
+                    Debug.WriteLine("Creating database directory");
+                    Directory.CreateDirectory(folderPath);
+                }
+
                 string dbPath = Path.Combine(folderPath, "market.db");
-                optionsBuilder.UseSqlite($"Data Source={dbPath}");
-            }
-            else
-            {
-                // Fallback to a default path if needed
-                optionsBuilder.UseSqlite("Data Source=market.db");
-            }
+                Debug.WriteLine($"Database file path: {dbPath}");
 
-            return new AppDbContext(optionsBuilder.Options);
+                // Check if database file exists
+                if (File.Exists(dbPath))
+                {
+                    Debug.WriteLine("Database file already exists");
+                }
+                else
+                {
+                    Debug.WriteLine("Database file does not exist yet");
+                }
+
+                optionsBuilder.UseSqlite($"Data Source={dbPath}");
+                Debug.WriteLine("Database connection string configured");
+
+                return new AppDbContext(optionsBuilder.Options);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in AppDbContextFactory: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
     }
 }
