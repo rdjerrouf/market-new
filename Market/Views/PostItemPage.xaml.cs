@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Market.Views;
 
 public partial class PostItemPage : ContentPage
@@ -6,4 +8,9 @@ public partial class PostItemPage : ContentPage
 	{
 		InitializeComponent();
 	}
+
+    private void OnUploadPhotoClicked(object sender, EventArgs e)
+    {
+        Debug.WriteLine("Upload photo button clicked");
+    }
 }

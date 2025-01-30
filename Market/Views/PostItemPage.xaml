@@ -62,8 +62,9 @@
 
             <!-- Photo Upload Section -->
             <Button 
-                Text="Upload Photo"
-                Command="{Binding UploadPhotoCommand}"/>
+    Text="Upload Photo"
+    Command="{Binding UploadPhotoCommand}"
+    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
 
             <!-- Photo Preview - Only visible when photo is selected -->
             <Image 

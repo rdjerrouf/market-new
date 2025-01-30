@@ -19,9 +19,12 @@ namespace Market.ViewModels
         public ObservableCollection<Item> Items { get; }
 
         // Search query binding property
-        [ObservableProperty]
-        private string? searchQuery;
-
+        private string? _searchQuery;
+        public string? SearchQuery
+        {
+            get => _searchQuery;
+            set => SetProperty(ref _searchQuery, value);
+        }
         // Command for search functionality
         public IRelayCommand<string?> SearchCommand { get; }
 

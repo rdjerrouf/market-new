@@ -3,9 +3,10 @@ using System.Diagnostics;
 
 namespace Market
 {
-    // Shell class that handles the app's navigation structure
     public partial class AppShell : Shell
     {
+        private bool _isNavigating = false;
+
         public AppShell()
         {
             try
@@ -16,8 +17,10 @@ namespace Market
                 // Register routes for navigation between pages
                 RegisterRoutes();
 
-                // Navigate to initial page (SignIn for authentication)
-                NavigateToInitialPage();
+                // Subscribe to loaded event for initial navigation
+                Loaded += OnShellLoaded;
+
+                Debug.WriteLine("AppShell initialization completed");
             }
             catch (Exception ex)
             {
@@ -25,34 +28,59 @@ namespace Market
             }
         }
 
-        // Registers all navigation routes used in the app
         private void RegisterRoutes()
         {
             Debug.WriteLine("Registering navigation routes...");
-
-            // Register main pages for navigation
-            Routing.RegisterRoute(nameof(MainPage), typeof(MainPage));
-            Routing.RegisterRoute(nameof(SignInPage), typeof(SignInPage));
-            Routing.RegisterRoute(nameof(RegistrationPage), typeof(RegistrationPage));
-            Routing.RegisterRoute(nameof(PostItemPage), typeof(PostItemPage));
-
-            Debug.WriteLine("Route registration completed");
-        }
-
-        // Sets the initial page for the application
-        private async void NavigateToInitialPage()
-        {
-            Debug.WriteLine("Navigating to initial page (SignInPage)...");
-
             try
             {
-                // Navigate to SignIn page as the starting point
-                await Current.GoToAsync("//SignInPage");
-                Debug.WriteLine("Navigation to SignInPage completed");
+                Routing.RegisterRoute(nameof(MainPage), typeof(MainPage));
+                Routing.RegisterRoute(nameof(SignInPage), typeof(SignInPage));
+                Routing.RegisterRoute(nameof(RegistrationPage), typeof(RegistrationPage));
+                Routing.RegisterRoute(nameof(PostItemPage), typeof(PostItemPage));
+                Debug.WriteLine("Route registration completed");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Navigation error: {ex.Message}");
+                Debug.WriteLine($"Error registering routes: {ex.Message}");
+            }
+        }
+
+        private async void OnShellLoaded(object sender, EventArgs e)
+        {
+            try
+            {
+                // Prevent multiple navigation attempts
+                if (_isNavigating)
+                    return;
+
+                _isNavigating = true;
+
+                // Remove the event handler
+                Loaded -= OnShellLoaded;
+
+                Debug.WriteLine("Shell loaded, attempting navigation to SignInPage...");
+
+                // Use dispatcher to ensure we're on the main thread
+                await Dispatcher.DispatchAsync(async () =>
+                {
+                    try
+                    {
+                        await GoToAsync("//SignInPage");
+                        Debug.WriteLine("Navigation to SignInPage completed successfully");
+                    }
+                    catch (Exception navEx)
+                    {
+                        Debug.WriteLine($"Error during navigation: {navEx.Message}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnShellLoaded: {ex.Message}");
+            }
+            finally
+            {
+                _isNavigating = false;
             }
         }
     }

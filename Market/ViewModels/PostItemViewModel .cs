@@ -9,35 +9,83 @@ namespace Market.ViewModels
     /// <summary>
     /// ViewModel for handling item posting functionality.
     /// Uses ObservableObject for property change notifications.
+    /// This implementation is AOT-compatible for WinRT scenarios.
     /// </summary>
     public partial class PostItemViewModel : ObservableObject
     {
-        // Services for data operations
+        // Services for handling data operations
         private readonly IItemService _itemService;
         private readonly IAuthService _authService;
 
-        // Observable properties for form fields
-        [ObservableProperty]
+        // Private backing fields for properties
         private string _title = string.Empty;
-
-        [ObservableProperty]
         private string _description = string.Empty;
-
-        [ObservableProperty]
         private decimal _price;
-
-        [ObservableProperty]
-        private string _category = "For Sale";  // Default category
-
-        [ObservableProperty]
+        private string _category = "For Sale"; // Default category
         private string? _photoUrl;
-
-        [ObservableProperty]
         private bool _isBusy;
 
+        #region Properties
         /// <summary>
-        /// Constructor - initializes services needed for item operations
+        /// Title of the item being posted
         /// </summary>
+        public string Title
+        {
+            get => _title;
+            set => SetProperty(ref _title, value);
+        }
+
+        /// <summary>
+        /// Detailed description of the item
+        /// </summary>
+        public string Description
+        {
+            get => _description;
+            set => SetProperty(ref _description, value);
+        }
+
+        /// <summary>
+        /// Price of the item
+        /// </summary>
+        public decimal Price
+        {
+            get => _price;
+            set => SetProperty(ref _price, value);
+        }
+
+        /// <summary>
+        /// Category of the item (e.g., "For Sale", "Services")
+        /// </summary>
+        public string Category
+        {
+            get => _category;
+            set => SetProperty(ref _category, value);
+        }
+
+        /// <summary>
+        /// Local path to the item's photo
+        /// </summary>
+        public string? PhotoUrl
+        {
+            get => _photoUrl;
+            set => SetProperty(ref _photoUrl, value);
+        }
+
+        /// <summary>
+        /// Flag indicating if the ViewModel is performing an operation
+        /// </summary>
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set => SetProperty(ref _isBusy, value);
+        }
+        #endregion
+
+        /// <summary>
+        /// Constructor - initializes required services
+        /// </summary>
+        /// <param name="itemService">Service for item operations</param>
+        /// <param name="authService">Service for authentication</param>
         public PostItemViewModel(IItemService itemService, IAuthService authService)
         {
             _itemService = itemService;
@@ -46,8 +94,9 @@ namespace Market.ViewModels
         }
 
         /// <summary>
-        /// Validates if the item can be saved based on required fields
+        /// Determines if an item can be saved based on required fields
         /// </summary>
+        /// <returns>True if all required fields are filled and not busy</returns>
         private bool CanSaveItem()
         {
             return !IsBusy &&
@@ -57,7 +106,7 @@ namespace Market.ViewModels
         }
 
         /// <summary>
-        /// Handles saving the new item to the database
+        /// Handles saving the item to the database
         /// Uses RelayCommand with CanExecute for validation
         /// </summary>
         [RelayCommand(CanExecute = nameof(CanSaveItem))]
@@ -81,15 +130,14 @@ namespace Market.ViewModels
                     UserId = 1 // TODO: Get actual user ID from AuthService
                 };
 
-                // Add this block right here, before saving to database
+                // Convert photo URL to relative path for storage
                 if (!string.IsNullOrEmpty(PhotoUrl))
                 {
-                    // Convert to relative path for storage
                     var relativePath = PhotoUrl.Replace(FileSystem.AppDataDirectory, string.Empty);
                     item.PhotoUrl = relativePath;
                 }
 
-                // Save to database
+                // Attempt to save the item
                 var success = await _itemService.AddItemAsync(item);
 
                 if (success)
@@ -116,36 +164,61 @@ namespace Market.ViewModels
         }
 
         /// <summary>
-        /// Handles photo selection and temporary storage
-        /// In a real app, would upload to a server
-        /// </summary>
-        /// <summary>
         /// Handles photo selection and storage in the app's local storage
+        /// Includes permission checking and file management
         /// </summary>
         [RelayCommand]
         private async Task UploadPhotoAsync()
         {
-            if (IsBusy) return;
+            if (IsBusy)
+            {
+                Debug.WriteLine("Upload canceled - busy state");
+                return;
+            }
 
             try
             {
                 IsBusy = true;
                 Debug.WriteLine("Starting photo upload process...");
 
-                // Check if permission is granted
-                var status = await Permissions.CheckStatusAsync<Permissions.Photos>();
-                if (status != PermissionStatus.Granted)
+                // Check storage permission first
+                var storageStatus = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
+                Debug.WriteLine($"Storage permission status: {storageStatus}");
+
+                if (storageStatus != PermissionStatus.Granted)
                 {
-                    status = await Permissions.RequestAsync<Permissions.Photos>();
-                    if (status != PermissionStatus.Granted)
+                    Debug.WriteLine("Requesting storage permission...");
+                    storageStatus = await Permissions.RequestAsync<Permissions.StorageRead>();
+
+                    if (storageStatus != PermissionStatus.Granted)
                     {
+                        Debug.WriteLine("Storage permission denied");
                         await Shell.Current.DisplayAlert("Permission Required",
-                            "Photo access permission is required to upload photos.", "OK");
+                            "Storage access permission is required to upload photos.", "OK");
                         return;
                     }
                 }
 
-                // Open photo picker
+                // Check photos permission
+                var photosStatus = await Permissions.CheckStatusAsync<Permissions.Photos>();
+                Debug.WriteLine($"Photos permission status: {photosStatus}");
+
+                if (photosStatus != PermissionStatus.Granted)
+                {
+                    Debug.WriteLine("Requesting photos permission...");
+                    photosStatus = await Permissions.RequestAsync<Permissions.Photos>();
+
+                    if (photosStatus != PermissionStatus.Granted)
+                    {
+                        Debug.WriteLine("Photos permission denied");
+                        await Shell.Current.DisplayAlert("Permission Required",
+                            "Photos access permission is required to upload photos.", "OK");
+                        return;
+                    }
+                }
+
+                Debug.WriteLine("Launching media picker...");
+
                 var photo = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
                 {
                     Title = "Select a photo"
@@ -153,64 +226,45 @@ namespace Market.ViewModels
 
                 if (photo != null)
                 {
-                    // Create local storage directory if it doesn't exist
+                    Debug.WriteLine($"Photo selected: {photo.FileName}");
+
+                    // Create app's local storage directory
                     var localStorageDir = Path.Combine(FileSystem.AppDataDirectory, "ItemPhotos");
-                    if (!Directory.Exists(localStorageDir))
-                    {
-                        Directory.CreateDirectory(localStorageDir);
-                    }
+                    Directory.CreateDirectory(localStorageDir);
 
                     // Generate unique filename
                     var fileName = $"item_photo_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(photo.FileName)}";
                     var localFilePath = Path.Combine(localStorageDir, fileName);
 
-                    // Copy the selected photo to app's local storage
-                    using Stream sourceStream = await photo.OpenReadAsync();
-                    using FileStream localFileStream = File.OpenWrite(localFilePath);
-                    await sourceStream.CopyToAsync(localFileStream);
+                    Debug.WriteLine($"Copying to local storage: {localFilePath}");
 
-                    // Update the PhotoUrl property
+                    using (var sourceStream = await photo.OpenReadAsync())
+                    using (var destinationStream = File.OpenWrite(localFilePath))
+                    {
+                        await sourceStream.CopyToAsync(destinationStream);
+                    }
+
                     PhotoUrl = localFilePath;
-                    Debug.WriteLine($"Photo saved locally: {PhotoUrl}");
+                    Debug.WriteLine($"Photo saved successfully. PhotoUrl set to: {PhotoUrl}");
+
+                    await Shell.Current.DisplayAlert("Success", "Photo uploaded successfully!", "OK");
+                }
+                else
+                {
+                    Debug.WriteLine("No photo selected");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Photo upload error: {ex.Message}");
+                Debug.WriteLine($"Error in photo upload: {ex}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Shell.Current.DisplayAlert("Error",
-                    "Failed to upload photo. Please try again.", "OK");
+                    $"Failed to upload photo: {ex.Message}", "OK");
             }
             finally
             {
                 IsBusy = false;
-            }
-        }
-
-        /// <summary>
-        /// Cleans up temporary photo files when no longer needed
-        /// </summary>
-        private void CleanupPhotos()
-        {
-            try
-            {
-                var localStorageDir = Path.Combine(FileSystem.AppDataDirectory, "ItemPhotos");
-                if (Directory.Exists(localStorageDir))
-                {
-                    // Delete files older than 24 hours
-                    var files = Directory.GetFiles(localStorageDir);
-                    foreach (var file in files)
-                    {
-                        var fileInfo = new FileInfo(file);
-                        if ((DateTime.Now - fileInfo.CreationTime).TotalHours > 24)
-                        {
-                            File.Delete(file);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error cleaning up photos: {ex.Message}");
+                Debug.WriteLine("Photo upload process completed");
             }
         }
     }
