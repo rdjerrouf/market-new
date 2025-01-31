@@ -1,41 +1,49 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- Post Item Page - Allows users to create new marketplace listings -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:Market.ViewModels"
              x:Class="Market.Views.PostItemPage"
              x:DataType="viewmodels:PostItemViewModel"
              Title="Post New Item">
-
-    <!-- Main ScrollView to handle content overflow -->
     <ScrollView>
-        <!-- Main layout container with spacing and padding -->
         <VerticalStackLayout Spacing="20" Padding="20">
-
             <!-- Page Title -->
             <Label 
                 Text="Create New Listing"
                 FontSize="24"
                 HorizontalOptions="Center"/>
 
-            <!-- Item Title Input -->
-            <Entry 
-                Placeholder="Title"
-                Text="{Binding Title}"
-                MaxLength="100"/>
+            <!-- Item Title Input with Validation -->
+            <VerticalStackLayout Spacing="5">
+                <Entry 
+                    Placeholder="Title"
+                    Text="{Binding Title}"
+                    MaxLength="100"/>
+                <Label 
+                    Text="{Binding TitleError}"
+                    TextColor="Red"
+                    FontSize="12"
+                    IsVisible="{Binding TitleError, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"/>
+            </VerticalStackLayout>
 
-            <!-- Item Description Input - Multiline -->
-            <Editor 
-                Placeholder="Description"
-                Text="{Binding Description}"
-                HeightRequest="100"
-                AutoSize="TextChanges"/>
+            <!-- Item Description Input with Validation -->
+            <VerticalStackLayout Spacing="5">
+                <Editor 
+                    Placeholder="Description"
+                    Text="{Binding Description}"
+                    HeightRequest="100"
+                    AutoSize="TextChanges"/>
+                <Label 
+                    Text="{Binding DescriptionError}"
+                    TextColor="Red"
+                    FontSize="12"
+                    IsVisible="{Binding DescriptionError, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"/>
+            </VerticalStackLayout>
 
-            <!-- Category Selection Section -->
+            <!-- Category Selection Section with Validation -->
             <Frame Padding="10" BorderColor="LightGray">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Category"/>
-                    <!-- Radio buttons for category selection -->
                     <HorizontalStackLayout Spacing="10">
                         <RadioButton 
                             Content="For Sale" 
@@ -51,29 +59,41 @@
                             Content="Rentals" 
                             GroupName="Category"/>
                     </HorizontalStackLayout>
+                    <Label 
+                        Text="{Binding CategoryError}"
+                        TextColor="Red"
+                        FontSize="12"
+                        IsVisible="{Binding CategoryError, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"/>
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- Price Input - Numeric keyboard -->
-            <Entry 
-                Placeholder="Price"
-                Text="{Binding Price}"
-                Keyboard="Numeric"/>
+            <!-- Price Input with Validation -->
+            <VerticalStackLayout Spacing="5">
+                <Entry 
+                    Placeholder="Price"
+                    Text="{Binding Price}"
+                    Keyboard="Numeric"/>
+                <Label 
+                    Text="{Binding PriceError}"
+                    TextColor="Red"
+                    FontSize="12"
+                    IsVisible="{Binding PriceError, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"/>
+            </VerticalStackLayout>
 
             <!-- Photo Upload Section -->
             <Button 
-    Text="Upload Photo"
-    Command="{Binding UploadPhotoCommand}"
-    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
+                Text="Upload Photo"
+                Command="{Binding UploadPhotoCommand}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
 
-            <!-- Photo Preview - Only visible when photo is selected -->
+            <!-- Photo Preview -->
             <Image 
                 IsVisible="{Binding PhotoUrl, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"
                 Source="{Binding PhotoUrl}"
                 HeightRequest="200"
                 Aspect="AspectFit"/>
 
-            <!-- Save Button - Disabled when busy -->
+            <!-- Save Button -->
             <Button 
                 Text="Post Item"
                 Command="{Binding SaveItemCommand}"
@@ -84,7 +104,6 @@
                 IsRunning="{Binding IsBusy}"
                 IsVisible="{Binding IsBusy}"
                 HorizontalOptions="Center"/>
-
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

@@ -5,27 +5,39 @@ using System.Diagnostics;
 
 namespace Market.Services
 {
+    /// <summary>
+    /// Service handling user authentication operations including sign-in and registration
+    /// </summary>
     public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
+        private static SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
+        private bool _isInitialized;
 
         public AuthService(AppDbContext context)
         {
-            _context = context;
-            InitializeDatabase().Wait();
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        private async Task InitializeDatabase()
+        /// <summary>
+        /// Initialize database and verify connection
+        /// </summary>
+        public async Task InitializeAsync()
         {
+            if (_isInitialized) return;
+
             try
             {
+                await _initLock.WaitAsync();
+                if (_isInitialized) return;
+
                 Debug.WriteLine("Starting database initialization");
 
-                // Get database path
+                // Get and verify connection string
                 var dbPath = (_context.Database.GetDbConnection()).ConnectionString;
                 Debug.WriteLine($"Database connection string: {dbPath}");
 
-                // Check if database exists
+                // Verify database exists and is accessible
                 var exists = await _context.Database.CanConnectAsync();
                 Debug.WriteLine($"Database exists and can connect: {exists}");
 
@@ -36,17 +48,11 @@ namespace Market.Services
                     Debug.WriteLine("Database created successfully");
                 }
 
-                // Verify Users table by attempting to count records
-                try
-                {
-                    var userCount = await _context.Users.CountAsync();
-                    Debug.WriteLine($"Current number of users in database: {userCount}");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Error accessing Users table: {ex.Message}");
-                    throw new Exception("Users table not properly initialized");
-                }
+                // Verify Users table
+                var userCount = await _context.Users.CountAsync();
+                Debug.WriteLine($"Current number of users in database: {userCount}");
+
+                _isInitialized = true;
             }
             catch (Exception ex)
             {
@@ -56,22 +62,28 @@ namespace Market.Services
                 {
                     Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
                 }
-                throw; // Re-throw to ensure app doesn't start with broken DB
+                throw;
+            }
+            finally
+            {
+                _initLock.Release();
             }
         }
 
+        /// <summary>
+        /// Register a new user in the system
+        /// </summary>
+        /// <param name="user">User object containing registration details</param>
+        /// <returns>True if registration successful, false if user exists</returns>
         public async Task<bool> RegisterUserAsync(User user)
         {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
+            await InitializeAsync();
+
             try
             {
                 Debug.WriteLine($"\nStarting registration for email: {user.Email}");
-
-                // Verify database connection
-                if (!await _context.Database.CanConnectAsync())
-                {
-                    Debug.WriteLine("Cannot connect to database!");
-                    throw new Exception("Database connection failed");
-                }
 
                 // Check for existing user
                 var duplicateUser = await _context.Users
@@ -79,36 +91,17 @@ namespace Market.Services
 
                 if (duplicateUser != null)
                 {
-                    Debug.WriteLine($"Found duplicate user with email: {duplicateUser.Email}");
+                    Debug.WriteLine($"Found duplicate user with email: {user.Email}");
                     return false;
                 }
 
-                Debug.WriteLine("No duplicate user found, proceeding with registration");
-
-                // Hash password
+                // Hash password and save user
                 user.PasswordHash = PasswordHasher.HashPassword(user.PasswordHash);
-                Debug.WriteLine("Password hashed successfully");
-
-                // Add user to context
                 await _context.Users.AddAsync(user);
-                Debug.WriteLine("User added to context, trying to save...");
+                var result = await _context.SaveChangesAsync();
 
-                // Try to save
-                try
-                {
-                    var result = await _context.SaveChangesAsync();
-                    Debug.WriteLine($"SaveChanges completed. Changes saved: {result}");
-                    return result > 0;
-                }
-                catch (DbUpdateException dbEx)
-                {
-                    Debug.WriteLine($"Database update error: {dbEx.Message}");
-                    if (dbEx.InnerException != null)
-                    {
-                        Debug.WriteLine($"Inner exception: {dbEx.InnerException.Message}");
-                    }
-                    throw;
-                }
+                Debug.WriteLine($"Registration completed. Changes saved: {result}");
+                return result > 0;
             }
             catch (Exception ex)
             {
@@ -118,34 +111,30 @@ namespace Market.Services
                 {
                     Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
                 }
-                throw; // Re-throw so we can see the actual error in the UI
+                throw;
             }
         }
 
+        /// <summary>
+        /// Authenticate a user with email and password
+        /// </summary>
+        /// <param name="email">User's email</param>
+        /// <param name="password">User's password</param>
+        /// <returns>User object if authentication successful, null otherwise</returns>
         public async Task<User?> SignInAsync(string email, string password)
         {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentException("Email and password are required");
+            }
+
+            await InitializeAsync();
+
             try
             {
                 Debug.WriteLine($"\nAttempting sign in for email: {email}");
 
-                if (!await _context.Database.CanConnectAsync())
-                {
-                    Debug.WriteLine("Cannot connect to database during sign in!");
-                    throw new Exception("Database connection failed");
-                }
-
-                // Log total number of users in database
-                var userCount = await _context.Users.CountAsync();
-                Debug.WriteLine($"Total users in database: {userCount}");
-
-                // Log all users in database for debugging
-                var allUsers = await _context.Users.ToListAsync();
-                Debug.WriteLine("All users in database:");
-                foreach (var u in allUsers)
-                {
-                    Debug.WriteLine($"- Email: {u.Email}, Id: {u.Id}");
-                }
-
+                // Find user by email
                 var user = await _context.Users
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
 
@@ -155,20 +144,11 @@ namespace Market.Services
                     return null;
                 }
 
-                Debug.WriteLine($"User found - Id: {user.Id}, Email: {user.Email}");
-                Debug.WriteLine("Verifying password");
-
+                // Verify password
                 var isPasswordValid = PasswordHasher.VerifyPassword(password, user.PasswordHash);
                 Debug.WriteLine($"Password verification result: {isPasswordValid}");
 
-                if (!isPasswordValid)
-                {
-                    Debug.WriteLine("Password verification failed");
-                    return null;
-                }
-
-                Debug.WriteLine("Sign in successful");
-                return user;
+                return isPasswordValid ? user : null;
             }
             catch (Exception ex)
             {

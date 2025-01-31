@@ -75,11 +75,18 @@ namespace Market
         {
             Debug.WriteLine("Registering services...");
 
-            // Register authentication and item services
-            builder.Services.AddScoped<IAuthService, AuthService>();
+            // Register AuthService with initialization
+            builder.Services.AddScoped<IAuthService>(provider => {
+                var context = provider.GetRequiredService<AppDbContext>();
+                var service = new AuthService(context);
+                // Initialize synchronously since we're in service registration
+                service.InitializeAsync().GetAwaiter().GetResult();
+                return service;
+            });
+
+            // Register other services
             builder.Services.AddScoped<IItemService, ItemService>();
         }
-
         // Registers view models with dependency injection
         private static void RegisterViewModels(MauiAppBuilder builder)
         {
