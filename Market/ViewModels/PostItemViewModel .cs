@@ -11,23 +11,46 @@ namespace Market.ViewModels
         private readonly IItemService _itemService;
         private readonly IAuthService _authService;
 
-        [ObservableProperty]
-        private string _title = string.Empty;
+        private string title = string.Empty;
+        public string Title
+        {
+            get => title;
+            set => SetProperty(ref title, value);
+        }
 
-        [ObservableProperty]
-        private string _description = string.Empty;
+        private string description = string.Empty;
+        public string Description
+        {
+            get => description;
+            set => SetProperty(ref description, value);
+        }
 
-        [ObservableProperty]
-        private decimal _price;
-
-        [ObservableProperty]
+        private decimal price;
+        public decimal Price
+        {
+            get => price;
+            set => SetProperty(ref price, value);
+        }
         private string _category = "For Sale";
+        public string Category
+        {
+            get => _category;
+            set => SetProperty(ref _category, value);
+        }
 
-        [ObservableProperty]
         private string? _photoUrl;
+        public string? PhotoUrl
+        {
+            get => _photoUrl;
+            set => SetProperty(ref _photoUrl, value);
+        }
 
-        [ObservableProperty]
         private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set => SetProperty(ref _isBusy, value);
+        }
 
         public PostItemViewModel(IItemService itemService, IAuthService authService)
         {
@@ -39,7 +62,8 @@ namespace Market.ViewModels
         [RelayCommand]
         private async Task UploadPhotoAsync()
         {
-            await Shell.Current.DisplayAlert("Debug", "Upload method called!", "OK");
+            Debug.WriteLine("Upload button pressed");
+
             if (IsBusy)
             {
                 Debug.WriteLine("Upload canceled - busy state");
@@ -51,39 +75,70 @@ namespace Market.ViewModels
                 IsBusy = true;
                 Debug.WriteLine("Starting photo upload process...");
 
-                // Request permissions
-                var storageStatus = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
-                var photosStatus = await Permissions.CheckStatusAsync<Permissions.Photos>();
+#if IOS || MACCATALYST
+        var storageStatus = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
+        Debug.WriteLine($"Storage permission status: {storageStatus}");
 
-                if (storageStatus != PermissionStatus.Granted)
-                {
-                    storageStatus = await Permissions.RequestAsync<Permissions.StorageRead>();
-                }
+         if (storageStatus != PermissionStatus.Granted)
+        {
+            Debug.WriteLine("Requesting storage permission...");
+            storageStatus = await Permissions.RequestAsync<Permissions.StorageRead>();
+
+            if (storageStatus != PermissionStatus.Granted)
+            {
+                Debug.WriteLine("Storage permission denied");
+                await Shell.Current.DisplayAlert("Permission Required",
+                    "Storage access permission is required to upload photos.", "OK");
+                return;
+            }
+        }
+
+        if (OperatingSystem.IsIOSVersionAtLeast(14, 0) || OperatingSystem.IsMacCatalystVersionAtLeast(14, 0))
+        {
+            var photosStatus = await Permissions.CheckStatusAsync<Permissions.Photos>();
+            Debug.WriteLine($"Photos permission status: {photosStatus}");
+
+            if (photosStatus != PermissionStatus.Granted)
+            {
+                Debug.WriteLine("Requesting photos permission...");
+                photosStatus = await Permissions.RequestAsync<Permissions.Photos>();
 
                 if (photosStatus != PermissionStatus.Granted)
                 {
-                    photosStatus = await Permissions.RequestAsync<Permissions.Photos>();
-                }
-
-                if (storageStatus != PermissionStatus.Granted || photosStatus != PermissionStatus.Granted)
-                {
+                    Debug.WriteLine("Photos permission denied");
                     await Shell.Current.DisplayAlert("Permission Required",
-                        "Storage and Photos access permissions are required to upload photos.", "OK");
+                        "Photos access permission is required to upload photos.", "OK");
                     return;
                 }
+            }
+        }
+        else
+        {
+            Debug.WriteLine("Photos permission is not supported on this version of iOS or MacCatalyst.");
+            await Shell.Current.DisplayAlert("Unsupported Version",
+                "Photos access permission is not supported on this version of iOS or MacCatalyst.", "OK");
+            return;
+        }
+#endif
 
-                var photo = await MediaPicker.Default.PickPhotoAsync(new MediaPickerOptions
+                Debug.WriteLine("Launching media picker...");
+
+                var photo = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
                 {
                     Title = "Select a photo"
                 });
 
                 if (photo != null)
                 {
+                    Debug.WriteLine($"Photo selected: {photo.FileName}");
+
                     var localStorageDir = Path.Combine(FileSystem.AppDataDirectory, "ItemPhotos");
                     Directory.CreateDirectory(localStorageDir);
 
                     var fileName = $"item_photo_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(photo.FileName)}";
                     var localFilePath = Path.Combine(localStorageDir, fileName);
+
+                    Debug.WriteLine($"Copying to local storage: {localFilePath}");
 
                     using (var sourceStream = await photo.OpenReadAsync())
                     using (var destinationStream = File.OpenWrite(localFilePath))
@@ -92,17 +147,24 @@ namespace Market.ViewModels
                     }
 
                     PhotoUrl = localFilePath;
+                    Debug.WriteLine($"Photo saved successfully. PhotoUrl set to: {PhotoUrl}");
                     await Shell.Current.DisplayAlert("Success", "Photo uploaded successfully!", "OK");
+                }
+                else
+                {
+                    Debug.WriteLine("No photo selected");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in photo upload: {ex}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Shell.Current.DisplayAlert("Error", $"Failed to upload photo: {ex.Message}", "OK");
             }
             finally
             {
                 IsBusy = false;
+                Debug.WriteLine("Photo upload process completed");
             }
         }
 

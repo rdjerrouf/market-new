@@ -20,14 +20,27 @@ namespace Market.ViewModels
         /// </summary>
         public ObservableCollection<Item> Items { get; } = new();
 
-        [ObservableProperty]
+        // Replace fields with full property implementations
         private string searchQuery = string.Empty;
+        public string SearchQuery
+        {
+            get => searchQuery;
+            set => SetProperty(ref searchQuery, value);
+        }
 
-        [ObservableProperty]
         private bool isLoading;
+        public bool IsLoading
+        {
+            get => isLoading;
+            set => SetProperty(ref isLoading, value);
+        }
 
-        [ObservableProperty]
         private string title = "Marketplace";
+        public string Title
+        {
+            get => title;
+            set => SetProperty(ref title, value);
+        }
 
         private ICommand? _searchCommand;
         public ICommand SearchCommand => _searchCommand ??= new Command<string>(async (query) =>
@@ -44,6 +57,7 @@ namespace Market.ViewModels
             LoadItemsAsync().ConfigureAwait(false);
         }
 
+        // Rest of your existing methods remain exactly the same...
         private async Task LoadItemsAsync()
         {
             if (IsLoading) return;
