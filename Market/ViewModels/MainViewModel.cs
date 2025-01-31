@@ -1,202 +1,193 @@
-﻿using System.Windows.Input;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using System.Linq;
 using Market.DataAccess.Models;
+using Market.Services;
 using System.Diagnostics;
+using System.Windows.Input;
 
 namespace Market.ViewModels
 {
     /// <summary>
-    /// ViewModel for the main marketplace page.
-    /// Handles item listing, searching, and category filtering.
+    /// ViewModel for the main marketplace page
     /// </summary>
     public partial class MainViewModel : ObservableObject
     {
-        // Collection of items displayed in the marketplace
-        public ObservableCollection<Item> Items { get; }
-
-        // Search query binding property
-        private string? _searchQuery;
-        public string? SearchQuery
-        {
-            get => _searchQuery;
-            set => SetProperty(ref _searchQuery, value);
-        }
-        // Command for search functionality
-        public IRelayCommand<string?> SearchCommand { get; }
+        private readonly IItemService _itemService;
 
         /// <summary>
-        /// Initializes the main view model and loads initial data
+        /// Collection of items displayed in the marketplace
         /// </summary>
-        public MainViewModel()
+        public ObservableCollection<Item> Items { get; } = new();
+
+        [ObservableProperty]
+        private string searchQuery = string.Empty;
+
+        [ObservableProperty]
+        private bool isLoading;
+
+        [ObservableProperty]
+        private string title = "Marketplace";
+
+        private ICommand? _searchCommand;
+        public ICommand SearchCommand => _searchCommand ??= new Command<string>(async (query) =>
         {
-            // Initialize items collection with sample data
-            Items = new ObservableCollection<Item>(GetAllItems());
+            if (query is not null)
+            {
+                await SearchItemsAsync(query);
+            }
+        });
 
-            // Initialize search command
-            SearchCommand = new RelayCommand<string?>(SearchItems);
-
-            Debug.WriteLine("MainViewModel initialized");
+        public MainViewModel(IItemService itemService)
+        {
+            _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
+            LoadItemsAsync().ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Filters items based on search query
-        /// Matches against item title and description
-        /// </summary>
-        private void SearchItems(string? query)
+        private async Task LoadItemsAsync()
         {
-            Debug.WriteLine($"Searching items with query: {query}");
+            if (IsLoading) return;
 
             try
             {
-                Items.Clear();
+                IsLoading = true;
+                Debug.WriteLine("Loading items...");
 
-                if (string.IsNullOrWhiteSpace(query))
+                var allItems = await _itemService.GetItemsAsync();
+                Items.Clear();
+                foreach (var item in allItems)
                 {
-                    // Show all items if no search query
-                    foreach (var item in GetAllItems())
-                    {
-                        Items.Add(item);
-                    }
+                    Items.Add(item);
                 }
-                else
-                {
-                    // Filter items based on query
-                    var filteredItems = GetAllItems().Where(item =>
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading items: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to load items.", "OK");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task SearchItemsAsync(string query)
+        {
+            if (IsLoading) return;
+
+            try
+            {
+                IsLoading = true;
+
+                var allItems = await _itemService.GetItemsAsync();
+                var filteredItems = string.IsNullOrWhiteSpace(query)
+                    ? allItems
+                    : allItems.Where(item =>
                         item.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                         item.Description.Contains(query, StringComparison.OrdinalIgnoreCase))
-                        .ToList();
+                    .ToList();
 
-                    foreach (var item in filteredItems)
-                    {
-                        Items.Add(item);
-                    }
+                Items.Clear();
+                foreach (var item in filteredItems)
+                {
+                    Items.Add(item);
                 }
-
-                Debug.WriteLine($"Search completed. Found {Items.Count} items");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error during search: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Search failed.", "OK");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
-        /// <summary>
-        /// Temporary method to get sample items
-        /// TODO: Replace with actual database calls
-        /// </summary>
-        private List<Item> GetAllItems()
+        [RelayCommand]
+        private async Task ForSale()
         {
-            // Sample data for testing
-            // Will be replaced with actual database queries
-            return new List<Item>
+            await FilterByCategoryAsync("For Sale");
+        }
+
+        [RelayCommand]
+        private async Task Jobs()
+        {
+            await FilterByCategoryAsync("Jobs");
+        }
+
+        [RelayCommand]
+        private async Task Services()
+        {
+            await FilterByCategoryAsync("Services");
+        }
+
+        [RelayCommand]
+        private async Task Rentals()
+        {
+            await FilterByCategoryAsync("Rentals");
+        }
+
+        private async Task FilterByCategoryAsync(string category)
+        {
+            if (IsLoading) return;
+
+            try
             {
-                new Item
+                IsLoading = true;
+
+                var allItems = await _itemService.GetItemsAsync();
+                var filteredItems = allItems
+                    .Where(item => item.Status.Equals(category, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                Items.Clear();
+                foreach (var item in filteredItems)
                 {
-                    Id = 1,
-                    Title = "Sample Laptop",
-                    Description = "Slightly used laptop in great condition",
-                    PhotoUrl = "http://example.com/photo1.jpg",
-                    Price = 599.99m,
-                    UserId = 123,
-                    ListedDate = DateTime.UtcNow,
-                    Status = "For Sale"
-                },
-                new Item
-                {
-                    Id = 2,
-                    Title = "Garden Services",
-                    Description = "Professional garden maintenance",
-                    PhotoUrl = "http://example.com/photo2.jpg",
-                    Price = 50.00m,
-                    UserId = 124,
-                    ListedDate = DateTime.UtcNow,
-                    Status = "Services"
-                },
-                new Item
-                {
-                    Id = 3,
-                    Title = "Room for Rent",
-                    Description = "Furnished room in quiet neighborhood",
-                    PhotoUrl = "http://example.com/photo3.jpg",
-                    Price = 800.00m,
-                    UserId = 125,
-                    ListedDate = DateTime.UtcNow,
-                    Status = "Rentals"
+                    Items.Add(item);
                 }
-            };
-        }
-
-        // Category filter commands
-        [RelayCommand]
-        private void ForSale()
-        {
-            Debug.WriteLine("ForSale filter selected");
-            // TODO: Implement For Sale category filtering
-        }
-
-        [RelayCommand]
-        private void Jobs()
-        {
-            Debug.WriteLine("Jobs filter selected");
-            // TODO: Implement Jobs category filtering
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error filtering {category} items: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to filter items.", "OK");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         [RelayCommand]
-        private void Services()
+        private async Task Post()
         {
-            Debug.WriteLine("Services filter selected");
-            // TODO: Implement Services category filtering
+            try
+            {
+                await Shell.Current.GoToAsync("PostItemPage");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Navigation error: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to open post page.", "OK");
+            }
         }
 
         [RelayCommand]
-        private void Rentals()
+        private async Task Home()
         {
-            Debug.WriteLine("Rentals filter selected");
-            // TODO: Implement Rentals category filtering
-        }
-
-        // Navigation commands
-        [RelayCommand]
-        private void Home()
-        {
-            Debug.WriteLine("Navigating to Home");
-            // TODO: Implement Home navigation
+            await LoadItemsAsync();
         }
 
         [RelayCommand]
         private void Inbox()
         {
-            Debug.WriteLine("Navigating to Inbox");
-            // TODO: Implement Inbox navigation
-        }
-
-        [RelayCommand]
-        private async Task PostAsync()
-        {
-            try
-            {
-                Debug.WriteLine("Navigating to PostItemPage...");
-                await Shell.Current.GoToAsync("PostItemPage");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error navigating to PostItemPage: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-
-                await Shell.Current.DisplayAlert("Error",
-                    "Unable to open post item page. Please try again.", "OK");
-            }
+            Debug.WriteLine("Inbox feature not implemented");
         }
 
         [RelayCommand]
         private void MyListings()
         {
-            Debug.WriteLine("Navigating to MyListings");
-            // TODO: Implement My Listings navigation
+            Debug.WriteLine("My Listings feature not implemented");
         }
     }
 }

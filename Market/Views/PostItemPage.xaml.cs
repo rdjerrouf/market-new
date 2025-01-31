@@ -1,16 +1,22 @@
 using System.Diagnostics;
+using Market.ViewModels;
 
 namespace Market.Views;
 
 public partial class PostItemPage : ContentPage
 {
-	public PostItemPage()
-	{
-		InitializeComponent();
-	}
+    private readonly PostItemViewModel _viewModel;
 
-    private void OnUploadPhotoClicked(object sender, EventArgs e)
+    public PostItemPage(PostItemViewModel viewModel)
     {
-        Debug.WriteLine("Upload photo button clicked");
+        InitializeComponent();
+        _viewModel = viewModel;
+        BindingContext = _viewModel;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        Debug.WriteLine("PostItemPage appeared, BindingContext type: " + BindingContext?.GetType().FullName);
     }
 }
