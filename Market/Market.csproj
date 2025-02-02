@@ -66,6 +66,9 @@
    </ItemGroup>
 
    <ItemGroup>
+       <MauiXaml Update="Views\InboxPage.xaml">
+         <Generator>MSBuild:Compile</Generator>
+       </MauiXaml>
        <MauiXaml Update="Views\PostItemPage.xaml">
          <Generator>MSBuild:Compile</Generator>
        </MauiXaml>

@@ -14,7 +14,7 @@ namespace Market.ViewModels
     public partial class MainViewModel : ObservableObject
     {
         private readonly IItemService _itemService;
-
+        
         /// <summary>
         /// Collection of items displayed in the marketplace
         /// </summary>
@@ -187,21 +187,55 @@ namespace Market.ViewModels
         }
 
         [RelayCommand]
+        private async Task Inbox()
+        {
+            try
+            {
+                // Navigate to inbox page
+                await Shell.Current.GoToAsync("InboxPage");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Navigation error to Inbox: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", $"Unable to open inbox: {ex.Message}", "OK");
+            }
+        }
+
+        [RelayCommand]
+        private async Task MyListings()
+        {
+            try
+            {
+                // To implement this, we'll need to add a dependency for IAuthService
+                // Assuming you have an authentication service that can provide the current user's ID
+                var currentUserId = 1; // TODO: Replace with actual user ID retrieval
+
+                Items.Clear();
+
+                // Fetch items specific to the current user
+                var userItems = await _itemService.GetItemsByUserAsync(currentUserId);
+
+                // Populate items collection
+                foreach (var item in userItems)
+                {
+                    Items.Add(item);
+                }
+
+                // Update title to reflect current view
+                Title = "My Listings";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error fetching my listings: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to load your listings", "OK");
+            }
+        }
+
+
+        [RelayCommand]
         private async Task Home()
         {
             await LoadItemsAsync();
-        }
-
-        [RelayCommand]
-        private void Inbox()
-        {
-            Debug.WriteLine("Inbox feature not implemented");
-        }
-
-        [RelayCommand]
-        private void MyListings()
-        {
-            Debug.WriteLine("My Listings feature not implemented");
         }
     }
 }

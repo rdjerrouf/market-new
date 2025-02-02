@@ -11,8 +11,9 @@ namespace Market.Views
         public MainPage(IItemService itemService)
         {
             InitializeComponent();
-            // Create and set ViewModel with required service
-            BindingContext = new MainViewModel(itemService);
+            // Create ViewModel with the injected ItemService
+            var viewModel = new MainViewModel(itemService);
+            BindingContext = viewModel;
         }
     }
 }

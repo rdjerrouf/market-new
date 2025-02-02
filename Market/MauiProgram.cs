@@ -75,19 +75,19 @@ namespace Market
         {
             Debug.WriteLine("Registering services...");
 
-            // Register AuthService with initialization
+            // Register AuthService
             builder.Services.AddScoped<IAuthService>(provider => {
                 var context = provider.GetRequiredService<AppDbContext>();
                 var service = new AuthService(context);
-                // Initialize synchronously since we're in service registration
                 service.InitializeAsync().GetAwaiter().GetResult();
                 return service;
             });
 
-            // Register other services
+            // Add ItemService registration
             builder.Services.AddScoped<IItemService, ItemService>();
-        }
-        // Registers view models with dependency injection
+            builder.Services.AddScoped<IMessageService, MessageService>();
+            // Other service registrations...
+        }        // Registers view models with dependency injection
         private static void RegisterViewModels(MauiAppBuilder builder)
         {
             Debug.WriteLine("Registering ViewModels...");
@@ -97,6 +97,7 @@ namespace Market
             builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddTransient<SearchViewModel>();
             builder.Services.AddTransient<PostItemViewModel>();
+            builder.Services.AddTransient<InboxViewModel>();
         }
 
         // Registers pages with dependency injection
@@ -109,6 +110,7 @@ namespace Market
             builder.Services.AddTransient<RegistrationPage>();
             builder.Services.AddTransient<SearchPage>();
             builder.Services.AddTransient<PostItemPage>();
+            builder.Services.AddTransient<InboxPage>();
         }
 
         // Configures debug settings for development

@@ -7,66 +7,111 @@
              x:DataType="viewmodels:MainViewModel"
              Title="{Binding Title}">
 
-    <StackLayout>
-        <!-- Search Bar -->
-        <SearchBar Placeholder="Search" 
-                   Text="{Binding SearchQuery}"
-                   SearchCommand="{Binding SearchCommand}"
-                   SearchCommandParameter="{Binding Text, Source={RelativeSource Self}}"/>
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="15,10">
+        <!-- Search Bar Row -->
+        <Grid Grid.Row="0" 
+      ColumnDefinitions="*,50" 
+      Margin="0,0,0,10">
+            <!-- Search Bar -->
+            <SearchBar Grid.Column="0"
+               Placeholder="Search" 
+               Text="{Binding SearchQuery}"
+               SearchCommand="{Binding SearchCommand}"
+               SearchCommandParameter="{Binding Text, Source={RelativeSource Self}}"
+               Margin="0,0,10,0"/>
 
-        <!-- Category Buttons -->
-        <Grid HorizontalOptions="FillAndExpand" ColumnDefinitions="*,*,*,*">
-            <StackLayout Grid.Column="0" HorizontalOptions="Center">
-                <ImageButton Source="sellicon.png" 
-                            Command="{Binding ForSaleCommand}" 
-                            WidthRequest="50" HeightRequest="50" />
-                <Label Text="For Sale" HorizontalOptions="Center" />
-            </StackLayout>
-            <StackLayout Grid.Column="1" HorizontalOptions="Center">
-                <ImageButton Source="jobsicon.png" 
-                            Command="{Binding JobsCommand}" 
-                            WidthRequest="50" HeightRequest="50" />
-                <Label Text="Jobs" HorizontalOptions="Center" />
-            </StackLayout>
-            <StackLayout Grid.Column="2" HorizontalOptions="Center">
-                <ImageButton Source="servicesicon.png" 
-                            Command="{Binding ServicesCommand}" 
-                            WidthRequest="50" HeightRequest="50" />
-                <Label Text="Services" HorizontalOptions="Center" />
-            </StackLayout>
-            <StackLayout Grid.Column="3" HorizontalOptions="Center">
-                <ImageButton Source="renticon.png" 
-                            Command="{Binding RentalsCommand}" 
-                            WidthRequest="50" HeightRequest="50" />
-                <Label Text="Rentals" HorizontalOptions="Center" />
-            </StackLayout>
+            <!-- Account Icon -->
+            <Frame Grid.Column="1"
+           HeightRequest="40"
+           WidthRequest="40"
+           CornerRadius="20"
+           Padding="0"
+           BackgroundColor="LightGray"
+           HorizontalOptions="End"
+           VerticalOptions="Center">
+                <ImageButton Source="accounticon.png"
+                     HeightRequest="40"
+                     WidthRequest="40"
+                     Aspect="AspectFit"
+                     BackgroundColor="Transparent"/>
+            </Frame>
+        </Grid>
+
+        <!-- Top Category Buttons -->
+        <Grid Grid.Row="1" 
+              ColumnDefinitions="*,*,*,*"
+              Margin="0,0,0,20">
+            <!-- For Sale -->
+            <VerticalStackLayout Grid.Column="0" 
+                                HorizontalOptions="Center">
+                <ImageButton Source="sellicon.png"
+                            Command="{Binding ForSaleCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5"/>
+                <Label Text="For Sale"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Jobs -->
+            <VerticalStackLayout Grid.Column="1"
+                                HorizontalOptions="Center">
+                <ImageButton Source="jobsicon.png"
+                            Command="{Binding JobsCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5"/>
+                <Label Text="Jobs"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Services -->
+            <VerticalStackLayout Grid.Column="2"
+                                HorizontalOptions="Center">
+                <ImageButton Source="servicesicon.png"
+                            Command="{Binding ServicesCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5"/>
+                <Label Text="Services"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Rentals -->
+            <VerticalStackLayout Grid.Column="3"
+                                HorizontalOptions="Center">
+                <ImageButton Source="renticon.png"
+                            Command="{Binding RentalsCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5"/>
+                <Label Text="Rentals"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
         </Grid>
 
         <!-- Items List -->
-        <CollectionView ItemsSource="{Binding Items}"
-                       EmptyView="No items found">
+        <CollectionView Grid.Row="2"
+                       ItemsSource="{Binding Items}"
+                       EmptyView="No items found"
+                       Margin="0,10">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:Item">
-                    <Frame Margin="10" Padding="10">
-                        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                    <Frame Margin="0,0,0,10" Padding="10">
+                        <Grid RowDefinitions="Auto,Auto"
+                              ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" 
                                    Text="{Binding Title}"
                                    FontSize="16"
                                    FontAttributes="Bold"/>
                             <Label Grid.Column="1" 
-                                   Text="{Binding Price, StringFormat='${0:F2}'}"
+                                   Text="{Binding Price, StringFormat='${0:N2}'}"
                                    FontAttributes="Bold"/>
                             <Label Grid.Row="1" 
                                    Grid.ColumnSpan="2"
                                    Text="{Binding Description}"
                                    LineBreakMode="TailTruncation"
                                    MaxLines="2"/>
-                            <Image Grid.Row="2" 
-                                   Grid.ColumnSpan="2"
-                                   Source="{Binding PhotoUrl}"
-                                   HeightRequest="200"
-                                   Aspect="AspectFit"
-                                   IsVisible="{Binding PhotoUrl, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"/>
                         </Grid>
                     </Frame>
                 </DataTemplate>
@@ -74,37 +119,63 @@
         </CollectionView>
 
         <!-- Bottom Navigation -->
-        <Grid HorizontalOptions="FillAndExpand" VerticalOptions="EndAndExpand" ColumnDefinitions="*,*,*,*">
-            <StackLayout Grid.Column="0" HorizontalOptions="Center">
-                <ImageButton Source="homeicon.png" 
-                            Command="{Binding HomeCommand}" 
-                            WidthRequest="50" HeightRequest="50" />
-                <Label Text="Home" HorizontalOptions="Center" />
-            </StackLayout>
-            <StackLayout Grid.Column="1" HorizontalOptions="Center">
-                <ImageButton Source="inboxicon.png" 
-                            Command="{Binding InboxCommand}" 
-                            WidthRequest="50" HeightRequest="50" />
-                <Label Text="Inbox" HorizontalOptions="Center" />
-            </StackLayout>
-            <StackLayout Grid.Column="2" HorizontalOptions="Center">
-                <ImageButton Source="addicon.png" 
-                            Command="{Binding PostCommand}" 
-                            WidthRequest="50" HeightRequest="50" />
-                <Label Text="Post" HorizontalOptions="Center" />
-            </StackLayout>
-            <StackLayout Grid.Column="3" HorizontalOptions="Center">
-                <ImageButton Source="listicon.png" 
-                            Command="{Binding MyListingsCommand}" 
-                            WidthRequest="50" HeightRequest="50" />
-                <Label Text="My Listings" HorizontalOptions="Center" />
-            </StackLayout>
+        <Grid Grid.Row="3" 
+              ColumnDefinitions="*,*,*,*"
+              Margin="0,10,0,0">
+            <!-- Home -->
+            <VerticalStackLayout Grid.Column="0"
+                                HorizontalOptions="Center">
+                <ImageButton Source="homeicon.png"
+                            Command="{Binding HomeCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5"/>
+                <Label Text="Home"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Inbox -->
+            <VerticalStackLayout Grid.Column="1"
+                                HorizontalOptions="Center">
+                <ImageButton Source="inboxicon.png"
+                            Command="{Binding InboxCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5"/>
+                <Label Text="Inbox"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Add/Post -->
+            <VerticalStackLayout Grid.Column="2"
+                                HorizontalOptions="Center">
+                <ImageButton Source="addicon.png"
+                            Command="{Binding PostCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5"/>
+                <Label Text="Post"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Listings -->
+            <VerticalStackLayout Grid.Column="3"
+                                HorizontalOptions="Center">
+                <ImageButton Source="listicon.png"
+                            Command="{Binding MyListingsCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5"/>
+                <Label Text="Listings"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
         </Grid>
 
         <!-- Loading Indicator -->
-        <ActivityIndicator IsRunning="{Binding IsLoading}"
+        <ActivityIndicator Grid.RowSpan="4"
+                          IsRunning="{Binding IsLoading}"
                           IsVisible="{Binding IsLoading}"
                           HorizontalOptions="Center"
                           VerticalOptions="Center"/>
-    </StackLayout>
+    </Grid>
 </ContentPage>

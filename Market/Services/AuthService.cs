@@ -14,6 +14,57 @@ namespace Market.Services
         private static SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
         private bool _isInitialized;
 
+        // In AuthService.cs, add these methods:
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return null;
+
+            await InitializeAsync();
+
+            try
+            {
+                return await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error retrieving user by email: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> ChangePasswordAsync(string email, string currentPassword, string newPassword)
+        {
+            await InitializeAsync();
+
+            try
+            {
+                // First, verify the current password
+                var user = await SignInAsync(email, currentPassword);
+                if (user == null)
+                {
+                    Debug.WriteLine("Current password verification failed");
+                    return false;
+                }
+
+                // Hash the new password
+                user.PasswordHash = PasswordHasher.HashPassword(newPassword);
+
+                // Update the user
+                _context.Users.Update(user);
+                var result = await _context.SaveChangesAsync();
+
+                Debug.WriteLine($"Password change result: {result}");
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Password change error: {ex.Message}");
+                return false;
+            }
+        }
+
         public AuthService(AppDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));

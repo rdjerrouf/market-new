@@ -1,11 +1,8 @@
-﻿using Market.Views;  // Add this for PostItemPage
+﻿using Market.Views;  // Make sure this includes InboxPage
 using System.Diagnostics;
 
 namespace Market
 {
-    /// <summary>
-    /// Main shell navigation container for the application
-    /// </summary>
     public partial class AppShell : Shell
     {
         public AppShell()
@@ -15,12 +12,10 @@ namespace Market
             Debug.WriteLine("AppShell initialized");
         }
 
-        /// <summary>
-        /// Register navigation routes for the application
-        /// </summary>
         private void RegisterRoutes()
         {
             Routing.RegisterRoute("PostItemPage", typeof(PostItemPage));
+            Routing.RegisterRoute("InboxPage", typeof(InboxPage)); // Add this line
             Debug.WriteLine("Routes registered");
         }
     }

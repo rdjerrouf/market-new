@@ -25,5 +25,9 @@ namespace Market.Services
 
         // Searches items based on text and optional category
         Task<IEnumerable<Item>> SearchItemsAsync(string searchTerm, string? category = null);
+
+        // adding my listings
+
+        Task<IEnumerable<Item>> GetItemsByUserAsync(int userId);
     }
 }

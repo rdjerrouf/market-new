@@ -5,25 +5,28 @@ using System.Diagnostics;
 
 namespace Market.Services
 {
-    // Handles all database operations related to marketplace items
+    /// <summary>
+    /// Service for managing marketplace items
+    /// </summary>
     public class ItemService : IItemService
     {
         private readonly AppDbContext _context;
 
         public ItemService(AppDbContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        // Adds a new item to the marketplace
-        // Returns true if successful, false if failed
+        /// <summary>
+        /// Adds a new item to the marketplace
+        /// </summary>
         public async Task<bool> AddItemAsync(Item item)
         {
             try
             {
                 await _context.Items.AddAsync(item);
                 var result = await _context.SaveChangesAsync();
-                return result > 0;  // Returns true if at least one row was affected
+                return result > 0;
             }
             catch (Exception ex)
             {
@@ -32,8 +35,9 @@ namespace Market.Services
             }
         }
 
-        // Updates an existing item's information
-        // Returns true if update was successful
+        /// <summary>
+        /// Updates an existing item's information
+        /// </summary>
         public async Task<bool> UpdateItemAsync(Item item)
         {
             try
@@ -49,8 +53,9 @@ namespace Market.Services
             }
         }
 
-        // Removes an item from the marketplace by its ID
-        // Returns true if deletion was successful
+        /// <summary>
+        /// Deletes an item from the marketplace
+        /// </summary>
         public async Task<bool> DeleteItemAsync(int id)
         {
             try
@@ -69,59 +74,96 @@ namespace Market.Services
             }
         }
 
-        // Retrieves a single item by its ID
-        // Returns null if item doesn't exist
+        /// <summary>
+        /// Retrieves a specific item by its ID
+        /// </summary>
         public async Task<Item?> GetItemAsync(int id)
         {
-            return await _context.Items.FindAsync(id);
+            try
+            {
+                return await _context.Items.FindAsync(id);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error retrieving item: {ex.Message}");
+                return null;
+            }
         }
 
-        // Retrieves all items from the marketplace
-        // Orders them by most recently listed first
+        /// <summary>
+        /// Retrieves all items in the marketplace
+        /// </summary>
         public async Task<IEnumerable<Item>> GetItemsAsync()
         {
-            return await _context.Items
-                .OrderByDescending(i => i.ListedDate)
-                .ToListAsync();
+            try
+            {
+                return await _context.Items
+                    .OrderByDescending(i => i.ListedDate)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error retrieving items: {ex.Message}");
+                return Enumerable.Empty<Item>();
+            }
         }
 
-        // Gets all items posted by a specific user
-        // Orders them by most recently listed first
+        /// <summary>
+        /// Retrieves items posted by a specific user
+        /// </summary>
         public async Task<IEnumerable<Item>> GetUserItemsAsync(int userId)
         {
-            return await _context.Items
-                .Where(i => i.UserId == userId)
-                .OrderByDescending(i => i.ListedDate)
-                .ToListAsync();
+            try
+            {
+                return await _context.Items
+                    .Where(i => i.UserId == userId)
+                    .OrderByDescending(i => i.ListedDate)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error retrieving user items: {ex.Message}");
+                return Enumerable.Empty<Item>();
+            }
         }
 
-        // Searches items based on search term and optional category
-        // searchTerm: Matches against title and description
-        // category: Optional filter for item category (For Sale, Jobs, etc.)
+        /// <summary>
+        /// Searches items based on search term and optional category
+        /// </summary>
         public async Task<IEnumerable<Item>> SearchItemsAsync(string searchTerm, string? category = null)
         {
-            // Start with all items
-            var query = _context.Items.AsQueryable();
-
-            // Apply search term filter if provided
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+            try
             {
-                searchTerm = searchTerm.ToLower();
-                query = query.Where(i =>
-                    i.Title.ToLower().Contains(searchTerm) ||
-                    i.Description.ToLower().Contains(searchTerm));
-            }
+                var query = _context.Items.AsQueryable();
 
-            // Apply category filter if provided
-            if (!string.IsNullOrWhiteSpace(category))
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    searchTerm = searchTerm.ToLower();
+                    query = query.Where(i =>
+                        i.Title.ToLower().Contains(searchTerm) ||
+                        i.Description.ToLower().Contains(searchTerm));
+                }
+
+                if (!string.IsNullOrWhiteSpace(category))
+                {
+                    query = query.Where(i => i.Status == category);
+                }
+
+                return await query
+                    .OrderByDescending(i => i.ListedDate)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
             {
-                query = query.Where(i => i.Status == category);
+                Debug.WriteLine($"Error searching items: {ex.Message}");
+                return Enumerable.Empty<Item>();
             }
-
-            // Return results ordered by most recent first
-            return await query
-                .OrderByDescending(i => i.ListedDate)
-                .ToListAsync();
         }
+
+        /// <summary>
+        /// Alias for GetUserItemsAsync to match interface
+        /// </summary>
+        public Task<IEnumerable<Item>> GetItemsByUserAsync(int userId) =>
+            GetUserItemsAsync(userId);
     }
 }

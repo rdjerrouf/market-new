@@ -1,4 +1,5 @@
-﻿using Market.DataAccess.Models;
+﻿// Import necessary namespaces for functionality
+using Market.DataAccess.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Market.Services;
@@ -6,19 +7,33 @@ using System.Diagnostics;
 
 namespace Market.ViewModels
 {
+    /// <summary>
+    /// ViewModel responsible for handling the creation and posting of new marketplace items.
+    /// Includes photo upload functionality, form validation, and data persistence.
+    /// </summary>
     public partial class PostItemViewModel : ObservableObject
     {
+        // Dependencies injected through constructor
         private readonly IItemService _itemService;
         private readonly IAuthService _authService;
 
-        
-        
-       
-        
-        
-       
+        // Constants for form validation
+        // These define the constraints for item properties
+        private const int TITLE_MIN_LENGTH = 3;
+        private const int TITLE_MAX_LENGTH = 100;
+        private const int DESCRIPTION_MIN_LENGTH = 10;
+        private const int DESCRIPTION_MAX_LENGTH = 1000;
+        private const decimal MIN_PRICE = 0.01m;
+        private const decimal MAX_PRICE = 999999.99m;
+        private const long MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
-        // Add validation message properties
+        #region Error Message Properties
+        // Properties to hold validation error messages
+        // These are displayed in the UI when validation fails
+
+        /// <summary>
+        /// Error message for title validation
+        /// </summary>
         private string? _titleError;
         public string? TitleError
         {
@@ -26,6 +41,9 @@ namespace Market.ViewModels
             set => SetProperty(ref _titleError, value);
         }
 
+        /// <summary>
+        /// Error message for description validation
+        /// </summary>
         private string? _descriptionError;
         public string? DescriptionError
         {
@@ -33,6 +51,9 @@ namespace Market.ViewModels
             set => SetProperty(ref _descriptionError, value);
         }
 
+        /// <summary>
+        /// Error message for price validation
+        /// </summary>
         private string? _priceError;
         public string? PriceError
         {
@@ -40,13 +61,25 @@ namespace Market.ViewModels
             set => SetProperty(ref _priceError, value);
         }
 
+        /// <summary>
+        /// Error message for category validation
+        /// </summary>
         private string? _categoryError;
         public string? CategoryError
         {
             get => _categoryError;
             set => SetProperty(ref _categoryError, value);
         }
+        #endregion
 
+        #region Form Field Properties
+        // Properties for the item form fields
+        // These bind to the UI and hold the user input
+
+        /// <summary>
+        /// Title of the item being posted
+        /// Triggers validation on change
+        /// </summary>
         private string title = string.Empty;
         public string Title
         {
@@ -59,6 +92,10 @@ namespace Market.ViewModels
             }
         }
 
+        /// <summary>
+        /// Description of the item being posted
+        /// Triggers validation on change
+        /// </summary>
         private string description = string.Empty;
         public string Description
         {
@@ -71,7 +108,10 @@ namespace Market.ViewModels
             }
         }
 
-
+        /// <summary>
+        /// Price of the item being posted
+        /// Triggers validation on change
+        /// </summary>
         private decimal price;
         public decimal Price
         {
@@ -83,6 +123,12 @@ namespace Market.ViewModels
                 SaveItemCommand.NotifyCanExecuteChanged();
             }
         }
+
+        /// <summary>
+        /// Category of the item being posted
+        /// Triggers validation on change
+        /// Default value is "For Sale"
+        /// </summary>
         private string _category = "For Sale";
         public string Category
         {
@@ -95,14 +141,21 @@ namespace Market.ViewModels
             }
         }
 
+        /// <summary>
+        /// Path to the uploaded photo
+        /// This is the local file system path where the photo is stored
+        /// </summary>
         private string? _photoUrl;
         public string? PhotoUrl
         {
             get => _photoUrl;
             set => SetProperty(ref _photoUrl, value);
-            
         }
 
+        /// <summary>
+        /// Indicates if the ViewModel is currently processing an operation
+        /// Used to prevent multiple simultaneous operations
+        /// </summary>
         private bool _isBusy;
         public bool IsBusy
         {
@@ -113,28 +166,46 @@ namespace Market.ViewModels
                 SaveItemCommand.NotifyCanExecuteChanged();
             }
         }
+        #endregion
 
-        // Validation methods
+        /// <summary>
+        /// Constructor for PostItemViewModel
+        /// Initializes services and sets up initial state
+        /// </summary>
+        /// <param name="itemService">Service for managing marketplace items</param>
+        /// <param name="authService">Service for user authentication</param>
+        public PostItemViewModel(IItemService itemService, IAuthService authService)
+        {
+            _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            Debug.WriteLine("PostItemViewModel initialized");
+        }
+
+        #region Validation Methods
+        // Methods to validate form fields
+        // Each returns true if validation passes, false otherwise
+
+        /// <summary>
+        /// Validates the item title
+        /// Checks for required field, minimum and maximum length
+        /// </summary>
         private bool ValidateTitle()
         {
-            const int minLength = 3;
-            const int maxLength = 100;
-
             if (string.IsNullOrWhiteSpace(Title))
             {
                 TitleError = "Title is required";
                 return false;
             }
 
-            if (Title.Length < minLength)
+            if (Title.Length < TITLE_MIN_LENGTH)
             {
-                TitleError = $"Title must be at least {minLength} characters";
+                TitleError = $"Title must be at least {TITLE_MIN_LENGTH} characters";
                 return false;
             }
 
-            if (Title.Length > maxLength)
+            if (Title.Length > TITLE_MAX_LENGTH)
             {
-                TitleError = $"Title cannot exceed {maxLength} characters";
+                TitleError = $"Title cannot exceed {TITLE_MAX_LENGTH} characters";
                 return false;
             }
 
@@ -142,26 +213,27 @@ namespace Market.ViewModels
             return true;
         }
 
+        /// <summary>
+        /// Validates the item description
+        /// Checks for required field, minimum and maximum length
+        /// </summary>
         private bool ValidateDescription()
         {
-            const int minLength = 10;
-            const int maxLength = 1000;
-
             if (string.IsNullOrWhiteSpace(Description))
             {
                 DescriptionError = "Description is required";
                 return false;
             }
 
-            if (Description.Length < minLength)
+            if (Description.Length < DESCRIPTION_MIN_LENGTH)
             {
-                DescriptionError = $"Description must be at least {minLength} characters";
+                DescriptionError = $"Description must be at least {DESCRIPTION_MIN_LENGTH} characters";
                 return false;
             }
 
-            if (Description.Length > maxLength)
+            if (Description.Length > DESCRIPTION_MAX_LENGTH)
             {
-                DescriptionError = $"Description cannot exceed {maxLength} characters";
+                DescriptionError = $"Description cannot exceed {DESCRIPTION_MAX_LENGTH} characters";
                 return false;
             }
 
@@ -169,20 +241,21 @@ namespace Market.ViewModels
             return true;
         }
 
+        /// <summary>
+        /// Validates the item price
+        /// Checks for minimum and maximum price limits
+        /// </summary>
         private bool ValidatePrice()
         {
-            const decimal minPrice = 0.01m;
-            const decimal maxPrice = 999999.99m;
-
-            if (Price < minPrice)
+            if (Price < MIN_PRICE)
             {
                 PriceError = "Price must be greater than zero";
                 return false;
             }
 
-            if (Price > maxPrice)
+            if (Price > MAX_PRICE)
             {
-                PriceError = $"Price cannot exceed {maxPrice:C}";
+                PriceError = $"Price cannot exceed {MAX_PRICE:C}";
                 return false;
             }
 
@@ -190,6 +263,10 @@ namespace Market.ViewModels
             return true;
         }
 
+        /// <summary>
+        /// Validates the item category
+        /// Checks if the category is one of the allowed values
+        /// </summary>
         private bool ValidateCategory()
         {
             var validCategories = new[] { "For Sale", "Jobs", "Services", "Rentals" };
@@ -210,7 +287,10 @@ namespace Market.ViewModels
             return true;
         }
 
-        // Update CanSaveItem to use all validations
+        /// <summary>
+        /// Determines if the item can be saved
+        /// Checks all validation rules and busy state
+        /// </summary>
         private bool CanSaveItem()
         {
             var isValid = !IsBusy &&
@@ -229,14 +309,13 @@ namespace Market.ViewModels
 
             return isValid;
         }
+        #endregion
 
-        public PostItemViewModel(IItemService itemService, IAuthService authService)
-        {
-            _itemService = itemService;
-            _authService = authService;
-            Debug.WriteLine("PostItemViewModel initialized");
-        }
-
+        #region Photo Handling Methods
+        /// <summary>
+        /// Handles the photo upload process
+        /// Includes picking a photo, validation, and saving to local storage
+        /// </summary>
         [RelayCommand]
         private async Task UploadPhotoAsync()
         {
@@ -248,10 +327,12 @@ namespace Market.ViewModels
                 IsBusy = true;
                 Debug.WriteLine("Starting photo upload");
 
+                // Check permissions on iOS/MacCatalyst
 #if IOS || MACCATALYST
                 if (!await CheckPhotoPermissions()) return;
 #endif
 
+                // Let user pick a photo
                 var photo = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
                 {
                     Title = "Select a photo"
@@ -261,14 +342,18 @@ namespace Market.ViewModels
 
                 Debug.WriteLine($"Photo selected: {photo.FileName}");
 
+                // Validate the selected photo
                 if (!await ValidatePhotoAsync(photo)) return;
 
+                // Create storage directory if it doesn't exist
                 var localStorageDir = Path.Combine(FileSystem.AppDataDirectory, "ItemPhotos");
                 Directory.CreateDirectory(localStorageDir);
 
+                // Generate unique filename for the photo
                 var fileName = $"item_photo_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(photo.FileName)}";
                 tempPhotoPath = Path.Combine(localStorageDir, fileName);
 
+                // Copy photo to app storage
                 using (var sourceStream = await photo.OpenReadAsync())
                 using (var destinationStream = File.OpenWrite(tempPhotoPath))
                 {
@@ -292,7 +377,8 @@ namespace Market.ViewModels
         }
 
         /// <summary>
-        /// Cleans up photo files from failed uploads
+        /// Cleans up temporary photo files
+        /// Called when upload fails or item save fails
         /// </summary>
         private void CleanupPhoto(string? photoPath)
         {
@@ -311,17 +397,18 @@ namespace Market.ViewModels
                 Debug.WriteLine($"Error cleaning up photo: {ex.Message}");
             }
         }
+
         /// <summary>
-        /// Validates photo file size and format
+        /// Validates the selected photo
+        /// Checks file size and format
         /// </summary>
         private async Task<bool> ValidatePhotoAsync(FileResult photo)
         {
             Debug.WriteLine($"Validating photo: {photo.FileName}");
 
             // Check file size (max 5MB)
-            const long maxFileSize = 5 * 1024 * 1024;
             using var stream = await photo.OpenReadAsync();
-            if (stream.Length > maxFileSize)
+            if (stream.Length > MAX_PHOTO_SIZE)
             {
                 await Shell.Current.DisplayAlert("Error", "Photo must be less than 5MB", "OK");
                 return false;
@@ -338,8 +425,14 @@ namespace Market.ViewModels
 
             return true;
         }
+
+        /// <summary>
+        /// Checks and requests necessary permissions for photo access
+        /// Handles iOS/MacCatalyst specific permission requirements
+        /// </summary>
         private async Task<bool> CheckPhotoPermissions()
         {
+            // Check storage permissions
             var storageStatus = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
             if (storageStatus != PermissionStatus.Granted)
             {
@@ -352,6 +445,7 @@ namespace Market.ViewModels
                 }
             }
 
+            // Check photo library permissions on iOS/MacCatalyst
             if (OperatingSystem.IsIOSVersionAtLeast(14, 0) ||
                 OperatingSystem.IsMacCatalystVersionAtLeast(14, 0))
             {
@@ -369,10 +463,15 @@ namespace Market.ViewModels
             }
             return true;
         }
+        #endregion
 
-
+        #region Save Item Command
+        /// <summary>
+        /// Saves the item to the marketplace
+        /// Validates all fields and handles photo path storage
+        /// </summary>
         [RelayCommand(CanExecute = nameof(CanSaveItem))]
-        private async Task SaveItem()  // Changed from SaveItemAsync to SaveItem
+        private async Task SaveItem()
         {
             if (IsBusy) return;
 
@@ -381,6 +480,7 @@ namespace Market.ViewModels
                 IsBusy = true;
                 Debug.WriteLine("Starting item save process...");
 
+                // Create new item from form data
                 var item = new Item
                 {
                     Title = Title,
@@ -391,12 +491,14 @@ namespace Market.ViewModels
                     UserId = 1 // TODO: Get actual user ID from AuthService
                 };
 
+                // Handle photo path
                 if (!string.IsNullOrEmpty(PhotoUrl))
                 {
                     var relativePath = PhotoUrl.Replace(FileSystem.AppDataDirectory, string.Empty);
                     item.PhotoUrl = relativePath;
                 }
 
+                // Save item to database
                 var success = await _itemService.AddItemAsync(item);
 
                 if (success)
@@ -421,5 +523,6 @@ namespace Market.ViewModels
                 IsBusy = false;
             }
         }
+        #endregion
     }
 }
