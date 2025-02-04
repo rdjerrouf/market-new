@@ -189,10 +189,14 @@ namespace Market.ViewModels
         [RelayCommand]
         private async Task Inbox()
         {
+            Debug.WriteLine("Inbox function called");
+
             try
             {
+                Debug.WriteLine("Attempting to navigate to InboxPage");
                 // Navigate to inbox page
                 await Shell.Current.GoToAsync("InboxPage");
+                Debug.WriteLine("Navigation to InboxPage completed");
             }
             catch (Exception ex)
             {
@@ -231,7 +235,7 @@ namespace Market.ViewModels
             }
         }
 
-
+                    
         [RelayCommand]
         private async Task Home()
         {

@@ -13,6 +13,13 @@ namespace Market
         {
             InitializeComponent();
             MainPage = new AppShell();
+            Debug.WriteLine("App constructor called");
+            Console.WriteLine("App constructor called");
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                Debug.WriteLine($"Unhandled exception: {e.ExceptionObject}");
+                Console.WriteLine($"Unhandled exception: {e.ExceptionObject}");
+            };
         }
 
         protected override Window CreateWindow(IActivationState? activationState)

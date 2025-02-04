@@ -33,17 +33,36 @@ namespace Market.Services
         {
             try
             {
-                // Retrieve messages where user is the receiver
-                // This ensures we're getting the user's inbox specifically
-                return await _context.Messages
-                    .Where(m => m.ReceiverId == userId)
-                    .OrderByDescending(m => m.Timestamp)
-                    .ToListAsync();
+                Debug.WriteLine($"GetUserInboxMessagesAsync called for user {userId}");
+                Debug.WriteLine($"Database path: {_context.Database.GetDbConnection().ConnectionString}");
+
+                var query = _context.Messages.Where(m => m.ReceiverId == userId);
+                Debug.WriteLine($"Query SQL: {query.ToQueryString()}");
+
+                var messages = await query.OrderByDescending(m => m.Timestamp).ToListAsync();
+
+                Debug.WriteLine($"Retrieved {messages.Count} messages for user {userId}");
+                foreach (var message in messages)
+                {
+                    Debug.WriteLine($"Message: ID={message.Id}, Content={message.Content}, From={message.SenderId}, To={message.ReceiverId}, Time={message.Timestamp}");
+                }
+
+                if (messages.Count == 0)
+                {
+                    var allMessages = await _context.Messages.ToListAsync();
+                    Debug.WriteLine($"Total messages in database: {allMessages.Count}");
+                    foreach (var msg in allMessages)
+                    {
+                        Debug.WriteLine($"DB Message: ID={msg.Id}, From={msg.SenderId}, To={msg.ReceiverId}");
+                    }
+                }
+
+                return messages;
             }
             catch (Exception ex)
             {
-                // Log any database access errors
                 Debug.WriteLine($"Error retrieving user inbox messages: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 return Enumerable.Empty<Message>();
             }
         }

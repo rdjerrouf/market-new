@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using Market.DataAccess.Models;
 using Market.Services;
 
@@ -12,10 +12,25 @@ namespace Market.ViewModels
     /// </summary>
     public partial class InboxViewModel : ObservableObject
     {
+       
         // Services for message management and user authentication
         private readonly IMessageService _messageService;
         private readonly IAuthService _authService;
+        public InboxViewModel(IMessageService messageService, IAuthService authService)
+        {
+            Debug.WriteLine("InboxViewModel constructor called");
+            Console.WriteLine("InboxViewModel constructor called");
 
+            _messageService = messageService;
+            _authService = authService;
+
+            Debug.WriteLine("Executing LoadMessagesCommand");
+            Console.WriteLine("Executing LoadMessagesCommand");
+            LoadMessagesCommand.Execute(null);
+
+            Debug.WriteLine("InboxViewModel constructor completed");
+            Console.WriteLine("InboxViewModel constructor completed");
+        }
         /// <summary>
         /// Collection of messages to be displayed in the inbox
         /// Uses ObservableCollection for real-time UI updates
@@ -36,55 +51,43 @@ namespace Market.ViewModels
                  /// </summary>
                  /// <param name="messageService">Service for managing messages</param>
                  /// <param name="authService">Service for user authentication</param>
-        public InboxViewModel(IMessageService messageService, IAuthService authService)
-        {
-            _messageService = messageService;
-            _authService = authService;
-            LoadMessagesAsync().ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Loads messages for the current user
-        /// Handles loading state and error scenarios
-        /// </summary>
+        
+        [RelayCommand]
         private async Task LoadMessagesAsync()
         {
-            // Prevent multiple simultaneous loading attempts
+            Debug.WriteLine("LoadMessagesAsync called");
             if (IsLoading) return;
-
             try
             {
-                // Indicate loading is in progress
                 IsLoading = true;
-                Debug.WriteLine("Loading inbox messages...");
-
-                // TODO: Replace with actual user authentication
-                // Placeholder user ID - replace with actual authentication mechanism
-                int currentUserId = 1;
-
-                // Retrieve messages for the current user
+                Debug.WriteLine("InboxViewModel: Set IsLoading to true");
+                int currentUserId = 2; // TODO: Replace with actual user ID
+                Debug.WriteLine($"Fetching messages for user ID: {currentUserId}");
                 var messages = await _messageService.GetUserInboxMessagesAsync(currentUserId);
-
-                // Clear existing messages and populate with new data
+                Debug.WriteLine($"InboxViewModel: Retrieved {messages.Count()} messages from service");
                 Messages.Clear();
                 foreach (var message in messages)
                 {
                     Messages.Add(message);
+                    Debug.WriteLine($"InboxViewModel: Added message: ID={message.Id}, Content={message.Content}");
                 }
-
-                Debug.WriteLine($"Loaded {Messages.Count} messages");
+                Debug.WriteLine($"InboxViewModel: Added messagee: ID= {Messages.Count}");
+                foreach (var message in Messages)
+                {
+                    Debug.WriteLine($"Message: {message.Content}, From: {message.SenderId}, Time: {message.Timestamp}");
+                }
+                Debug.WriteLine($"InboxViewModel: Total messages loaded: {Messages.Count}");
             }
             catch (Exception ex)
             {
-                // Log and display error if message loading fails
                 Debug.WriteLine($"Error loading messages: {ex.Message}");
                 await Shell.Current.DisplayAlert("Error", "Unable to load messages", "OK");
             }
             finally
             {
-                // Ensure loading state is reset
                 IsLoading = false;
             }
+            Debug.WriteLine("InboxViewModel: LoadMessagesAsync completed");
         }
 
         /// <summary>
@@ -92,10 +95,7 @@ namespace Market.ViewModels
         /// Triggered manually by user pull-to-refresh or other refresh mechanisms
         /// </summary>
         [RelayCommand]
-        private async Task RefreshMessagesAsync()
-        {
-            await LoadMessagesAsync();
-        }
+        private Task RefreshMessagesAsync() => LoadMessagesAsync();
 
         /// <summary>
         /// Opens a specific message and marks it as read
