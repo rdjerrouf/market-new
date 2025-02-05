@@ -208,6 +208,7 @@ namespace Market.ViewModels
         [RelayCommand]
         private async Task MyListings()
         {
+            Debug.WriteLine("MyListings function has started");
             try
             {
                 // To implement this, we'll need to add a dependency for IAuthService
@@ -219,14 +220,18 @@ namespace Market.ViewModels
                 // Fetch items specific to the current user
                 var userItems = await _itemService.GetItemsByUserAsync(currentUserId);
 
+                Debug.WriteLine($"MyListings: Retrieved {userItems.Count()} items from service");
+
                 // Populate items collection
                 foreach (var item in userItems)
                 {
                     Items.Add(item);
+                    Debug.WriteLine($"MyListings: Added item: ID={item.Id}, Title={item.Title}");
                 }
 
                 // Update title to reflect current view
                 Title = "My Listings";
+               
             }
             catch (Exception ex)
             {

@@ -18,6 +18,8 @@ namespace Market
             Routing.RegisterRoute(nameof(InboxPage), typeof(InboxPage));
             Debug.WriteLine($"Routes registered: {nameof(PostItemPage)}, {nameof(InboxPage)}");
             Console.WriteLine("Routes registered");
+            Routing.RegisterRoute(nameof(MyListingsPage), typeof(MyListingsPage));
+
         }
     }
 }

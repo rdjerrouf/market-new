@@ -8,7 +8,7 @@ namespace Market.Services
         // Existing methods
         Task<bool> RegisterUserAsync(User user);
         Task<User?> SignInAsync(string email, string password);
-
+        Task<User?> GetCurrentUserAsync();
         // New methods to resolve build errors
         /// <summary>
         /// Retrieves a user by their email address

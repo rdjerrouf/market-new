@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Market.Views.MyListingsPage"
+             xmlns:viewmodel="clr-namespace:Market.ViewModels"
+             xmlns:models="clr-namespace:Market.DataAccess.Models"
+             x:DataType="viewmodel:MyListingsViewModel"
+             Title="My Listings">
+    <Grid RowDefinitions="Auto,*">
+        <Button Grid.Row="0" 
+                Text="Refresh Listings" 
+                Command="{Binding LoadMyListingsCommand}"
+                Margin="10"/>
+        <RefreshView Grid.Row="1" 
+                     Command="{Binding LoadMyListingsCommand}" 
+                     IsRefreshing="{Binding IsLoading}">
+            <CollectionView ItemsSource="{Binding Items}"
+                            EmptyView="You don't have any listings yet.">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Item">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Delete"
+                                               BackgroundColor="Red"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MyListingsViewModel}}, Path=DeleteItemCommand}"
+                                               CommandParameter="{Binding .}"/>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <Grid Padding="10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Title}"
+                                       FontAttributes="Bold"/>
+                                <Label Grid.Row="1" Grid.Column="0"
+                                       Text="{Binding Description}"
+                                       FontSize="Small"/>
+                                <Label Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                                       Text="{Binding Price, StringFormat='{0:C}'}"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+        <ActivityIndicator Grid.RowSpan="2" 
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"/>
+    </Grid>
+</ContentPage>

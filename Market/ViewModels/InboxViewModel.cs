@@ -45,13 +45,8 @@ namespace Market.ViewModels
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
-        }        /// <summary>
+        }        
                  /// Constructor for InboxViewModel
-                 /// Initializes services and triggers message loading
-                 /// </summary>
-                 /// <param name="messageService">Service for managing messages</param>
-                 /// <param name="authService">Service for user authentication</param>
-        
         [RelayCommand]
         private async Task LoadMessagesAsync()
         {

@@ -21,7 +21,7 @@ namespace Market.ViewModels
         // These define the constraints for item properties
         private const int TITLE_MIN_LENGTH = 3;
         private const int TITLE_MAX_LENGTH = 100;
-        private const int DESCRIPTION_MIN_LENGTH = 10;
+        private const int DESCRIPTION_MIN_LENGTH = 8;
         private const int DESCRIPTION_MAX_LENGTH = 1000;
         private const decimal MIN_PRICE = 0.01m;
         private const decimal MAX_PRICE = 999999.99m;
@@ -319,6 +319,8 @@ namespace Market.ViewModels
         [RelayCommand]
         private async Task UploadPhotoAsync()
         {
+            Debug.WriteLine("UploadPhotoAsync called");
+
             if (IsBusy) return;
 
             string? tempPhotoPath = null;
@@ -336,28 +338,35 @@ namespace Market.ViewModels
                 var photo = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
                 {
                     Title = "Select a photo"
+                    
                 });
-
+                Debug.WriteLine($"Photo picked: before checking if phote is  null");
                 if (photo == null) return;
 
                 Debug.WriteLine($"Photo selected: {photo.FileName}");
 
                 // Validate the selected photo
                 if (!await ValidatePhotoAsync(photo)) return;
-
+                Debug.WriteLine("Photo validation passed");
                 // Create storage directory if it doesn't exist
                 var localStorageDir = Path.Combine(FileSystem.AppDataDirectory, "ItemPhotos");
                 Directory.CreateDirectory(localStorageDir);
 
+                Debug.WriteLine($"Local storage directory: {localStorageDir}");
+
                 // Generate unique filename for the photo
                 var fileName = $"item_photo_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(photo.FileName)}";
                 tempPhotoPath = Path.Combine(localStorageDir, fileName);
+
+                Debug.WriteLine($"Temp photo path: {tempPhotoPath}");
 
                 // Copy photo to app storage
                 using (var sourceStream = await photo.OpenReadAsync())
                 using (var destinationStream = File.OpenWrite(tempPhotoPath))
                 {
                     await sourceStream.CopyToAsync(destinationStream);
+
+                    Debug.WriteLine($"Photo copied to: {tempPhotoPath}");
                 }
 
                 PhotoUrl = tempPhotoPath;
@@ -470,9 +479,11 @@ namespace Market.ViewModels
         /// Saves the item to the marketplace
         /// Validates all fields and handles photo path storage
         /// </summary>
+       
         [RelayCommand(CanExecute = nameof(CanSaveItem))]
         private async Task SaveItem()
         {
+            Debug.WriteLine("SaveItem method called");
             if (IsBusy) return;
 
             try
@@ -491,11 +502,14 @@ namespace Market.ViewModels
                     UserId = 1 // TODO: Get actual user ID from AuthService
                 };
 
+                Debug.WriteLine($"Created item: Title={item.Title}, Price={item.Price}, Category={item.Status}");
+
                 // Handle photo path
                 if (!string.IsNullOrEmpty(PhotoUrl))
                 {
                     var relativePath = PhotoUrl.Replace(FileSystem.AppDataDirectory, string.Empty);
                     item.PhotoUrl = relativePath;
+                    Debug.WriteLine($"Photo path set: {item.PhotoUrl}");
                 }
 
                 // Save item to database
@@ -516,6 +530,7 @@ namespace Market.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error saving item: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Shell.Current.DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
             }
             finally

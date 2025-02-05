@@ -98,6 +98,7 @@ namespace Market
             builder.Services.AddTransient<SearchViewModel>();
             builder.Services.AddTransient<PostItemViewModel>();
             builder.Services.AddTransient<InboxViewModel>();
+            builder.Services.AddTransient<MyListingsViewModel>();
         }
 
         // Registers pages with dependency injection
@@ -111,6 +112,7 @@ namespace Market
             builder.Services.AddTransient<SearchPage>();
             builder.Services.AddTransient<PostItemPage>();
             builder.Services.AddTransient<InboxPage>();
+            builder.Services.AddTransient<MyListingsPage>();
         }
 
         // Configures debug settings for development
