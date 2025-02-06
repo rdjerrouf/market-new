@@ -498,7 +498,7 @@ namespace Market.ViewModels
         [RelayCommand(CanExecute = nameof(CanSaveItem))]
         private async Task SaveItem()
         {
-            Debug.WriteLine("SaveItem method called");
+            Debug.WriteLine("SaveItem method called**************************************");
             if (IsBusy) return;
 
             try
@@ -516,19 +516,25 @@ namespace Market.ViewModels
                     ListedDate = DateTime.UtcNow,
                     UserId = 1 // TODO: Get actual user ID from AuthService
                 };
+                Debug.WriteLine("THE ITEM HAS BEEN CREATED SO FAR");
 
                 Debug.WriteLine($"Created item: Title={item.Title}, Price={item.Price}, Category={item.Status}");
 
                 // Handle photo path
                 if (!string.IsNullOrEmpty(PhotoUrl))
                 {
+                    Debug.WriteLine($"Photo path set: {PhotoUrl}");
+                    Debug.WriteLine($"Photo path set: path of the photo is not nuuuuuuuuuuuuuuuuuuuul");
+
                     var relativePath = PhotoUrl.Replace(FileSystem.AppDataDirectory, string.Empty);
                     item.PhotoUrl = relativePath;
                     Debug.WriteLine($"Photo path set: {item.PhotoUrl}");
+                    Debug.WriteLine($"phot is uploaded here");
                 }
 
                 // Save item to database
                 var success = await _itemService.AddItemAsync(item);
+                Debug.WriteLine($"Item saved: {success}");
 
                 if (success)
                 {
