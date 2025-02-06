@@ -35,8 +35,8 @@ namespace Market.DataAccess.Models
         /// Price of the item
         /// </summary>
         [Required]
-        public decimal Price { get; set; }
-
+        [Range(1, 999999.99)]
+        public required decimal Price { get; set; } = 1.00M;
         /// <summary>
         /// ID of user who posted the item
         /// </summary>

@@ -2,9 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             xmlns:converters="clr-namespace:Market.Converters"
              x:Class="Market.Views.PostItemPage"
              x:DataType="viewmodels:PostItemViewModel"
              Title="Post New Item">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="20">
             <!-- Page Title -->
@@ -46,18 +52,17 @@
                     <Label Text="Category"/>
                     <HorizontalStackLayout Spacing="10">
                         <RadioButton 
-                            Content="For Sale" 
-                            IsChecked="{Binding Category, Mode=TwoWay}"
-                            GroupName="Category"/>
+    Content="For Sale" 
+    IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=For Sale}"/>
                         <RadioButton 
-                            Content="Jobs" 
-                            GroupName="Category"/>
+    Content="Jobs" 
+    IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Jobs}"/>
                         <RadioButton 
-                            Content="Services" 
-                            GroupName="Category"/>
+    Content="Services" 
+    IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Services}"/>
                         <RadioButton 
-                            Content="Rentals" 
-                            GroupName="Category"/>
+    Content="Rentals" 
+    IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Rentals}"/>
                     </HorizontalStackLayout>
                     <Label 
                         Text="{Binding CategoryError}"

@@ -1,5 +1,6 @@
 ﻿// Import necessary namespaces for functionality
 using Market.DataAccess.Models;
+using Market.Converters;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Market.Services;
@@ -112,7 +113,7 @@ namespace Market.ViewModels
         /// Price of the item being posted
         /// Triggers validation on change
         /// </summary>
-        private decimal price;
+        private decimal price = 1.00M;
         public decimal Price
         {
             get => price;
@@ -247,20 +248,32 @@ namespace Market.ViewModels
         /// </summary>
         private bool ValidatePrice()
         {
+            Console.WriteLine($"Debug - Validating Price: {Price}"); // Add current price value
+
             if (Price < MIN_PRICE)
             {
+                Console.WriteLine($"Debug - Price {Price} is less than MIN_PRICE {MIN_PRICE}"); // Add comparison debug
                 PriceError = "Price must be greater than zero";
                 return false;
             }
-
             if (Price > MAX_PRICE)
             {
                 PriceError = $"Price cannot exceed {MAX_PRICE:C}";
                 return false;
             }
-
             PriceError = null;
             return true;
+        }
+
+        private string _selectedCategory = "For Sale";
+        public string SelectedCategory
+        {
+            get => _selectedCategory;
+            set
+            {
+                SetProperty(ref _selectedCategory, value);
+                Category = value; // Update the Category property 
+            }
         }
 
         /// <summary>
@@ -271,7 +284,7 @@ namespace Market.ViewModels
         {
             var validCategories = new[] { "For Sale", "Jobs", "Services", "Rentals" };
 
-            if (string.IsNullOrWhiteSpace(Category))
+            if (string.IsNullOrEmpty(Category))
             {
                 CategoryError = "Category is required";
                 return false;
@@ -286,6 +299,8 @@ namespace Market.ViewModels
             CategoryError = null;
             return true;
         }
+
+        // ... (rest of the code)
 
         /// <summary>
         /// Determines if the item can be saved
@@ -389,7 +404,7 @@ namespace Market.ViewModels
         /// Cleans up temporary photo files
         /// Called when upload fails or item save fails
         /// </summary>
-        private void CleanupPhoto(string? photoPath)
+        private void  CleanupPhoto(string? photoPath)
         {
             if (string.IsNullOrEmpty(photoPath)) return;
 
@@ -411,7 +426,7 @@ namespace Market.ViewModels
         /// Validates the selected photo
         /// Checks file size and format
         /// </summary>
-        private async Task<bool> ValidatePhotoAsync(FileResult photo)
+        private static async Task<bool> ValidatePhotoAsync(FileResult photo)
         {
             Debug.WriteLine($"Validating photo: {photo.FileName}");
 

@@ -104,9 +104,11 @@
                                    Text="{Binding Title}"
                                    FontSize="16"
                                    FontAttributes="Bold"/>
-                            <Label Grid.Column="1" 
-                                   Text="{Binding Price, StringFormat='${0:N2}'}"
-                                   FontAttributes="Bold"/>
+                            <Entry Grid.Column="1"
+                                   Text="{Binding Price}"
+                                    Keyboard="Numeric"
+                                   Placeholder="Enter price"
+                       FontAttributes="Bold"/>
                             <Label Grid.Row="1" 
                                    Grid.ColumnSpan="2"
                                    Text="{Binding Description}"

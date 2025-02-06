@@ -19,4 +19,5 @@ public partial class PostItemPage : ContentPage
         base.OnAppearing();
         Debug.WriteLine("PostItemPage appeared, BindingContext type: " + BindingContext?.GetType().FullName);
     }
+
 }
