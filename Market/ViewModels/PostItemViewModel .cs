@@ -275,7 +275,116 @@ namespace Market.ViewModels
                 Category = value; // Update the Category property 
             }
         }
+        /// <summary>
+        /// Type of job for Jobs category
+        /// </summary>
+       
+        private string? _jobType;
+        public string? JobType
+        {
+            get => _jobType;
+            set => SetProperty(ref _jobType, value);
+        }
+        /// <summary>
+        /// Type of service for Services category
+        /// </summary>
 
+        private string? serviceType;
+        public string? ServiceType
+        {
+            get => serviceType;
+            set => SetProperty(ref serviceType, value);
+        }
+
+        /// <summary>
+        /// Rental period for Rentals category
+        /// </summary>
+        
+        private string? rentalPeriod;
+        public string? RentalPeriod
+        {
+            get => rentalPeriod;
+            set => SetProperty(ref rentalPeriod, value);
+        }
+
+        /// <summary>
+        /// Start date for job or rental availability
+        /// </summary>
+        
+        private DateTime? availableFrom;
+        public DateTime? AvailableFrom
+        {
+            get => availableFrom;
+            set => SetProperty(ref availableFrom, value);
+        }
+
+        /// <summary>
+        /// End date for rental availability
+        /// </summary>
+        
+        private DateTime? availableTo;
+        public DateTime? AvailableTo
+        {
+            get => availableTo;
+            set => SetProperty(ref availableTo, value);
+        }
+
+        // ... existing validation methods ...
+
+        /// <summary>
+        /// Validates job-specific details when Jobs category is selected
+        /// </summary>
+        /// <returns>True if valid, false otherwise</returns>
+        private bool ValidateJobDetails()
+        {
+            if (SelectedCategory == "Jobs" && string.IsNullOrEmpty(JobType))
+            {
+                CategoryError = "Job type is required for Jobs category";
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Validates service-specific details when Services category is selected
+        /// </summary>
+        /// <returns>True if valid, false otherwise</returns>
+        private bool ValidateServiceDetails()
+        {
+            if (SelectedCategory == "Services" && string.IsNullOrEmpty(ServiceType))
+            {
+                CategoryError = "Service type is required for Services category";
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Validates rental-specific details when Rentals category is selected
+        /// </summary>
+        /// <returns>True if valid, false otherwise</returns>
+        private bool ValidateRentalDetails()
+        {
+            if (SelectedCategory == "Rentals")
+            {
+                if (string.IsNullOrEmpty(RentalPeriod))
+                {
+                    CategoryError = "Rental period is required for Rentals category";
+                    return false;
+                }
+                if (!AvailableFrom.HasValue || !AvailableTo.HasValue)
+                {
+                    CategoryError = "Available dates are required for Rentals category";
+                    return false;
+                }
+                if (AvailableFrom > AvailableTo)
+                {
+                    CategoryError = "Available from date must be before available to date";
+                    return false;
+                }
+            }
+            return true;
+        }
         /// <summary>
         /// Validates the item category
         /// Checks if the category is one of the allowed values
@@ -313,6 +422,20 @@ namespace Market.ViewModels
                          ValidateDescription() &&
                          ValidatePrice() &&
                          ValidateCategory();
+
+            // Perform category-specific validations
+            switch (SelectedCategory)
+            {
+                case "Jobs":
+                    isValid &= ValidateJobDetails();
+                    break;
+                case "Services":
+                    isValid &= ValidateServiceDetails();
+                    break;
+                case "Rentals":
+                    isValid &= ValidateRentalDetails();
+                    break;
+            }
 
             Debug.WriteLine($"CanSaveItem check - " +
                            $"IsBusy: {IsBusy}, " +
@@ -353,7 +476,7 @@ namespace Market.ViewModels
                 var photo = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
                 {
                     Title = "Select a photo"
-                    
+
                 });
                 Debug.WriteLine($"Photo picked: before checking if phote is  null");
                 if (photo == null) return;
@@ -404,7 +527,7 @@ namespace Market.ViewModels
         /// Cleans up temporary photo files
         /// Called when upload fails or item save fails
         /// </summary>
-        private void  CleanupPhoto(string? photoPath)
+        private void CleanupPhoto(string? photoPath)
         {
             if (string.IsNullOrEmpty(photoPath)) return;
 
@@ -494,52 +617,47 @@ namespace Market.ViewModels
         /// Saves the item to the marketplace
         /// Validates all fields and handles photo path storage
         /// </summary>
-       
+
+        /// <summary>
+        /// Saves the item to the database
+        /// </summary>
         [RelayCommand(CanExecute = nameof(CanSaveItem))]
+#pragma warning disable CS1998 // Async method lacks 'await' operators
         private async Task SaveItem()
         {
-            Debug.WriteLine("SaveItem method called**************************************");
-            if (IsBusy) return;
+            if (IsBusy)
+                return;
 
             try
             {
                 IsBusy = true;
-                Debug.WriteLine("Starting item save process...");
+                Debug.WriteLine("Starting item save");
 
-                // Create new item from form data
+                // Create new item with all relevant fields
                 var item = new Item
                 {
                     Title = Title,
                     Description = Description,
                     Price = Price,
-                    Status = Category,
+                    Category = SelectedCategory,
+                    PhotoUrl = PhotoUrl,  // Add the photo URL
                     ListedDate = DateTime.UtcNow,
-                    UserId = 1 // TODO: Get actual user ID from AuthService
+                    UserId = 1, // TODO: Get actual user ID from AuthService
+                    JobType = SelectedCategory == "Jobs" ? JobType : null,
+                    ServiceType = SelectedCategory == "Services" ? ServiceType : null,
+                    RentalPeriod = SelectedCategory == "Rentals" ? RentalPeriod : null,
+                    AvailableFrom = SelectedCategory == "Jobs" || SelectedCategory == "Rentals" ? AvailableFrom : null,
+                    AvailableTo = SelectedCategory == "Rentals" ? AvailableTo : null
                 };
-                Debug.WriteLine("THE ITEM HAS BEEN CREATED SO FAR");
 
-                Debug.WriteLine($"Created item: Title={item.Title}, Price={item.Price}, Category={item.Status}");
+                // Save the item using the item service
+                var result = await _itemService.AddItemAsync(item);
 
-                // Handle photo path
-                if (!string.IsNullOrEmpty(PhotoUrl))
-                {
-                    Debug.WriteLine($"Photo path set: {PhotoUrl}");
-                    Debug.WriteLine($"Photo path set: path of the photo is not nuuuuuuuuuuuuuuuuuuuul");
-
-                    var relativePath = PhotoUrl.Replace(FileSystem.AppDataDirectory, string.Empty);
-                    item.PhotoUrl = relativePath;
-                    Debug.WriteLine($"Photo path set: {item.PhotoUrl}");
-                    Debug.WriteLine($"phot is uploaded here");
-                }
-
-                // Save item to database
-                var success = await _itemService.AddItemAsync(item);
-                Debug.WriteLine($"Item saved: {success}");
-
-                if (success)
+                if (result)
                 {
                     Debug.WriteLine("Item saved successfully");
                     await Shell.Current.DisplayAlert("Success", "Item posted successfully!", "OK");
+                    // Navigate back to the previous page
                     await Shell.Current.GoToAsync("..");
                 }
                 else
@@ -551,14 +669,21 @@ namespace Market.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error saving item: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Shell.Current.DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+
+                // Cleanup photo if save failed
+                if (!string.IsNullOrEmpty(PhotoUrl))
+                {
+                    CleanupPhoto(PhotoUrl);
+                    PhotoUrl = null;
+                }
             }
             finally
             {
                 IsBusy = false;
             }
         }
-        #endregion
+
     }
 }
+#endregion

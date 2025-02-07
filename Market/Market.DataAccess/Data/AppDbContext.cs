@@ -18,7 +18,14 @@ namespace Market.DataAccess.Data
             Debug.WriteLine("AppDbContext constructor called");
         }
 
-           protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // method in the AppDbContext to recreate the database
+        public async Task RecreateDatabase()
+        {
+            await Database.EnsureDeletedAsync();
+            await Database.EnsureCreatedAsync();
+            Debug.WriteLine("Database recreated successfully");
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
            {
                base.OnModelCreating(modelBuilder);
 
@@ -45,21 +52,32 @@ namespace Market.DataAccess.Data
                        .ValueGeneratedOnAdd();
                });
 
-               modelBuilder.Entity<Item>(entity =>
-               {
-                   entity.ToTable("Items");
-                   entity.HasKey(e => e.Id);
-                   entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
-                   entity.Property(e => e.Description).IsRequired();
-                   entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
-                   entity.Property(e => e.PhotoUrl).IsRequired(false);
-                   entity.Property(e => e.Status).IsRequired();
-                   entity.Property(e => e.ListedDate)
-                       .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                       .ValueGeneratedOnAdd();
-               });
+            modelBuilder.Entity<Item>(entity =>
+            {
+                entity.ToTable("Items");
+                entity.HasKey(e => e.Id);
 
-               modelBuilder.Entity<Message>(entity =>
+                // Required fields
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired();
+                entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Category).IsRequired();
+
+                // Optional fields
+                entity.Property(e => e.PhotoUrl).IsRequired(false);
+                entity.Property(e => e.JobType).IsRequired(false);
+                entity.Property(e => e.ServiceType).IsRequired(false);
+                entity.Property(e => e.RentalPeriod).IsRequired(false);
+                entity.Property(e => e.AvailableFrom).IsRequired(false);
+                entity.Property(e => e.AvailableTo).IsRequired(false);
+
+                // Generated fields
+                entity.Property(e => e.ListedDate)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAdd();
+            });
+
+            modelBuilder.Entity<Message>(entity =>
                {
                    entity.ToTable("Messages");
                    entity.HasKey(e => e.Id);

@@ -32,8 +32,8 @@
        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
        <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
-   </PropertyGroup>
-
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
    <ItemGroup>
        <!-- App Icon -->
        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
@@ -42,6 +42,7 @@
        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
        <!-- Navigation Images -->
+	   <MauiImage Include="Resources\Images\accounticon.png" />
        <MauiImage Include="Resources\Images\sellicon.png" />
        <MauiImage Include="Resources\Images\jobsicon.png" />
        <MauiImage Include="Resources\Images\servicesicon.png" />

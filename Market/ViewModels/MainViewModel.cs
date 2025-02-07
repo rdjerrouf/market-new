@@ -152,7 +152,7 @@ namespace Market.ViewModels
 
                 var allItems = await _itemService.GetItemsAsync();
                 var filteredItems = allItems
-                    .Where(item => item.Status.Equals(category, StringComparison.OrdinalIgnoreCase))
+                    .Where(item => item.Category.Equals(category, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
                 Items.Clear();

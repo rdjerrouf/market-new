@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Market.Services;
 using Market.ViewModels;
+using Market.Converters;
 using Market.Views;
 using Market.DataAccess.Models;
 using Market.DataAccess.Data;
@@ -12,31 +13,57 @@ namespace Market
     // Static class responsible for MAUI application setup and configuration
     public static class MauiProgram
     {
+
+        // Initializes the database with required schema
+        private static async Task InitializeDatabase(MauiApp app)
+        {
+            Debug.WriteLine("Initializing database...");
+
+            using var scope = app.Services.CreateScope();
+            try
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var dbPath = Path.Combine(FileSystem.AppDataDirectory, "market.db");
+
+                // Delete all SQLite files if they exist
+                if (File.Exists(dbPath))
+                    File.Delete(dbPath);
+                if (File.Exists(dbPath + "-shm"))
+                    File.Delete(dbPath + "-shm");
+                if (File.Exists(dbPath + "-wal"))
+                    File.Delete(dbPath + "-wal");
+
+                Debug.WriteLine("Existing database files deleted");
+
+                // Create new database with updated schema
+                await context.Database.EnsureCreatedAsync();
+                Debug.WriteLine("New database created successfully");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Database initialization error: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        // Creates and configures the MAUI app to handle the async operation
         public static MauiApp CreateMauiApp()
         {
             Debug.WriteLine("Starting application initialization...");
 
             var builder = MauiApp.CreateBuilder();
 
-            // Configure basic MAUI settings
             ConfigureBasicSettings(builder);
-
-            // Set up database
             ConfigureDatabase(builder);
-
-            // Register services, viewmodels, and pages
             RegisterServices(builder);
             RegisterViewModels(builder);
             RegisterPages(builder);
-
-            // Configure debug settings
             ConfigureDebugSettings(builder);
 
-            // Build the application
             var app = builder.Build();
 
-            // Initialize database
-            InitializeDatabase(app);
+            // Initialize database asynchronously but wait for it to complete
+            Task.Run(async () => await InitializeDatabase(app)).GetAwaiter().GetResult();
 
             Debug.WriteLine("Application initialization completed");
             return app;
@@ -86,8 +113,15 @@ namespace Market
             // Add ItemService registration
             builder.Services.AddScoped<IItemService, ItemService>();
             builder.Services.AddScoped<IMessageService, MessageService>();
-            // Other service registrations...
-        }        // Registers view models with dependency injection
+            // Converter Registrations (Add these lines HERE)
+            builder.Services.AddTransient<StringToBoolConverter>();
+            builder.Services.AddTransient<StringEqualityConverter>();
+            builder.Services.AddTransient<InverseBoolConverter>();
+            builder.Services.AddTransient<StringNotNullOrEmptyBoolConverter>();
+            builder.Services.AddTransient<BoolToColorConverter>();
+            builder.Services.AddTransient<BoolToFontAttributesConverter>();
+            Debug.WriteLine("Converters registered."); // Add a debug log for verification.
+        }   // Registers view models with dependency injection
         private static void RegisterViewModels(MauiAppBuilder builder)
         {
             Debug.WriteLine("Registering ViewModels...");
@@ -124,31 +158,6 @@ namespace Market
         }
 
         // Initializes the database with required schema
-        private static void InitializeDatabase(MauiApp app)
-        {
-            Debug.WriteLine("Initializing database...");
-
-            using var scope = app.Services.CreateScope();
-            try
-            {
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var dbPath = Path.Combine(FileSystem.AppDataDirectory, "market.db");
-
-                if (!File.Exists(dbPath))
-                {
-                    context.Database.EnsureCreated();
-                    Debug.WriteLine("Database created successfully");
-                }
-                else if (context.Database.CanConnect())
-                {
-                    Debug.WriteLine("Successfully connected to existing database");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Database initialization error: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-            }
-        }
+        
     }
 }

@@ -146,7 +146,7 @@ namespace Market.Services
 
                 if (!string.IsNullOrWhiteSpace(category))
                 {
-                    query = query.Where(i => i.Status == category);
+                    query = query.Where(i => i.Category == category);
                 }
 
                 return await query

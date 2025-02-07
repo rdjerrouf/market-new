@@ -9,6 +9,9 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
+            <converters:StringEqualityConverter x:Key="StringEqualityConverter"/>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:StringNotNullOrEmptyBoolConverter x:Key="StringNotNullOrEmptyBoolConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
     <ScrollView>
@@ -52,17 +55,17 @@
                     <Label Text="Category"/>
                     <HorizontalStackLayout Spacing="10">
                         <RadioButton 
-    Content="For Sale" 
-    IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=For Sale}"/>
+                            Content="For Sale" 
+                            IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=For Sale}"/>
                         <RadioButton 
-    Content="Jobs" 
-    IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Jobs}"/>
+                            Content="Jobs" 
+                            IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Jobs}"/>
                         <RadioButton 
-    Content="Services" 
-    IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Services}"/>
+                            Content="Services" 
+                            IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Services}"/>
                         <RadioButton 
-    Content="Rentals" 
-    IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Rentals}"/>
+                            Content="Rentals" 
+                            IsChecked="{Binding SelectedCategory, Mode=TwoWay, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Rentals}"/>
                     </HorizontalStackLayout>
                     <Label 
                         Text="{Binding CategoryError}"
@@ -83,6 +86,24 @@
                     TextColor="Red"
                     FontSize="12"
                     IsVisible="{Binding PriceError, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"/>
+            </VerticalStackLayout>
+
+            <!-- Job-specific fields -->
+            <VerticalStackLayout IsVisible="{Binding SelectedCategory, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Jobs'}">
+                <Entry Placeholder="Job Type" Text="{Binding JobType}"/>
+                <DatePicker Date="{Binding AvailableFrom}" />
+            </VerticalStackLayout>
+
+            <!-- Service-specific fields -->
+            <VerticalStackLayout IsVisible="{Binding SelectedCategory, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Services'}">
+                <Entry Placeholder="Service Type" Text="{Binding ServiceType}"/>
+            </VerticalStackLayout>
+
+            <!-- Rental-specific fields -->
+            <VerticalStackLayout IsVisible="{Binding SelectedCategory, Converter={StaticResource StringEqualityConverter}, ConverterParameter='Rentals'}">
+                <Entry Placeholder="Rental Period" Text="{Binding RentalPeriod}"/>
+                <DatePicker Date="{Binding AvailableFrom}" />
+                <DatePicker Date="{Binding AvailableTo}" />
             </VerticalStackLayout>
 
             <!-- Photo Upload Section -->

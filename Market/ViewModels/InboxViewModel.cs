@@ -45,8 +45,14 @@ namespace Market.ViewModels
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
-        }        
-                 /// Constructor for InboxViewModel
+        }
+
+        private bool _isRead;
+        public bool IsRead
+        {
+            get => _isRead;
+            set => SetProperty(ref _isRead, value);
+        }
         [RelayCommand]
         private async Task LoadMessagesAsync()
         {

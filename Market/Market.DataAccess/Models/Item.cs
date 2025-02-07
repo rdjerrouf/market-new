@@ -5,10 +5,11 @@ using System.ComponentModel.DataAnnotations;
 namespace Market.DataAccess.Models
 {
     /// <summary>
-    /// Represents a marketplace item listing
+    /// Represents a marketplace item listing, accommodating various categories such as For Sale, Jobs, Services, and Rentals
     /// </summary>
     public class Item
     {
+        // Existing properties
         /// <summary>
         /// Unique identifier for the item
         /// </summary>
@@ -32,11 +33,12 @@ namespace Market.DataAccess.Models
         public string? PhotoUrl { get; set; }
 
         /// <summary>
-        /// Price of the item
+        /// Price of the item or rate for service/job
         /// </summary>
         [Required]
-        [Range(1, 999999.99)]
-        public required decimal Price { get; set; } = 1.00M;
+        [Range(0, 999999.99)] // Changed minimum to 0 to allow free items/services
+        public required decimal Price { get; set; } = 0.00M;
+
         /// <summary>
         /// ID of user who posted the item
         /// </summary>
@@ -48,8 +50,35 @@ namespace Market.DataAccess.Models
         public DateTime ListedDate { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Current status of the item
+        /// Category of the item (e.g., For Sale, Jobs, Services, Rentals)
         /// </summary>
-        public required string Status { get; set; } = "Available";
+        [Required]
+        public required string Category { get; set; } // Changed from Status to Category
+
+        // New properties for different categories
+        /// <summary>
+        /// Type of job (e.g., Full-time, Part-time) - only for Jobs category
+        /// </summary>
+        public string? JobType { get; set; }
+
+        /// <summary>
+        /// Type of service offered - only for Services category
+        /// </summary>
+        public string? ServiceType { get; set; }
+
+        /// <summary>
+        /// Rental period (e.g., Daily, Weekly, Monthly) - only for Rentals category
+        /// </summary>
+        public string? RentalPeriod { get; set; }
+
+        /// <summary>
+        /// Start date for job or rental availability
+        /// </summary>
+        public DateTime? AvailableFrom { get; set; }
+
+        /// <summary>
+        /// End date for rental availability
+        /// </summary>
+        public DateTime? AvailableTo { get; set; }
     }
 }
