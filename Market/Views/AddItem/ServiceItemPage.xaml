@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels.AddItem"
+             xmlns:system="clr-namespace:System;assembly=netstandard"
+             x:Class="Market.Views.AddItem.ServiceItemPage"
+             x:DataType="viewmodels:ServiceItemViewModel"
+             Title="Post a Service">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            <!-- Service Title Input -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Service Title"
+                       FontSize="16"/>
+                <Entry Placeholder="Enter service title"
+                       Text="{Binding Title}"
+                       MaxLength="100"/>
+                <Label Text="{Binding TitleError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasTitleError}"/>
+            </VerticalStackLayout>
+
+            <!-- Service Category Selection -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Service Category"
+                       FontSize="16"/>
+                <Picker ItemsSource="{Binding ServiceCategories}"
+                        SelectedItem="{Binding ServiceCategory}"/>
+                <Label Text="{Binding CategoryError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasCategoryError}"/>
+            </VerticalStackLayout>
+
+            <!-- Rate Section -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Rate Details"
+                           FontSize="16"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Entry Grid.Column="0"
+                               Placeholder="Enter rate"
+                               Text="{Binding Rate}"
+                               Keyboard="Numeric"/>
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding RatePeriods}"
+                                SelectedItem="{Binding RatePeriod}"
+                                WidthRequest="120"/>
+                    </Grid>
+                    <Label Text="{Binding RateError}"
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding HasRateError}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Remote Availability -->
+            <VerticalStackLayout Spacing="5">
+                <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                    <CheckBox IsChecked="{Binding IsRemoteAvailable}"/>
+                    <Label Text="Remote service available"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- Experience Input -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Experience"
+                       FontSize="16"/>
+                <Editor Placeholder="Tell us about your experience (optional)"
+                        Text="{Binding Experience}"
+                        HeightRequest="100"
+                        AutoSize="TextChanges"/>
+            </VerticalStackLayout>
+
+            <!-- Service Area Input -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Service Area"
+                       FontSize="16"/>
+                <Entry Placeholder="Where do you provide your service? (optional)"
+                       Text="{Binding ServiceArea}"/>
+            </VerticalStackLayout>
+
+            <!-- Service Description -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Service Description"
+                       FontSize="16"/>
+                <Editor Placeholder="Describe your service in detail"
+                        Text="{Binding Description}"
+                        HeightRequest="150"
+                        AutoSize="TextChanges"/>
+                <Label Text="{Binding DescriptionError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasDescriptionError}"/>
+            </VerticalStackLayout>
+
+            <!-- Post Button -->
+            <Button Text="Post Service"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding CanSave}"
+                    BackgroundColor="#9C27B0"
+                    Margin="0,20"/>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                             IsVisible="{Binding IsBusy}"
+                             HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

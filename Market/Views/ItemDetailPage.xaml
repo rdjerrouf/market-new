@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             x:Class="Market.Views.ItemDetailPage"
+             x:DataType="viewmodels:ItemDetailViewModel"
+             Title="{Binding Title}">
+    <!-- Rest of your XAML remains the same, but now binds to Item properties -->
+    <ScrollView>
+        <VerticalStackLayout Padding="20">
+            <Image Source="{Binding Item.PhotoUrl}"
+                   HeightRequest="200"
+                   Aspect="AspectFit"
+                   Margin="0,0,0,20"/>
+            <Label Text="{Binding Item.Title}"
+                   FontSize="24"
+                   FontAttributes="Bold"/>
+            <!-- Update other bindings similarly -->
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

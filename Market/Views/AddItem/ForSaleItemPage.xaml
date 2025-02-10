@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- ForSaleItemPage.xaml - Specialized form for items being sold -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels.AddItem"
+             x:Class="Market.Views.AddItem.ForSaleItemPage"
+             x:DataType="viewmodels:ForSaleItemViewModel"
+             Title="Sell an Item">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            <!-- Title Input with Validation -->
+            <VerticalStackLayout Spacing="5">
+                <Entry Placeholder="What are you selling?"
+                       Text="{Binding Title}"
+                       MaxLength="100"/>
+                <Label Text="{Binding TitleError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasTitleError}"/>
+            </VerticalStackLayout>
+
+            <!-- Price Input with Validation -->
+            <VerticalStackLayout Spacing="5">
+                <Entry Placeholder="Price"
+                       Text="{Binding Price}"
+                       Keyboard="Numeric"/>
+                <Label Text="{Binding PriceError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasPriceError}"/>
+            </VerticalStackLayout>
+
+            <!-- Description Input with Validation -->
+            <VerticalStackLayout Spacing="5">
+                <Editor Placeholder="Describe your item (condition, features, etc.)"
+                        Text="{Binding Description}"
+                        HeightRequest="100"
+                        AutoSize="TextChanges"/>
+                <Label Text="{Binding DescriptionError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasDescriptionError}"/>
+            </VerticalStackLayout>
+
+            <!-- Photo Upload Section -->
+            <Button Text="Add Photos"
+                    Command="{Binding UploadPhotoCommand}"
+                    IsEnabled="{Binding IsNotBusy}"/>
+
+            <!-- Photo Preview -->
+            <Image IsVisible="{Binding HasPhoto}"
+                   Source="{Binding PhotoUrl}"
+                   HeightRequest="200"
+                   Aspect="AspectFit"/>
+
+            <!-- Post Button -->
+            <Button Text="Post For Sale"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding CanSave}"
+                    BackgroundColor="#2196F3"/>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                             IsVisible="{Binding IsBusy}"
+                             HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -5,6 +5,9 @@ namespace Market.Services
 {
     public interface IAuthService
     {
+       
+            Task<int> GetCurrentUserIdAsync(); // Add this method
+        
         // Existing methods
         Task<bool> RegisterUserAsync(User user);
         Task<User?> SignInAsync(string email, string password);

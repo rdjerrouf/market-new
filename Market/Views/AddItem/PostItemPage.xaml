@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels.AddItem"
+             x:Class="Market.Views.AddItem.PostItemPage"
+             x:DataType="viewmodels:AddItemViewModel"
+             Title="Choose Category">
+    
+    <Grid RowDefinitions="Auto,*" Padding="20">
+        <Label Text="What would you like to post?"
+               FontSize="24"
+               HorizontalOptions="Center"
+               Margin="0,20"/>
+        <VerticalStackLayout Grid.Row="1" 
+                            Spacing="20" 
+                            VerticalOptions="Center">
+            <Button Text="For Sale"
+                    Command="{Binding ForSaleCommand}"
+                    HeightRequest="60"
+                    BackgroundColor="#2196F3"/>
+            <Button Text="Rental"
+                    Command="{Binding RentalCommand}"
+                    HeightRequest="60"
+                    BackgroundColor="#4CAF50"/>
+            <Button Text="Job"
+                    Command="{Binding JobCommand}"
+                    HeightRequest="60"
+                    BackgroundColor="#FFC107"/>
+            <Button Text="Service"
+                    Command="{Binding ServiceCommand}"
+                    HeightRequest="60"
+                    BackgroundColor="#9C27B0"/>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

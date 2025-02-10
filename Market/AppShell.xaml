@@ -15,7 +15,27 @@
         Title="Register"
         ContentTemplate="{DataTemplate views:RegistrationPage}"
         Route="RegistrationPage" />
-
+    <!-- Add these inside your Shell -->
+    <ShellContent
+    Title="Add Item"
+    ContentTemplate="{DataTemplate views:AddItem.AddItemPage}"
+    Route="AddItemPage" />
+    <ShellContent
+    Title="For Sale"
+    ContentTemplate="{DataTemplate views:AddItem.ForSaleItemPage}"
+    Route="ForSaleItemPage" />
+    <ShellContent
+    Title="Rental"
+    ContentTemplate="{DataTemplate views:AddItem.RentalItemPage}"
+    Route="RentalItemPage" />
+    <ShellContent
+    Title="Job"
+    ContentTemplate="{DataTemplate views:AddItem.JobItemPage}"
+    Route="JobItemPage" />
+    <ShellContent
+    Title="Service"
+    ContentTemplate="{DataTemplate views:AddItem.ServiceItemPage}"
+    Route="ServiceItemPage" />
     <!-- Main Content -->
     <ShellContent
         Title="Market"

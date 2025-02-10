@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels.AddItem"
+             xmlns:system="clr-namespace:System;assembly=netstandard"
+             x:Class="Market.Views.AddItem.JobItemPage"
+             x:DataType="viewmodels:JobItemViewModel"
+             Title="Post a Job">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            <!-- Job Title Input -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Job Title"
+                       FontSize="16"/>
+                <Entry Placeholder="Enter job title"
+                       Text="{Binding Title}"
+                       MaxLength="100"/>
+                <Label Text="{Binding TitleError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasTitleError}"/>
+            </VerticalStackLayout>
+
+            <!-- Employment Type Selection -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Employment Type"
+                       FontSize="16"/>
+                <Picker ItemsSource="{Binding EmploymentTypes}"
+                        SelectedItem="{Binding EmploymentType}"/>
+                <Label Text="{Binding EmploymentTypeError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasEmploymentTypeError}"/>
+            </VerticalStackLayout>
+
+            <!-- Salary Section -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Salary Details"
+                           FontSize="16"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Entry Grid.Column="0"
+                               Placeholder="Enter salary"
+                               Text="{Binding Salary}"
+                               Keyboard="Numeric"/>
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding SalaryPeriods}"
+                                SelectedItem="{Binding SalaryPeriod}"
+                                WidthRequest="120"/>
+                    </Grid>
+                    <Label Text="{Binding SalaryError}"
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding HasSalaryError}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Start Date -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Job Start Date"
+                       FontSize="16"/>
+                <DatePicker Date="{Binding StartDate}"
+                            MinimumDate="{x:Static system:DateTime.Today}"/>
+                <Label Text="{Binding DateError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasDateError}"/>
+            </VerticalStackLayout>
+
+            <!-- Job Description -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Job Description"
+                       FontSize="16"/>
+                <Editor Placeholder="Describe the role, responsibilities, and requirements"
+                        Text="{Binding Description}"
+                        HeightRequest="150"
+                        AutoSize="TextChanges"/>
+                <Label Text="{Binding DescriptionError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasDescriptionError}"/>
+            </VerticalStackLayout>
+
+            <!-- Post Button -->
+            <Button Text="Post Job"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding CanSave}"
+                    BackgroundColor="#FFC107"
+                    Margin="0,20"/>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                             IsVisible="{Binding IsBusy}"
+                             HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

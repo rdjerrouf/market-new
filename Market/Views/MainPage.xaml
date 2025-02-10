@@ -10,30 +10,42 @@
     <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="15,10">
         <!-- Search Bar Row -->
         <Grid Grid.Row="0" 
-      ColumnDefinitions="*,50" 
-      Margin="0,0,0,10">
+              ColumnDefinitions="*,50" 
+              Margin="0,0,0,10">
             <!-- Search Bar -->
             <SearchBar Grid.Column="0"
-               Placeholder="Search" 
-               Text="{Binding SearchQuery}"
-               SearchCommand="{Binding SearchCommand}"
-               SearchCommandParameter="{Binding Text, Source={RelativeSource Self}}"
-               Margin="0,0,10,0"/>
+                       Placeholder="Search" 
+                       Text="{Binding SearchQuery}"
+                       SearchCommand="{Binding SearchCommand}"
+                       SearchCommandParameter="{Binding Text, Source={RelativeSource Self}}"
+                       Margin="0,0,10,0"/>
 
             <!-- Account Icon -->
             <Frame Grid.Column="1"
-           HeightRequest="40"
-           WidthRequest="40"
-           CornerRadius="20"
-           Padding="0"
-           BackgroundColor="LightGray"
-           HorizontalOptions="End"
-           VerticalOptions="Center">
+                   HeightRequest="40"
+                   WidthRequest="40"
+                   CornerRadius="20"
+                   Padding="0"
+                   BackgroundColor="LightGray"
+                   HorizontalOptions="End"
+                   VerticalOptions="Center">
                 <ImageButton Source="accounticon.png"
-                     HeightRequest="40"
-                     WidthRequest="40"
-                     Aspect="AspectFit"
-                     BackgroundColor="Transparent"/>
+                            HeightRequest="40"
+                            WidthRequest="40"
+                            Command="{Binding AccountCommand}"
+                            Aspect="AspectFit"
+                            BackgroundColor="Transparent">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
             </Frame>
         </Grid>
 
@@ -48,7 +60,18 @@
                             Command="{Binding ForSaleCommand}"
                             HeightRequest="50"
                             WidthRequest="50"
-                            Margin="0,0,0,5"/>
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
                 <Label Text="For Sale"
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>
@@ -60,7 +83,18 @@
                             Command="{Binding JobsCommand}"
                             HeightRequest="50"
                             WidthRequest="50"
-                            Margin="0,0,0,5"/>
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
                 <Label Text="Jobs"
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>
@@ -72,7 +106,18 @@
                             Command="{Binding ServicesCommand}"
                             HeightRequest="50"
                             WidthRequest="50"
-                            Margin="0,0,0,5"/>
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
                 <Label Text="Services"
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>
@@ -84,41 +129,75 @@
                             Command="{Binding RentalsCommand}"
                             HeightRequest="50"
                             WidthRequest="50"
-                            Margin="0,0,0,5"/>
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
                 <Label Text="Rentals"
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>
         </Grid>
 
-        <!-- Items List -->
-        <CollectionView Grid.Row="2"
-                       ItemsSource="{Binding Items}"
-                       EmptyView="No items found"
-                       Margin="0,10">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:Item">
-                    <Frame Margin="0,0,0,10" Padding="10">
-                        <Grid RowDefinitions="Auto,Auto"
-                              ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" 
-                                   Text="{Binding Title}"
-                                   FontSize="16"
-                                   FontAttributes="Bold"/>
-                            <Entry Grid.Column="1"
-                                   Text="{Binding Price}"
-                                    Keyboard="Numeric"
-                                   Placeholder="Enter price"
-                       FontAttributes="Bold"/>
-                            <Label Grid.Row="1" 
-                                   Grid.ColumnSpan="2"
-                                   Text="{Binding Description}"
-                                   LineBreakMode="TailTruncation"
-                                   MaxLines="2"/>
-                        </Grid>
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+        <!-- Items List with RefreshView -->
+        <RefreshView Grid.Row="2"
+                     Command="{Binding RefreshCommand}"
+                     IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Items}"
+                           SelectionMode="Single"
+                           EmptyView="No items found"
+                           Margin="0,10">
+                <CollectionView.EmptyViewTemplate>
+                    <DataTemplate>
+                        <StackLayout HorizontalOptions="Center" 
+                                   VerticalOptions="Center">
+                            <Label Text="No items found"
+                                   HorizontalOptions="Center"
+                                   TextColor="Gray"
+                                   FontSize="16"/>
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.EmptyViewTemplate>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Item">
+                        <Frame Margin="0,0,0,10" 
+                               Padding="10"
+                               BorderColor="LightGray">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer 
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=ItemTappedCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Frame.GestureRecognizers>
+                            <Grid RowDefinitions="Auto,Auto"
+                                  ColumnDefinitions="*,Auto"
+                                  RowSpacing="5">
+                                <Label Grid.Column="0" 
+                                       Text="{Binding Title}"
+                                       FontSize="16"
+                                       FontAttributes="Bold"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding Price, StringFormat='{0:C}'}"
+                                       FontAttributes="Bold"
+                                       TextColor="DarkGreen"/>
+                                <Label Grid.Row="1" 
+                                       Grid.ColumnSpan="2"
+                                       Text="{Binding Description}"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="DimGray"
+                                       MaxLines="2"/>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
 
         <!-- Bottom Navigation -->
         <Grid Grid.Row="3" 
@@ -131,7 +210,18 @@
                             Command="{Binding HomeCommand}"
                             HeightRequest="50"
                             WidthRequest="50"
-                            Margin="0,0,0,5"/>
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
                 <Label Text="Home"
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>
@@ -143,7 +233,18 @@
                             Command="{Binding InboxCommand}"
                             HeightRequest="50"
                             WidthRequest="50"
-                            Margin="0,0,0,5"/>
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
                 <Label Text="Inbox"
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>
@@ -155,7 +256,18 @@
                             Command="{Binding PostCommand}"
                             HeightRequest="50"
                             WidthRequest="50"
-                            Margin="0,0,0,5"/>
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
                 <Label Text="Post"
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>
@@ -167,7 +279,18 @@
                             Command="{Binding MyListingsCommand}"
                             HeightRequest="50"
                             WidthRequest="50"
-                            Margin="0,0,0,5"/>
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
                 <Label Text="Listings"
                        HorizontalOptions="Center"/>
             </VerticalStackLayout>

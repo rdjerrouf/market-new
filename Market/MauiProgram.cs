@@ -2,8 +2,9 @@
 using Market.Services;
 using Market.ViewModels;
 using Market.Converters;
+using Market.Views.AddItem;
 using Market.Views;
-using Market.DataAccess.Models;
+using Market.ViewModels.AddItem;
 using Market.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -125,28 +126,41 @@ namespace Market
         private static void RegisterViewModels(MauiAppBuilder builder)
         {
             Debug.WriteLine("Registering ViewModels...");
-
+            // In ConfigureServices or similar method
+            builder.Services.AddTransient<AddItemViewModel>();
+            builder.Services.AddTransient<ForSaleItemViewModel>();
+            builder.Services.AddTransient<RentalItemViewModel>();
+            builder.Services.AddTransient<JobItemViewModel>();
+            builder.Services.AddTransient<ServiceItemViewModel>();
             builder.Services.AddTransient<SignInViewModel>();
             builder.Services.AddTransient<RegistrationViewModel>();
             builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddTransient<SearchViewModel>();
-            builder.Services.AddTransient<PostItemViewModel>();
             builder.Services.AddTransient<InboxViewModel>();
             builder.Services.AddTransient<MyListingsViewModel>();
+            builder.Services.AddTransient<PasswordResetViewModel>();
+            builder.Services.AddTransient<ItemDetailViewModel>();
         }
 
+        // Registers pages with dependency injection
         // Registers pages with dependency injection
         private static void RegisterPages(MauiAppBuilder builder)
         {
             Debug.WriteLine("Registering Pages...");
-
-            builder.Services.AddTransient<MainPage>();
+            // In ConfigureServices or similar method
             builder.Services.AddTransient<SignInPage>();
+            builder.Services.AddTransient<AddItemPage>();
+            builder.Services.AddTransient<ForSaleItemPage>();
+            builder.Services.AddTransient<RentalItemPage>();
+            builder.Services.AddTransient<JobItemPage>();
+            builder.Services.AddTransient<ServiceItemPage>();
+            builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<RegistrationPage>();
             builder.Services.AddTransient<SearchPage>();
             builder.Services.AddTransient<PostItemPage>();
             builder.Services.AddTransient<InboxPage>();
             builder.Services.AddTransient<MyListingsPage>();
+            builder.Services.AddTransient<ItemDetailPage>();
         }
 
         // Configures debug settings for development

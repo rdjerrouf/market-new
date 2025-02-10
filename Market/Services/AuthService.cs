@@ -255,5 +255,44 @@ namespace Market.Services
             }
         }
 
+
+        public async Task<int> GetCurrentUserIdAsync()
+        {
+            try
+            {
+                // Attempt to retrieve the stored user ID from secure storage
+                string? storedUserId = await SecureStorage.GetAsync("userId");
+
+                // Check if we have a stored user ID
+                if (string.IsNullOrEmpty(storedUserId))
+                {
+                    Debug.WriteLine("No stored user ID found. User is not logged in.");
+                    throw new InvalidOperationException("No user is currently logged in.");
+                }
+
+                // Attempt to parse the stored user ID to an integer
+                if (!int.TryParse(storedUserId, out int userId))
+                {
+                    Debug.WriteLine("Stored user ID is invalid.");
+                    throw new InvalidOperationException("Invalid stored user ID.");
+                }
+
+                // Optional: Additional verification by checking if user exists in database
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    Debug.WriteLine($"User with ID {userId} not found in database.");
+                    throw new InvalidOperationException("Current user not found in database.");
+                }
+
+                Debug.WriteLine($"Successfully retrieved current user ID: {userId}");
+                return userId;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in GetCurrentUserIdAsync: {ex.Message}");
+                throw; // Re-throw to allow caller to handle the error
+            }
+        }
     }
 }

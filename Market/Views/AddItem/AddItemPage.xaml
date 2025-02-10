@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- AddItemPage.xaml - Category selection page for posting new items -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels.AddItem"
+             x:Class="Market.Views.AddItem.AddItemPage"
+             x:DataType="viewmodels:AddItemViewModel"
+             Title="Choose Category">
+
+    <!-- Main layout grid with row for title and content -->
+    <Grid RowDefinitions="Auto,*" Padding="20">
+        <!-- Page title/instruction -->
+        <Label Text="What would you like to post?"
+               FontSize="24"
+               HorizontalOptions="Center"
+               Margin="0,20"/>
+
+        <!-- Category selection buttons container -->
+        <VerticalStackLayout Grid.Row="1" 
+                            Spacing="20" 
+                            VerticalOptions="Center">
+            <!-- For Sale - Used for items being sold -->
+            <Button Text="For Sale"
+                    Command="{Binding ForSaleCommand}"
+                    HeightRequest="60"
+                    BackgroundColor="#2196F3">
+                <Button.ImageSource>
+                    <FileImageSource File="sellicon.png"/>
+                </Button.ImageSource>
+            </Button>
+
+            <!-- Rental - Used for property and item rentals -->
+            <Button Text="Rental"
+                    Command="{Binding RentalCommand}"
+                    HeightRequest="60"
+                    BackgroundColor="#4CAF50">
+                <Button.ImageSource>
+                    <FileImageSource File="renticon.png"/>
+                </Button.ImageSource>
+            </Button>
+
+            <!-- Job - Used for job listings -->
+            <Button Text="Job"
+                    Command="{Binding JobCommand}"
+                    HeightRequest="60"
+                    BackgroundColor="#FFC107">
+                <Button.ImageSource>
+                    <FileImageSource File="jobsicon.png"/>
+                </Button.ImageSource>
+            </Button>
+
+            <!-- Service - Used for service offerings -->
+            <Button Text="Service"
+                    Command="{Binding ServiceCommand}"
+                    HeightRequest="60"
+                    BackgroundColor="#9C27B0">
+                <Button.ImageSource>
+                    <FileImageSource File="servicesicon.png"/>
+                </Button.ImageSource>
+            </Button>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Market.DataAccess.Models;
+﻿using Market.DataAccess.Models;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore; // Add this using directive
 
 namespace Market.DataAccess.Data
 {

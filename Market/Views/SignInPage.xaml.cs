@@ -3,6 +3,7 @@ using Market.ViewModels;
 using Market.Services;
 
 namespace Market.Views
+
 {
     public partial class SignInPage : ContentPage
     {
