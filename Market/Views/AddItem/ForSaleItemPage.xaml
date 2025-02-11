@@ -23,7 +23,7 @@
             <!-- Price Input with Validation -->
             <VerticalStackLayout Spacing="5">
                 <Entry Placeholder="Price"
-                       Text="{Binding Price}"
+                       Text="{Binding Price, Mode=TwoWay}"
                        Keyboard="Numeric"/>
                 <Label Text="{Binding PriceError}"
                        TextColor="Red"

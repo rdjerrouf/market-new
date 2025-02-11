@@ -1,4 +1,5 @@
 ﻿using System.Windows.Input;
+using System.Diagnostics;
 using Market.DataAccess;
 using Market.Services;
 using Market.Views;
@@ -10,6 +11,7 @@ namespace Market.ViewModels
         private readonly IAuthService _authService;
         private string _email = string.Empty;
         private string _password = string.Empty;
+        private bool _isSigningIn;
 
         public SignInViewModel(IAuthService authService)
         {
@@ -35,29 +37,60 @@ namespace Market.ViewModels
 
         private async Task SignInAsync()
         {
+            if (_isSigningIn) return;
+
             try
             {
+                _isSigningIn = true;
+
+                if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+                {
+                    await Shell.Current.DisplayAlert("Error", "Please enter both email and password", "OK");
+                    return;
+                }
+
+                Debug.WriteLine($"Attempting sign in for email: {Email}");
+
                 var user = await _authService.SignInAsync(Email, Password);
+
                 if (user is not null)
                 {
+                    Debug.WriteLine("Sign in successful, navigating to MainPage");
                     await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {
-                    await Shell.Current.DisplayAlert("Error", "Invalid credentials", "OK");
+                    Debug.WriteLine("Sign in failed - invalid credentials");
+                    await Shell.Current.DisplayAlert("Error", "Invalid email or password", "OK");
                 }
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Error", $"Sign in error: {ex.Message}", "OK");
+                Debug.WriteLine($"Sign in error: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
+                var errorMessage = "An error occurred during sign in. ";
+                if (ex.InnerException != null)
+                {
+                    Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    errorMessage += ex.InnerException.Message;
+                }
+                else
+                {
+                    errorMessage += ex.Message;
+                }
+
+                await Shell.Current.DisplayAlert("Error", errorMessage, "OK");
+            }
+            finally
+            {
+                _isSigningIn = false;
             }
         }
 
-        /// <summary>
-        /// Navigates to the registration page
-        /// </summary>
         private async Task RegisterAsync()
         {
+            if (_isSigningIn) return;
             await Shell.Current.GoToAsync("//RegistrationPage");
         }
     }

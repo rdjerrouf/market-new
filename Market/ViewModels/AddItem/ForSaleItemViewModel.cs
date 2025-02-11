@@ -171,6 +171,7 @@ namespace Market.ViewModels.AddItem
 
             PriceError = null;
             return true;
+            Debug.WriteLine("Price validated");
         }
 
         #endregion
@@ -188,25 +189,42 @@ namespace Market.ViewModels.AddItem
             try
             {
                 IsBusy = true;
+                Debug.WriteLine("Starting photo upload process");
 
-                var photo = await MediaPicker.PickPhotoAsync();
-                if (photo == null) return;
+                var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
+                {
+                    Title = "Select a photo"
+                });
 
-                // Validate photo
-                if (!await ValidatePhoto(photo)) return;
+                if (result == null)
+                {
+                    Debug.WriteLine("No photo selected");
+                    return;
+                }
 
-                // Save photo
-                var photoPath = await SavePhoto(photo);
+                Debug.WriteLine($"Photo selected: {result.FileName}");
+
+                if (!await ValidatePhoto(result))
+                {
+                    Debug.WriteLine("Photo validation failed");
+                    return;
+                }
+
+                var photoPath = await SavePhoto(result);
                 if (photoPath != null)
                 {
                     PhotoUrl = photoPath;
-                    await Shell.Current.DisplayAlert("Success", "Photo uploaded", "OK");
+                    OnPropertyChanged(nameof(HasPhoto));
+                    Debug.WriteLine($"Photo saved successfully at: {photoPath}");
+                    await Shell.Current.DisplayAlert("Success", "Photo uploaded successfully", "OK");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Photo upload error: {ex.Message}");
-                await Shell.Current.DisplayAlert("Error", "Failed to upload photo", "OK");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                await Shell.Current.DisplayAlert("Error",
+                    "Failed to upload photo. Please try again.", "OK");
             }
             finally
             {
@@ -308,19 +326,31 @@ namespace Market.ViewModels.AddItem
         {
             try
             {
-                var localPath = Path.Combine(FileSystem.AppDataDirectory,
-                    $"item_photo_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(photo.FileName)}");
+                // Create a photos directory if it doesn't exist
+                var photosDir = Path.Combine(FileSystem.AppDataDirectory, "Photos");
+                if (!Directory.Exists(photosDir))
+                    Directory.CreateDirectory(photosDir);
 
-                using var sourceStream = await photo.OpenReadAsync();
-                using var destinationStream = File.OpenWrite(localPath);
-                await sourceStream.CopyToAsync(destinationStream);
+                // Generate a unique filename
+                var fileName = $"item_photo_{Guid.NewGuid()}{Path.GetExtension(photo.FileName)}";
+                var localPath = Path.Combine(photosDir, fileName);
 
+                Debug.WriteLine($"Saving photo to: {localPath}");
+
+                using (var sourceStream = await photo.OpenReadAsync())
+                using (var destinationStream = File.Create(localPath))
+                {
+                    await sourceStream.CopyToAsync(destinationStream);
+                }
+
+                Debug.WriteLine("Photo saved successfully");
                 return localPath;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Photo save error: {ex.Message}");
-                return null;
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw; // Rethrow to handle in the calling method
             }
         }
 

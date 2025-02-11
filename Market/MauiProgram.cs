@@ -26,24 +26,34 @@ namespace Market
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var dbPath = Path.Combine(FileSystem.AppDataDirectory, "market.db");
 
-                // Delete all SQLite files if they exist
-                if (File.Exists(dbPath))
-                    File.Delete(dbPath);
-                if (File.Exists(dbPath + "-shm"))
-                    File.Delete(dbPath + "-shm");
-                if (File.Exists(dbPath + "-wal"))
-                    File.Delete(dbPath + "-wal");
-
-                Debug.WriteLine("Existing database files deleted");
-
-                // Create new database with updated schema
-                await context.Database.EnsureCreatedAsync();
-                Debug.WriteLine("New database created successfully");
+                // Only create if doesn't exist
+                if (!File.Exists(dbPath))
+                {
+                    Debug.WriteLine("Database file not found, creating new database...");
+                    await context.Database.EnsureCreatedAsync();
+                    Debug.WriteLine("New database created successfully");
+                }
+                else
+                {
+                    Debug.WriteLine("Database exists, checking connection...");
+                    // Verify database connection and schema
+                    if (!await context.Database.CanConnectAsync())
+                    {
+                        Debug.WriteLine("Cannot connect to existing database, recreating...");
+                        await context.Database.EnsureDeletedAsync();
+                        await context.Database.EnsureCreatedAsync();
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Database connection verified");
+                    }
+                }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Database initialization error: {ex.Message}");
                 Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw; // Rethrow to prevent app from starting with invalid database
             }
         }
 
@@ -94,6 +104,9 @@ namespace Market
                 options.EnableDetailedErrors();
                 options.EnableSensitiveDataLogging();
                 options.LogTo(message => Debug.WriteLine($"EF Core: {message}"));
+#else
+        // Release mode settings
+        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 #endif
             }, ServiceLifetime.Scoped);
         }
@@ -171,7 +184,7 @@ namespace Market
 #endif
         }
 
-        // Initializes the database with required schema
         
+
     }
 }

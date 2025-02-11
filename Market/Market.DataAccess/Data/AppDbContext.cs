@@ -94,5 +94,7 @@ namespace Market.DataAccess.Data
                Debug.WriteLine("Database model configuration completed");
            }
       
+
+
     }
 }
