@@ -170,8 +170,9 @@ namespace Market.ViewModels.AddItem
             }
 
             PriceError = null;
-            return true;
+            
             Debug.WriteLine("Price validated");
+            return true;
         }
 
         #endregion
@@ -235,6 +236,7 @@ namespace Market.ViewModels.AddItem
         /// <summary>
         /// Saves the For Sale item
         /// </summary>
+
         [RelayCommand]
         private async Task Save()
         {
@@ -243,12 +245,35 @@ namespace Market.ViewModels.AddItem
             try
             {
                 IsBusy = true;
+                Debug.WriteLine("Starting save process...");
 
+                // Validation check
                 if (!ValidateAll())
                 {
+                    Debug.WriteLine("Validation failed");
+                    return;
+                }
+                Debug.WriteLine("Validation passed");
+
+                // Get current user ID
+                Debug.WriteLine("Getting current user ID...");
+                int userId;
+                try
+                {
+                    userId = await _authService.GetCurrentUserIdAsync();
+                    Debug.WriteLine($"Got user ID: {userId}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to get current user ID: {ex.Message}");
+                    Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                    await Shell.Current.DisplayAlert("Error", "Please sign in to post items", "OK");
+                    await Shell.Current.GoToAsync("///SignInPage");
                     return;
                 }
 
+                // Create item
+                Debug.WriteLine("Creating item object...");
                 var item = new Item
                 {
                     Title = Title,
@@ -257,32 +282,43 @@ namespace Market.ViewModels.AddItem
                     Category = "For Sale",
                     PhotoUrl = PhotoUrl,
                     ListedDate = DateTime.UtcNow,
-                    UserId = await _authService.GetCurrentUserIdAsync()
+                    UserId = userId
                 };
+                Debug.WriteLine($"Item created: Title={item.Title}, Price={item.Price}, PhotoUrl={item.PhotoUrl}");
 
+                // Save item
+                Debug.WriteLine("Attempting to save item to database...");
                 var result = await _itemService.AddItemAsync(item);
 
                 if (result)
                 {
+                    Debug.WriteLine("Item saved successfully");
                     await Shell.Current.DisplayAlert("Success", "Your item has been posted!", "OK");
-                    await Shell.Current.GoToAsync("..");
+                    await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {
+                    Debug.WriteLine("Failed to save item to database");
                     await Shell.Current.DisplayAlert("Error", "Failed to post item", "OK");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Save error: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    Debug.WriteLine($"Inner stack trace: {ex.InnerException.StackTrace}");
+                }
                 await Shell.Current.DisplayAlert("Error", "An error occurred while saving", "OK");
             }
             finally
             {
                 IsBusy = false;
+                Debug.WriteLine("Save process completed");
             }
         }
-
         #endregion
 
         #region Helper Methods
@@ -302,21 +338,32 @@ namespace Market.ViewModels.AddItem
         /// </summary>
         private async Task<bool> ValidatePhoto(FileResult photo)
         {
-            using var stream = await photo.OpenReadAsync();
-            if (stream.Length > MAX_PHOTO_SIZE)
+            try
             {
-                await Shell.Current.DisplayAlert("Error", "Photo must be less than 5MB", "OK");
+                using var stream = await photo.OpenReadAsync();
+                if (stream.Length > MAX_PHOTO_SIZE)
+                {
+                    Debug.WriteLine($"Photo size ({stream.Length / 1024 / 1024}MB) exceeds limit of {MAX_PHOTO_SIZE / 1024 / 1024}MB");
+                    await Shell.Current.DisplayAlert("Error", "Photo must be less than 5MB", "OK");
+                    return false;
+                }
+
+                var extension = Path.GetExtension(photo.FileName).ToLowerInvariant();
+                if (extension != ".jpg" && extension != ".jpeg" && extension != ".png")
+                {
+                    Debug.WriteLine($"Invalid file extension: {extension}");
+                    await Shell.Current.DisplayAlert("Error", "Please select a JPG or PNG file", "OK");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Photo validation error: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Failed to validate photo", "OK");
                 return false;
             }
-
-            var extension = Path.GetExtension(photo.FileName).ToLowerInvariant();
-            if (extension != ".jpg" && extension != ".jpeg" && extension != ".png")
-            {
-                await Shell.Current.DisplayAlert("Error", "Please select a JPG or PNG file", "OK");
-                return false;
-            }
-
-            return true;
         }
 
         /// <summary>
@@ -326,8 +373,8 @@ namespace Market.ViewModels.AddItem
         {
             try
             {
-                // Create a photos directory if it doesn't exist
-                var photosDir = Path.Combine(FileSystem.AppDataDirectory, "Photos");
+                // Use MAUI's cache directory for photos
+                var photosDir = Path.Combine(FileSystem.CacheDirectory, "Photos");
                 if (!Directory.Exists(photosDir))
                     Directory.CreateDirectory(photosDir);
 
