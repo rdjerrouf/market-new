@@ -1,9 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Threading.Tasks;
 using Market.Services;
 using Market.DataAccess.Models;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Net.Mail;
 
 namespace Market.ViewModels.AddItem
 {
@@ -39,6 +41,14 @@ namespace Market.ViewModels.AddItem
             "per Year"
         };
 
+        // Apply Method Options
+        public List<ApplyMethod> ApplyMethods { get; } = Enum.GetValues(typeof(ApplyMethod))
+            .Cast<ApplyMethod>()
+            .ToList();
+        // Job Categories
+        public List<JobCategory> JobCategories { get; } = Enum.GetValues(typeof(JobCategory))
+            .Cast<JobCategory>()
+            .ToList();
         #endregion
 
         #region Observable Properties
@@ -64,14 +74,14 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref _salary, value);
         }
 
-        private string _employmentType;
+        private string _employmentType = string.Empty;
         public string EmploymentType
         {
             get => _employmentType;
             set => SetProperty(ref _employmentType, value);
         }
 
-        private string _salaryPeriod;
+        private string _salaryPeriod = string.Empty;
         public string SalaryPeriod
         {
             get => _salaryPeriod;
@@ -83,6 +93,55 @@ namespace Market.ViewModels.AddItem
         {
             get => _startDate;
             set => SetProperty(ref _startDate, value);
+        }
+
+        private ApplyMethod _selectedApplyMethod;
+        public ApplyMethod SelectedApplyMethod
+        {
+            get => _selectedApplyMethod;
+            set => SetProperty(ref _selectedApplyMethod, value);
+        }
+
+        private string _applyContact = string.Empty;
+        public string ApplyContact
+        {
+            get => _applyContact;
+            set => SetProperty(ref _applyContact, value);
+        }
+
+        private string? _applyContactError;
+        public string? ApplyContactError
+        {
+            get => _applyContactError;
+            set => SetProperty(ref _applyContactError, value);
+        }
+
+        private string _companyName = string.Empty;
+        public string CompanyName
+        {
+            get => _companyName;
+            set => SetProperty(ref _companyName, value);
+        }
+
+        private string? _companyNameError;
+        public string? CompanyNameError
+        {
+            get => _companyNameError;
+            set => SetProperty(ref _companyNameError, value);
+        }
+
+        private string _jobLocation = string.Empty;
+        public string JobLocation
+        {
+            get => _jobLocation;
+            set => SetProperty(ref _jobLocation, value);
+        }
+
+        private string? _jobLocationError;
+        public string? JobLocationError
+        {
+            get => _jobLocationError;
+            set => SetProperty(ref _jobLocationError, value);
         }
 
         private string? _titleError;
@@ -127,23 +186,34 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref _isBusy, value);
         }
 
+        private JobCategory _selectedJobCategory;
+        public JobCategory SelectedJobCategory
+        {
+            get => _selectedJobCategory;
+            set => SetProperty(ref _selectedJobCategory, value);
+        }
         #endregion
 
         #region Computed Properties
-
-        public bool CanSave => !IsBusy &&
-                              !HasTitleError &&
-                              !HasDescriptionError &&
-                              !HasSalaryError &&
-                              !HasEmploymentTypeError &&
-                              !HasDateError;
 
         public bool HasTitleError => !string.IsNullOrEmpty(TitleError);
         public bool HasDescriptionError => !string.IsNullOrEmpty(DescriptionError);
         public bool HasSalaryError => !string.IsNullOrEmpty(SalaryError);
         public bool HasEmploymentTypeError => !string.IsNullOrEmpty(EmploymentTypeError);
         public bool HasDateError => !string.IsNullOrEmpty(DateError);
-        public bool IsNotBusy => !IsBusy;
+        public bool HasApplyContactError => !string.IsNullOrEmpty(ApplyContactError);
+        public bool HasCompanyNameError => !string.IsNullOrEmpty(CompanyNameError);
+        public bool HasJobLocationError => !string.IsNullOrEmpty(JobLocationError);
+
+        public bool CanSave => !IsBusy &&
+                               !HasTitleError &&
+                               !HasDescriptionError &&
+                               !HasSalaryError &&
+                               !HasEmploymentTypeError &&
+                               !HasDateError &&
+                               !HasCompanyNameError &&
+                               !HasJobLocationError &&
+                               !HasApplyContactError;
 
         #endregion
 
@@ -152,11 +222,11 @@ namespace Market.ViewModels.AddItem
             _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
 
+            // Initialize defaults
             EmploymentType = EmploymentTypes[0];
             SalaryPeriod = SalaryPeriods[0];
-            _employmentType = EmploymentTypes[0];
-            _salaryPeriod = SalaryPeriods[0];
-
+            SelectedApplyMethod = ApplyMethods[0];
+            SelectedJobCategory = JobCategories[0];
 
             Debug.WriteLine("JobItemViewModel initialized");
         }
@@ -241,10 +311,125 @@ namespace Market.ViewModels.AddItem
             return true;
         }
 
+        private bool ValidateCompanyName()
+        {
+            if (string.IsNullOrWhiteSpace(CompanyName))
+            {
+                CompanyNameError = "Please enter a company name";
+                return false;
+            }
+
+            if (CompanyName.Length < 2)
+            {
+                CompanyNameError = "Company name must be at least 2 characters";
+                return false;
+            }
+
+            CompanyNameError = null;
+            return true;
+        }
+
+        private bool ValidateJobLocation()
+        {
+            if (string.IsNullOrWhiteSpace(JobLocation))
+            {
+                JobLocationError = "Please enter a job location";
+                return false;
+            }
+
+            if (JobLocation.Length < 3)
+            {
+                JobLocationError = "Job location must be at least 3 characters";
+                return false;
+            }
+
+            JobLocationError = null;
+            return true;
+        }
+
+        private bool ValidateApplyContact()
+        {
+            if (string.IsNullOrWhiteSpace(ApplyContact))
+            {
+                ApplyContactError = "Please enter contact information";
+                return false;
+            }
+
+            switch (SelectedApplyMethod)
+            {
+                case ApplyMethod.Email:
+                    if (!IsValidEmail(ApplyContact))
+                    {
+                        ApplyContactError = "Please enter a valid email address";
+                        return false;
+                    }
+                    break;
+                case ApplyMethod.PhoneNumber:
+                    if (!IsValidPhoneNumber(ApplyContact))
+                    {
+                        ApplyContactError = "Please enter a valid phone number";
+                        return false;
+                    }
+                    break;
+                case ApplyMethod.URL:
+                    if (!IsValidUrl(ApplyContact))
+                    {
+                        ApplyContactError = "Please enter a valid URL";
+                        return false;
+                    }
+                    break;
+            }
+
+            ApplyContactError = null;
+            return true;
+        }
+
+        private bool ValidateAll()
+        {
+            return ValidateTitle()
+                   && ValidateDescription()
+                   && ValidateSalary()
+                   && ValidateEmploymentType()
+                   && ValidateStartDate()
+                   && ValidateCompanyName()
+                   && ValidateJobLocation()
+                   && ValidateApplyContact();
+        }
+
         #endregion
 
-        #region Save Command
+        #region Helper Methods
 
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsValidPhoneNumber(string phoneNumber)
+        {
+            return Regex.IsMatch(
+                phoneNumber,
+                @"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$"
+            );
+        }
+
+        private bool IsValidUrl(string url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out Uri? uriResult)
+                   && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        }
+
+        #endregion
+
+        #region Save
         [RelayCommand]
         private async Task Save()
         {
@@ -270,7 +455,14 @@ namespace Market.ViewModels.AddItem
                     RentalPeriod = SalaryPeriod,
                     AvailableFrom = StartDate,
                     ListedDate = DateTime.UtcNow,
-                    UserId = await _authService.GetCurrentUserIdAsync()
+                    UserId = await _authService.GetCurrentUserIdAsync(),
+
+                    // New properties
+                    JobCategory = SelectedJobCategory,
+                    CompanyName = CompanyName,
+                    JobLocation = JobLocation,
+                    ApplyMethod = SelectedApplyMethod,
+                    ApplyContact = ApplyContact
                 };
 
                 Debug.WriteLine($"Saving job: {job.Title}, {job.Price} {job.RentalPeriod}");
@@ -296,20 +488,6 @@ namespace Market.ViewModels.AddItem
                 IsBusy = false;
             }
         }
-
-        #endregion
-
-        #region Helper Methods
-
-        private bool ValidateAll()
-        {
-            return ValidateTitle()
-                   && ValidateDescription()
-                   && ValidateSalary()
-                   && ValidateEmploymentType()
-                   && ValidateStartDate();
-        }
-
         #endregion
     }
 }

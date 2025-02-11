@@ -34,6 +34,53 @@
                        IsVisible="{Binding HasCategoryError}"/>
             </VerticalStackLayout>
 
+            <!-- Years of Experience -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Years of Experience"
+                       FontSize="16"/>
+                <Entry Placeholder="Enter years of experience"
+                       Text="{Binding YearsOfExperience}"
+                       Keyboard="Numeric"/>
+                <Label Text="{Binding YearsOfExperienceError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasYearsOfExperienceError}"/>
+            </VerticalStackLayout>
+
+            <!-- Number of Employees -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Number of Employees"
+                       FontSize="16"/>
+                <Entry Placeholder="Enter number of employees"
+                       Text="{Binding NumberOfEmployees}"
+                       Keyboard="Numeric"/>
+                <Label Text="{Binding NumberOfEmployeesError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasNumberOfEmployeesError}"/>
+            </VerticalStackLayout>
+
+            <!-- Service Location -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Service Location"
+                       FontSize="16"/>
+                <Entry Placeholder="Enter service location"
+                       Text="{Binding ServiceLocation}"
+                       MaxLength="200"/>
+                <Label Text="{Binding ServiceLocationError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasServiceLocationError}"/>
+            </VerticalStackLayout>
+
+            <!-- Service Availability -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Service Availability"
+                       FontSize="16"/>
+                <Picker ItemsSource="{Binding ServiceAvailabilities}"
+                        SelectedItem="{Binding SelectedServiceAvailability}"/>
+            </VerticalStackLayout>
+
             <!-- Rate Section -->
             <Frame BorderColor="LightGray" Padding="15">
                 <VerticalStackLayout Spacing="10">
@@ -67,9 +114,9 @@
 
             <!-- Experience Input -->
             <VerticalStackLayout Spacing="5">
-                <Label Text="Experience"
+                <Label Text="Additional Experience"
                        FontSize="16"/>
-                <Editor Placeholder="Tell us about your experience (optional)"
+                <Editor Placeholder="Tell us more about your experience (optional)"
                         Text="{Binding Experience}"
                         HeightRequest="100"
                         AutoSize="TextChanges"/>

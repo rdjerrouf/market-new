@@ -22,6 +22,56 @@
                        IsVisible="{Binding HasTitleError}"/>
             </VerticalStackLayout>
 
+            <!-- Job Category Selection -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Job Category"
+                       FontSize="16"/>
+                <Picker ItemsSource="{Binding JobCategories}"
+                        SelectedItem="{Binding SelectedJobCategory}"/>
+            </VerticalStackLayout>
+
+            <!-- Company Name -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Company Name"
+                       FontSize="16"/>
+                <Entry Placeholder="Enter company name"
+                       Text="{Binding CompanyName}"
+                       MaxLength="100"/>
+                <Label Text="{Binding CompanyNameError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasCompanyNameError}"/>
+            </VerticalStackLayout>
+
+            <!-- Job Location -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Job Location"
+                       FontSize="16"/>
+                <Entry Placeholder="Enter job location"
+                       Text="{Binding JobLocation}"
+                       MaxLength="200"/>
+                <Label Text="{Binding JobLocationError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasJobLocationError}"/>
+            </VerticalStackLayout>
+
+            <!-- Apply Method -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Apply Method"
+                       FontSize="16"/>
+                <Picker ItemsSource="{Binding 
+                    }"
+                        SelectedItem="{Binding SelectedApplyMethod}"/>
+                <Entry Placeholder="Enter contact information"
+                       Text="{Binding ApplyContact}"
+                       MaxLength="200"/>
+                <Label Text="{Binding ApplyContactError}"
+                       TextColor="Red"
+                       FontSize="12"
+                       IsVisible="{Binding HasApplyContactError}"/>
+            </VerticalStackLayout>
+
             <!-- Employment Type Selection -->
             <VerticalStackLayout Spacing="5">
                 <Label Text="Employment Type"

@@ -4,7 +4,6 @@ using Market.Services;
 using Market.DataAccess.Models;
 using System.Diagnostics;
 using System.Text;
-using System.Text.RegularExpressions; // Add this for regex
 
 namespace Market.ViewModels.AddItem
 {
@@ -22,18 +21,9 @@ namespace Market.ViewModels.AddItem
         private const decimal MAX_RATE = 999999.99m;
 
         // Service categories
-        public List<string> ServiceCategories { get; } = new()
-        {
-            "Home & Garden",
-            "Professional",
-            "Technology",
-            "Automotive",
-            "Education & Tutoring",
-            "Health & Wellness",
-            "Creative & Design",
-            "Events & Entertainment",
-            "Other"
-        };
+        public List<ServiceCategory> ServiceCategories { get; } = Enum.GetValues(typeof(ServiceCategory))
+            .Cast<ServiceCategory>()
+            .ToList();
 
         // Rate period options
         public List<string> RatePeriods { get; } = new()
@@ -44,65 +34,50 @@ namespace Market.ViewModels.AddItem
             "per Day"
         };
 
+        // Service availability options
+        public List<ServiceAvailability> ServiceAvailabilities { get; } = Enum.GetValues(typeof(ServiceAvailability))
+            .Cast<ServiceAvailability>()
+            .ToList();
+
         #endregion
 
         #region Observable Properties
 
-        /// <summary>
-        /// Title of the service being offered
-        /// </summary>
-        private string _title = string.Empty; // Initialize
+        private string _title = string.Empty;
         public string Title
         {
             get => _title;
             set => SetProperty(ref _title, value);
         }
 
-        /// <summary>
-        /// Detailed description of the service
-        /// </summary>
-        private string _description = string.Empty; // Initialize
+        private string _description = string.Empty;
         public string Description
         {
             get => _description;
             set => SetProperty(ref _description, value);
         }
 
-        /// <summary>
-        /// Service rate/price
-        /// </summary>
-        private decimal _rate; // No need to initialize decimal
-
+        private decimal _rate;
         public decimal Rate
         {
             get => _rate;
             set => SetProperty(ref _rate, value);
         }
 
-
-        /// <summary>
-        /// Selected service category
-        /// </summary>
-        private string _serviceCategory = string.Empty; // Initialize
+        private string _serviceCategory = string.Empty;
         public string ServiceCategory
         {
             get => _serviceCategory;
             set => SetProperty(ref _serviceCategory, value);
         }
 
-        /// <summary>
-        /// Selected rate period
-        /// </summary>
-        private string _ratePeriod = string.Empty; // Initialize
+        private string _ratePeriod = string.Empty;
         public string RatePeriod
         {
             get => _ratePeriod;
             set => SetProperty(ref _ratePeriod, value);
         }
 
-        /// <summary>
-        /// Additional details about service provider experience
-        /// </summary>
         private string? _experience;
         public string? Experience
         {
@@ -110,9 +85,6 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref _experience, value);
         }
 
-        /// <summary>
-        /// Service area or location details
-        /// </summary>
         private string? _serviceArea;
         public string? ServiceArea
         {
@@ -120,9 +92,6 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref _serviceArea, value);
         }
 
-        /// <summary>
-        /// Indicates if service provider is available remotely
-        /// </summary>
         private bool _isRemoteAvailable;
         public bool IsRemoteAvailable
         {
@@ -130,9 +99,86 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref _isRemoteAvailable, value);
         }
 
-        /// <summary>
-        /// Processing state indicator
-        /// </summary>
+        // New properties from previous update
+        private int _yearsOfExperience;
+        public int YearsOfExperience
+        {
+            get => _yearsOfExperience;
+            set => SetProperty(ref _yearsOfExperience, value);
+        }
+
+        private int _numberOfEmployees;
+        public int NumberOfEmployees
+        {
+            get => _numberOfEmployees;
+            set => SetProperty(ref _numberOfEmployees, value);
+        }
+
+        private string _serviceLocation = string.Empty;
+        public string ServiceLocation
+        {
+            get => _serviceLocation;
+            set => SetProperty(ref _serviceLocation, value);
+        }
+
+        private ServiceAvailability _selectedServiceAvailability;
+        public ServiceAvailability SelectedServiceAvailability
+        {
+            get => _selectedServiceAvailability;
+            set => SetProperty(ref _selectedServiceAvailability, value);
+        }
+
+        // Error properties
+        private string? _titleError;
+        public string? TitleError
+        {
+            get => _titleError;
+            set => SetProperty(ref _titleError, value);
+        }
+
+        private string? _descriptionError;
+        public string? DescriptionError
+        {
+            get => _descriptionError;
+            set => SetProperty(ref _descriptionError, value);
+        }
+
+        private string? _rateError;
+        public string? RateError
+        {
+            get => _rateError;
+            set => SetProperty(ref _rateError, value);
+        }
+
+        private string? _categoryError;
+        public string? CategoryError
+        {
+            get => _categoryError;
+            set => SetProperty(ref _categoryError, value);
+        }
+
+        // New error properties
+        private string? _yearsOfExperienceError;
+        public string? YearsOfExperienceError
+        {
+            get => _yearsOfExperienceError;
+            set => SetProperty(ref _yearsOfExperienceError, value);
+        }
+
+        private string? _numberOfEmployeesError;
+        public string? NumberOfEmployeesError
+        {
+            get => _numberOfEmployeesError;
+            set => SetProperty(ref _numberOfEmployeesError, value);
+        }
+
+        private string? _serviceLocationError;
+        public string? ServiceLocationError
+        {
+            get => _serviceLocationError;
+            set => SetProperty(ref _serviceLocationError, value);
+        }
+
         private bool _isBusy;
         public bool IsBusy
         {
@@ -142,104 +188,42 @@ namespace Market.ViewModels.AddItem
 
         #endregion
 
-        #region Error Properties
-
-        /// <summary>
-        /// Error message for service title validation
-        /// </summary>
-        private string? _titleError;
-        public string? TitleError
-        {
-            get => _titleError;
-            set => SetProperty(ref _titleError, value);
-        }
-
-        /// <summary>
-        /// Error message for service description validation
-        /// </summary>
-        private string? _descriptionError;
-        public string? DescriptionError
-        {
-            get => _descriptionError;
-            set => SetProperty(ref _descriptionError, value);
-        }
-
-        /// <summary>
-        /// Error message for rate validation
-        /// </summary>
-        private string? _rateError;
-        public string? RateError
-        {
-            get => _rateError;
-            set => SetProperty(ref _rateError, value);
-        }
-
-        /// <summary>
-        /// Error message for category validation
-        /// </summary>
-        private string? _categoryError;
-        public string? CategoryError
-        {
-            get => _categoryError;
-            set => SetProperty(ref _categoryError, value);
-        }
-
-        #endregion
-
         #region Computed Properties
 
-        /// <summary>
-        /// Indicates if the form can be submitted
-        /// </summary>
         public bool CanSave => !IsBusy &&
-                            !HasTitleError &&
-                            !HasDescriptionError &&
-                            !HasRateError &&
-                            !HasCategoryError;
+                               !HasTitleError &&
+                               !HasDescriptionError &&
+                               !HasRateError &&
+                               !HasCategoryError &&
+                               !HasYearsOfExperienceError &&
+                               !HasNumberOfEmployeesError &&
+                               !HasServiceLocationError;
 
-        /// <summary>
-        /// UI state indicators for error messages
-        /// </summary>
         public bool HasTitleError => !string.IsNullOrEmpty(TitleError);
         public bool HasDescriptionError => !string.IsNullOrEmpty(DescriptionError);
         public bool HasRateError => !string.IsNullOrEmpty(RateError);
         public bool HasCategoryError => !string.IsNullOrEmpty(CategoryError);
+        public bool HasYearsOfExperienceError => !string.IsNullOrEmpty(YearsOfExperienceError);
+        public bool HasNumberOfEmployeesError => !string.IsNullOrEmpty(NumberOfEmployeesError);
+        public bool HasServiceLocationError => !string.IsNullOrEmpty(ServiceLocationError);
 
         #endregion
 
-        /// <summary>
-        /// Initializes a new instance of ServiceItemViewModel
-        /// </summary>
         public ServiceItemViewModel(IItemService itemService, IAuthService authService)
         {
             _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
 
-            // Initialize all properties with default values (CS8618 Fix)
-            Title = string.Empty;
-            Description = string.Empty;
-            Rate = 0m;
-            ServiceCategory = ServiceCategories[0];
+            // Initialize defaults
+            ServiceCategory = ServiceCategories[0].ToString();
             RatePeriod = RatePeriods[0];
-            Experience = null;
-            ServiceArea = null;
-            IsRemoteAvailable = false;
-            IsBusy = false;
-
-            // Initialize error properties
-            TitleError = null;
-            DescriptionError = null;
-            RateError = null;
-            CategoryError = null;
+            SelectedServiceAvailability = ServiceAvailabilities[0];
 
             Debug.WriteLine("ServiceItemViewModel initialized");
         }
 
         #region Validation Methods
 
-        /// <summary>
-        /// Validates the service title
-        /// </summary>
         private bool ValidateTitle()
         {
             if (string.IsNullOrWhiteSpace(Title))
@@ -258,9 +242,6 @@ namespace Market.ViewModels.AddItem
             return true;
         }
 
-        /// <summary>
-        /// Validates the service description
-        /// </summary>
         private bool ValidateDescription()
         {
             if (string.IsNullOrWhiteSpace(Description))
@@ -279,9 +260,6 @@ namespace Market.ViewModels.AddItem
             return true;
         }
 
-        /// <summary>
-        /// Validates the service rate
-        /// </summary>
         private bool ValidateRate()
         {
             if (Rate < MIN_RATE)
@@ -300,9 +278,6 @@ namespace Market.ViewModels.AddItem
             return true;
         }
 
-        /// <summary>
-        /// Validates the service category selection
-        /// </summary>
         private bool ValidateCategory()
         {
             if (string.IsNullOrEmpty(ServiceCategory))
@@ -315,13 +290,64 @@ namespace Market.ViewModels.AddItem
             return true;
         }
 
+        private bool ValidateYearsOfExperience()
+        {
+            if (YearsOfExperience < 0)
+            {
+                YearsOfExperienceError = "Years of experience cannot be negative";
+                return false;
+            }
+
+            if (YearsOfExperience > 50)
+            {
+                YearsOfExperienceError = "Years of experience seems unrealistic";
+                return false;
+            }
+
+            YearsOfExperienceError = null;
+            return true;
+        }
+
+        private bool ValidateNumberOfEmployees()
+        {
+            if (NumberOfEmployees < 0)
+            {
+                NumberOfEmployeesError = "Number of employees cannot be negative";
+                return false;
+            }
+
+            if (NumberOfEmployees > 1000)
+            {
+                NumberOfEmployeesError = "Number of employees seems unrealistic";
+                return false;
+            }
+
+            NumberOfEmployeesError = null;
+            return true;
+        }
+
+        private bool ValidateServiceLocation()
+        {
+            if (string.IsNullOrWhiteSpace(ServiceLocation))
+            {
+                ServiceLocationError = "Please enter a service location";
+                return false;
+            }
+
+            if (ServiceLocation.Length < 3)
+            {
+                ServiceLocationError = "Service location must be at least 3 characters";
+                return false;
+            }
+
+            ServiceLocationError = null;
+            return true;
+        }
+
         #endregion
 
-        #region Commands
+        #region Save Command
 
-        /// <summary>
-        /// Command to save the service listing
-        /// </summary>
         [RelayCommand]
         private async Task Save()
         {
@@ -346,7 +372,14 @@ namespace Market.ViewModels.AddItem
                     ServiceType = ServiceCategory,
                     RentalPeriod = RatePeriod,
                     ListedDate = DateTime.UtcNow,
-                    UserId = await _authService.GetCurrentUserIdAsync()
+                    UserId = await _authService.GetCurrentUserIdAsync(),
+
+                    // New properties
+                    ServiceCategory = (ServiceCategory)Enum.Parse(typeof(ServiceCategory), ServiceCategory),
+                    ServiceAvailability = SelectedServiceAvailability,
+                    YearsOfExperience = YearsOfExperience,
+                    NumberOfEmployees = NumberOfEmployees,
+                    ServiceLocation = ServiceLocation
                 };
 
                 Debug.WriteLine($"Saving service: {service.Title}, {service.Price} {service.RentalPeriod}");
@@ -377,29 +410,32 @@ namespace Market.ViewModels.AddItem
 
         #region Helper Methods
 
-        /// <summary>
-        /// Validates all form fields
-        /// </summary>
         private bool ValidateAll()
         {
             return ValidateTitle()
                    && ValidateDescription()
                    && ValidateRate()
-                   && ValidateCategory();
+                   && ValidateCategory()
+                   && ValidateYearsOfExperience()
+                   && ValidateNumberOfEmployees()
+                   && ValidateServiceLocation();
         }
 
-        /// <summary>
-        /// Builds a complete description including experience and service area
-        /// </summary>
         private string BuildFullDescription()
         {
-            var fullDescription = new System.Text.StringBuilder();
+            var fullDescription = new StringBuilder();
             fullDescription.AppendLine(Description);
+
+            fullDescription.AppendLine();
+            fullDescription.AppendLine($"Years of Experience: {YearsOfExperience}");
+            fullDescription.AppendLine($"Number of Employees: {NumberOfEmployees}");
+            fullDescription.AppendLine($"Service Location: {ServiceLocation}");
+            fullDescription.AppendLine($"Availability: {SelectedServiceAvailability}");
 
             if (!string.IsNullOrEmpty(Experience))
             {
                 fullDescription.AppendLine();
-                fullDescription.AppendLine("Experience:");
+                fullDescription.AppendLine("Additional Experience:");
                 fullDescription.AppendLine(Experience);
             }
 
@@ -418,12 +454,7 @@ namespace Market.ViewModels.AddItem
 
             return fullDescription.ToString();
         }
-        
-        
-        
 
-        
-     
         #endregion
     }
 }

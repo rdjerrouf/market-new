@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore; // Add this using directive
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion; // For enum conversion
 
 namespace Market.DataAccess.Data
 {
@@ -70,6 +71,68 @@ namespace Market.DataAccess.Data
                 entity.Property(e => e.RentalPeriod).IsRequired(false);
                 entity.Property(e => e.AvailableFrom).IsRequired(false);
                 entity.Property(e => e.AvailableTo).IsRequired(false);
+
+                // New Job-specific fields
+                entity.Property(e => e.JobCategory)
+                    .HasConversion(
+                        v => v.HasValue ? v.Value.ToString() : null,
+                        v => !string.IsNullOrEmpty(v) ?
+                            (JobCategory)Enum.Parse(typeof(JobCategory), v) :
+                            (JobCategory?)null
+                    )
+                    .IsRequired(false);
+
+                entity.Property(e => e.CompanyName)
+                    .HasMaxLength(100)
+                    .IsRequired(false);
+
+                entity.Property(e => e.JobLocation)
+                    .HasMaxLength(200)
+                    .IsRequired(false);
+
+                entity.Property(e => e.ApplyMethod)
+                    .HasConversion(
+                        v => v.HasValue ? v.Value.ToString() : null,
+                        v => !string.IsNullOrEmpty(v) ?
+                            (ApplyMethod)Enum.Parse(typeof(ApplyMethod), v) :
+                            (ApplyMethod?)null
+                    )
+                    .IsRequired(false);
+
+                entity.Property(e => e.ApplyContact)
+                    .HasMaxLength(200)
+                    .IsRequired(false);
+
+                // New Service-specific fields
+                entity.Property(e => e.ServiceCategory)
+                    .HasConversion(
+                        v => v.HasValue ? v.Value.ToString() : null,
+                        v => !string.IsNullOrEmpty(v) ?
+                            (ServiceCategory)Enum.Parse(typeof(ServiceCategory), v) :
+                            (ServiceCategory?)null
+                    )
+                    .IsRequired(false);
+
+                entity.Property(e => e.ServiceAvailability)
+                    .HasConversion(
+                        v => v.HasValue ? v.Value.ToString() : null,
+                        v => !string.IsNullOrEmpty(v) ?
+                            (ServiceAvailability)Enum.Parse(typeof(ServiceAvailability), v) :
+                            (ServiceAvailability?)null
+                    )
+                    .IsRequired(false);
+
+                entity.Property(e => e.YearsOfExperience).IsRequired(false);
+
+                entity.Property(e => e.NumberOfEmployees).IsRequired(false);
+
+                entity.Property(e => e.ServiceLocation)
+                    .HasMaxLength(200)
+                    .IsRequired(false);
+
+                entity.Property(e => e.AverageRating)
+                    .HasColumnType("decimal(3,2)")
+                    .IsRequired(false);
 
                 // Generated fields
                 entity.Property(e => e.ListedDate)
