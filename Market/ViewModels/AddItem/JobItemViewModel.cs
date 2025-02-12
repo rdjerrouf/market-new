@@ -6,6 +6,7 @@ using Market.DataAccess.Models;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Net.Mail;
+using System.Text;
 
 namespace Market.ViewModels.AddItem
 {
@@ -45,10 +46,14 @@ namespace Market.ViewModels.AddItem
         public List<ApplyMethod> ApplyMethods { get; } = Enum.GetValues(typeof(ApplyMethod))
             .Cast<ApplyMethod>()
             .ToList();
+
         // Job Categories
         public List<JobCategory> JobCategories { get; } = Enum.GetValues(typeof(JobCategory))
             .Cast<JobCategory>()
             .ToList();
+
+        // Add MinimumDate property
+        public DateTime MinimumDate => DateTime.Today;
         #endregion
 
         #region Observable Properties
@@ -225,8 +230,9 @@ namespace Market.ViewModels.AddItem
             // Initialize defaults
             EmploymentType = EmploymentTypes[0];
             SalaryPeriod = SalaryPeriods[0];
-            SelectedApplyMethod = ApplyMethods[0];
             SelectedJobCategory = JobCategories[0];
+            SelectedApplyMethod = ApplyMethods[0];
+            StartDate = DateTime.Today;
 
             Debug.WriteLine("JobItemViewModel initialized");
         }
@@ -427,6 +433,22 @@ namespace Market.ViewModels.AddItem
                    && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
         }
 
+        private string BuildFullDescription()
+        {
+            var fullDescription = new StringBuilder();
+            fullDescription.AppendLine(Description);
+            fullDescription.AppendLine();
+            fullDescription.AppendLine($"Employment Type: {EmploymentType}");
+            fullDescription.AppendLine($"Salary: {Salary:C} {SalaryPeriod}");
+            fullDescription.AppendLine($"Start Date: {StartDate:d}");
+            fullDescription.AppendLine();
+            fullDescription.AppendLine("How to Apply:");
+            fullDescription.AppendLine($"Method: {SelectedApplyMethod}");
+            fullDescription.AppendLine($"Contact: {ApplyContact}");
+
+            return fullDescription.ToString();
+        }
+
         #endregion
 
         #region Save
@@ -448,16 +470,17 @@ namespace Market.ViewModels.AddItem
                 var job = new Item
                 {
                     Title = Title,
-                    Description = Description,
+                    Description = BuildFullDescription(),
                     Price = Salary,
                     Category = "Jobs",
                     JobType = EmploymentType,
                     RentalPeriod = SalaryPeriod,
                     AvailableFrom = StartDate,
+                    AvailableTo = StartDate.AddMonths(6), // Default 6-month listing
                     ListedDate = DateTime.UtcNow,
                     UserId = await _authService.GetCurrentUserIdAsync(),
 
-                    // New properties
+                    // Job-specific properties
                     JobCategory = SelectedJobCategory,
                     CompanyName = CompanyName,
                     JobLocation = JobLocation,
@@ -465,7 +488,7 @@ namespace Market.ViewModels.AddItem
                     ApplyContact = ApplyContact
                 };
 
-                Debug.WriteLine($"Saving job: {job.Title}, {job.Price} {job.RentalPeriod}");
+                Debug.WriteLine($"Saving job: {job.Title}, Category: {job.JobCategory}, Apply Method: {job.ApplyMethod}");
                 var result = await _itemService.AddItemAsync(job);
 
                 if (result)

@@ -26,7 +26,6 @@ namespace Market
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var dbPath = Path.Combine(FileSystem.AppDataDirectory, "market.db");
 
-                // Only create if doesn't exist
                 if (!File.Exists(dbPath))
                 {
                     Debug.WriteLine("Database file not found, creating new database...");
@@ -36,18 +35,30 @@ namespace Market
                 else
                 {
                     Debug.WriteLine("Database exists, checking connection...");
-                    // Verify database connection and schema
                     if (!await context.Database.CanConnectAsync())
                     {
-                        Debug.WriteLine("Cannot connect to existing database, recreating...");
-                        await context.Database.EnsureDeletedAsync();
-                        await context.Database.EnsureCreatedAsync();
+                        Debug.WriteLine("Cannot connect to existing database");
+                        throw new Exception("Database connection failed");
                     }
-                    else
+
+                    // Only create if tables don't exist
+                    try
                     {
-                        Debug.WriteLine("Database connection verified");
+                        // Try a simple query to check if tables exist
+                        await context.Users.FirstOrDefaultAsync();
+                        Debug.WriteLine("Database schema verified");
+                    }
+                    catch
+                    {
+                        Debug.WriteLine("Tables not found, creating schema...");
+                        await context.Database.EnsureCreatedAsync();
+                        Debug.WriteLine("Schema created successfully");
                     }
                 }
+
+                // Verify final connection
+                var canConnect = await context.Database.CanConnectAsync();
+                Debug.WriteLine($"Database exists and can connect: {canConnect}");
             }
             catch (Exception ex)
             {
