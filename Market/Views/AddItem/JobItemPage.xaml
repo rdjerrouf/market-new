@@ -25,9 +25,11 @@
             <!-- Job Category Selection -->
             <VerticalStackLayout Spacing="5">
                 <Label Text="Job Category"
-                       FontSize="16"/>
+            FontSize="16"/>
                 <Picker ItemsSource="{Binding JobCategories}"
-                        SelectedItem="{Binding SelectedJobCategory}"/>
+            SelectedItem="{Binding SelectedJobCategory}"/>
+                <Picker ItemsSource="{Binding ApplyMethods}"
+            SelectedItem="{Binding SelectedApplyMethod}"/>
             </VerticalStackLayout>
 
             <!-- Company Name -->
@@ -60,9 +62,8 @@
             <VerticalStackLayout Spacing="5">
                 <Label Text="Apply Method"
                        FontSize="16"/>
-                <Picker ItemsSource="{Binding 
-                    }"
-                        SelectedItem="{Binding SelectedApplyMethod}"/>
+                <Picker ItemsSource="{Binding ApplyMethods}"
+                       SelectedItem="{Binding SelectedApplyMethod}"/>
                 <Entry Placeholder="Enter contact information"
                        Text="{Binding ApplyContact}"
                        MaxLength="200"/>

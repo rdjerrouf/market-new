@@ -43,14 +43,51 @@ namespace Market.ViewModels.AddItem
         };
 
         // Apply Method Options
-        public List<ApplyMethod> ApplyMethods { get; } = Enum.GetValues(typeof(ApplyMethod))
-            .Cast<ApplyMethod>()
-            .ToList();
+        public List<ApplyMethod> ApplyMethods
+        {
+            get
+            {
+                try
+                {
+                    return Enum.GetValues(typeof(ApplyMethod))
+                        .Cast<ApplyMethod>()
+                        .ToList();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error in ApplyMethods getter: {ex}");
+                    return new List<ApplyMethod>();
+                }
+            }
+        }
 
         // Job Categories
-        public List<JobCategory> JobCategories { get; } = Enum.GetValues(typeof(JobCategory))
-            .Cast<JobCategory>()
-            .ToList();
+        private List<JobCategory> _jobCategories;
+        public List<JobCategory> JobCategories
+        {
+            get
+            {
+                try
+                {
+                    if (_jobCategories == null)
+                    {
+                        Debug.WriteLine("Initializing JobCategories list");
+                        _jobCategories = Enum.GetValues(typeof(JobCategory))
+                            .Cast<JobCategory>()
+                            .ToList();
+                        Debug.WriteLine($"JobCategories initialized with {_jobCategories.Count} items");
+                    }
+                    return _jobCategories;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error in JobCategories getter: {ex}");
+                    return new List<JobCategory>();
+                }
+            }
+        }
+
+       
 
         // Add MinimumDate property
         public DateTime MinimumDate => DateTime.Today;
@@ -224,19 +261,54 @@ namespace Market.ViewModels.AddItem
 
         public JobItemViewModel(IItemService itemService, IAuthService authService)
         {
-            _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
-            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            try
+            {
+                Debug.WriteLine("Starting JobItemViewModel initialization");
 
-            // Initialize defaults
-            EmploymentType = EmploymentTypes[0];
-            SalaryPeriod = SalaryPeriods[0];
-            SelectedJobCategory = JobCategories[0];
-            SelectedApplyMethod = ApplyMethods[0];
-            StartDate = DateTime.Today;
+                _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
+                _authService = authService ?? throw new ArgumentNullException(nameof(authService));
 
-            Debug.WriteLine("JobItemViewModel initialized");
+                // Initialize lists first
+                _jobCategories = JobCategories; // This will trigger the getter
+                var applyMethodsList = ApplyMethods; // This will trigger the getter
+
+                Debug.WriteLine($"JobCategories count: {_jobCategories?.Count ?? 0}");
+                Debug.WriteLine($"ApplyMethods count: {applyMethodsList?.Count ?? 0}");
+
+                // Now initialize the default values
+                if (_jobCategories?.Any() == true)
+                {
+                    SelectedJobCategory = _jobCategories[0];
+                    Debug.WriteLine($"Set default JobCategory: {SelectedJobCategory}");
+                }
+
+                if (applyMethodsList?.Any() == true)
+                {
+                    SelectedApplyMethod = applyMethodsList[0];
+                    Debug.WriteLine($"Set default ApplyMethod: {SelectedApplyMethod}");
+                }
+
+                if (EmploymentTypes?.Any() == true)
+                {
+                    EmploymentType = EmploymentTypes[0];
+                    Debug.WriteLine($"Set default EmploymentType: {EmploymentType}");
+                }
+
+                if (SalaryPeriods?.Any() == true)
+                {
+                    SalaryPeriod = SalaryPeriods[0];
+                    Debug.WriteLine($"Set default SalaryPeriod: {SalaryPeriod}");
+                }
+
+                StartDate = DateTime.Today;
+                Debug.WriteLine("JobItemViewModel initialization completed");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in JobItemViewModel constructor: {ex}");
+                throw;
+            }
         }
-
         #region Validation Methods
 
         private bool ValidateTitle()
