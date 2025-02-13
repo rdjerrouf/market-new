@@ -61,14 +61,21 @@ namespace Market.ViewModels.AddItem
         public decimal Rate
         {
             get => _rate;
-            set => SetProperty(ref _rate, value);
+            set
+            {
+                if (SetProperty(ref _rate, value))
+                {
+                    ValidateRate();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
-        private string _serviceCategory = string.Empty;
-        public string ServiceCategory
+        private ServiceCategory _selectedServiceCategory;
+        public ServiceCategory SelectedServiceCategory
         {
-            get => _serviceCategory;
-            set => SetProperty(ref _serviceCategory, value);
+            get => _selectedServiceCategory;
+            set => SetProperty(ref _selectedServiceCategory, value);
         }
 
         private string _ratePeriod = string.Empty;
@@ -211,15 +218,54 @@ namespace Market.ViewModels.AddItem
 
         public ServiceItemViewModel(IItemService itemService, IAuthService authService)
         {
-            _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
-            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            try
+            {
+                Debug.WriteLine("Starting ServiceItemViewModel initialization");
 
-            // Initialize defaults
-            ServiceCategory = ServiceCategories[0].ToString();
-            RatePeriod = RatePeriods[0];
-            SelectedServiceAvailability = ServiceAvailabilities[0];
+                _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
+                _authService = authService ?? throw new ArgumentNullException(nameof(authService));
 
-            Debug.WriteLine("ServiceItemViewModel initialized");
+                Debug.WriteLine($"ServiceCategories count: {ServiceCategories.Count}");
+                Debug.WriteLine($"ServiceAvailabilities count: {ServiceAvailabilities.Count}");
+                Debug.WriteLine($"RatePeriods count: {RatePeriods.Count}");
+
+                // Initialize defaults with validation
+                if (ServiceCategories.Count > 0)
+                {
+                    SelectedServiceCategory = ServiceCategories[0];
+                    Debug.WriteLine($"Set default ServiceCategory: {SelectedServiceCategory}");
+                }
+
+                if (ServiceAvailabilities.Count > 0)
+                {
+                    SelectedServiceAvailability = ServiceAvailabilities[0];
+                    Debug.WriteLine($"Set default ServiceAvailability: {SelectedServiceAvailability}");
+                }
+
+                if (RatePeriods.Count > 0)
+                {
+                    RatePeriod = RatePeriods[0];
+                    Debug.WriteLine($"Set default RatePeriod: {RatePeriod}");
+                }
+
+                // Initialize other fields
+                Rate = 0;
+                Title = string.Empty;
+                Description = string.Empty;
+                ServiceLocation = string.Empty;
+                YearsOfExperience = 0;
+                NumberOfEmployees = 0;
+                Experience = string.Empty;
+                ServiceArea = string.Empty;
+                IsRemoteAvailable = false;
+
+                Debug.WriteLine("ServiceItemViewModel initialization completed");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in ServiceItemViewModel constructor: {ex}");
+                throw;
+            }
         }
 
         #region Validation Methods
@@ -280,7 +326,7 @@ namespace Market.ViewModels.AddItem
 
         private bool ValidateCategory()
         {
-            if (string.IsNullOrEmpty(ServiceCategory))
+            if (SelectedServiceCategory == null)  // Changed from ServiceCategory
             {
                 CategoryError = "Please select a service category";
                 return false;
@@ -369,13 +415,11 @@ namespace Market.ViewModels.AddItem
                     Description = BuildFullDescription(),
                     Price = Rate,
                     Category = "Services",
-                    ServiceType = ServiceCategory,
+                    ServiceType = SelectedServiceCategory.ToString(),
                     RentalPeriod = RatePeriod,
                     ListedDate = DateTime.UtcNow,
                     UserId = await _authService.GetCurrentUserIdAsync(),
-
-                    // New properties
-                    ServiceCategory = (ServiceCategory)Enum.Parse(typeof(ServiceCategory), ServiceCategory),
+                    ServiceCategory = SelectedServiceCategory,
                     ServiceAvailability = SelectedServiceAvailability,
                     YearsOfExperience = YearsOfExperience,
                     NumberOfEmployees = NumberOfEmployees,

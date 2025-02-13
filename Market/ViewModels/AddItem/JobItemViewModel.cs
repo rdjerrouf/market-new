@@ -17,59 +17,56 @@ namespace Market.ViewModels.AddItem
         private readonly IItemService _itemService;
         private readonly IAuthService _authService;
 
-        // Validation constants
         private const int TITLE_MIN_LENGTH = 5;
         private const int DESCRIPTION_MIN_LENGTH = 30;
         private const decimal MIN_SALARY = 0.01m;
         private const decimal MAX_SALARY = 999999.99m;
 
-        // Employment type options
-        public List<string> EmploymentTypes { get; } = new List<string>
-        {
+        public List<string> EmploymentTypes { get; } =
+        [
             "Full-time",
             "Part-time",
             "Contract",
             "Temporary",
             "Internship"
-        };
+        ];
 
-        // Salary period options
-        public List<string> SalaryPeriods { get; } = new List<string>
-        {
+        public List<string> SalaryPeriods { get; } =
+        [
             "per Hour",
             "per Week",
             "per Month",
             "per Year"
-        };
+        ];
 
-        // Apply Method Options
+        private List<ApplyMethod> _applyMethods;
         public List<ApplyMethod> ApplyMethods
         {
             get
             {
                 try
                 {
-                    return Enum.GetValues(typeof(ApplyMethod))
+                    _applyMethods ??= Enum.GetValues(typeof(ApplyMethod))
                         .Cast<ApplyMethod>()
                         .ToList();
+                    return _applyMethods;
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"Error in ApplyMethods getter: {ex}");
-                    return new List<ApplyMethod>();
+                    return [];
                 }
             }
         }
 
-        // Job Categories
-        private List<JobCategory> _jobCategories;
+        private List<JobCategory> _jobCategories = [];
         public List<JobCategory> JobCategories
         {
             get
             {
                 try
                 {
-                    if (_jobCategories == null)
+                    if (_jobCategories.Count == 0)
                     {
                         Debug.WriteLine("Initializing JobCategories list");
                         _jobCategories = Enum.GetValues(typeof(JobCategory))
@@ -82,158 +79,131 @@ namespace Market.ViewModels.AddItem
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"Error in JobCategories getter: {ex}");
-                    return new List<JobCategory>();
+                    return [];
                 }
             }
         }
 
-       
-
-        // Add MinimumDate property
         public DateTime MinimumDate => DateTime.Today;
         #endregion
 
         #region Observable Properties
 
+        [ObservableProperty]
         private string _title = string.Empty;
-        public string Title
-        {
-            get => _title;
-            set => SetProperty(ref _title, value);
-        }
 
         private string _description = string.Empty;
         public string Description
         {
             get => _description;
-            set => SetProperty(ref _description, value);
+            set
+            {
+                if (SetProperty(ref _description, value))
+                {
+                    ValidateDescription();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
-
         private decimal _salary;
         public decimal Salary
         {
             get => _salary;
-            set => SetProperty(ref _salary, value);
+            set
+            {
+                try
+                {
+                    if (SetProperty(ref _salary, value))
+                    {
+                        ValidateSalary();
+                        OnPropertyChanged(nameof(CanSave));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error setting salary: {ex.Message}");
+                    SalaryError = "Please enter a valid number";
+                }
+            }
         }
 
+        [ObservableProperty]
         private string _employmentType = string.Empty;
-        public string EmploymentType
-        {
-            get => _employmentType;
-            set => SetProperty(ref _employmentType, value);
-        }
 
+        [ObservableProperty]
         private string _salaryPeriod = string.Empty;
-        public string SalaryPeriod
-        {
-            get => _salaryPeriod;
-            set => SetProperty(ref _salaryPeriod, value);
-        }
 
+        [ObservableProperty]
         private DateTime _startDate = DateTime.Today;
-        public DateTime StartDate
-        {
-            get => _startDate;
-            set => SetProperty(ref _startDate, value);
-        }
 
         private ApplyMethod _selectedApplyMethod;
         public ApplyMethod SelectedApplyMethod
         {
             get => _selectedApplyMethod;
-            set => SetProperty(ref _selectedApplyMethod, value);
+            set
+            {
+                if (SetProperty(ref _selectedApplyMethod, value))
+                {
+                    Debug.WriteLine($"SelectedApplyMethod changed to: {value}");
+                    ValidateApplyContact(); // Revalidate contact when method changes
+                    OnPropertyChanged(nameof(HasApplyContactError));
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
         private string _applyContact = string.Empty;
         public string ApplyContact
         {
             get => _applyContact;
-            set => SetProperty(ref _applyContact, value);
+            set
+            {
+                if (SetProperty(ref _applyContact, value))
+                {
+                    Debug.WriteLine($"ApplyContact changed to: '{value}'");
+                    ValidateApplyContact();
+                    OnPropertyChanged(nameof(HasApplyContactError));
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
+        [ObservableProperty]
         private string? _applyContactError;
-        public string? ApplyContactError
-        {
-            get => _applyContactError;
-            set => SetProperty(ref _applyContactError, value);
-        }
 
+        [ObservableProperty]
         private string _companyName = string.Empty;
-        public string CompanyName
-        {
-            get => _companyName;
-            set => SetProperty(ref _companyName, value);
-        }
 
+        [ObservableProperty]
         private string? _companyNameError;
-        public string? CompanyNameError
-        {
-            get => _companyNameError;
-            set => SetProperty(ref _companyNameError, value);
-        }
 
+        [ObservableProperty]
         private string _jobLocation = string.Empty;
-        public string JobLocation
-        {
-            get => _jobLocation;
-            set => SetProperty(ref _jobLocation, value);
-        }
 
+        [ObservableProperty]
         private string? _jobLocationError;
-        public string? JobLocationError
-        {
-            get => _jobLocationError;
-            set => SetProperty(ref _jobLocationError, value);
-        }
 
+        [ObservableProperty]
         private string? _titleError;
-        public string? TitleError
-        {
-            get => _titleError;
-            set => SetProperty(ref _titleError, value);
-        }
 
+        [ObservableProperty]
         private string? _descriptionError;
-        public string? DescriptionError
-        {
-            get => _descriptionError;
-            set => SetProperty(ref _descriptionError, value);
-        }
 
+        [ObservableProperty]
         private string? _salaryError;
-        public string? SalaryError
-        {
-            get => _salaryError;
-            set => SetProperty(ref _salaryError, value);
-        }
 
+        [ObservableProperty]
         private string? _employmentTypeError;
-        public string? EmploymentTypeError
-        {
-            get => _employmentTypeError;
-            set => SetProperty(ref _employmentTypeError, value);
-        }
 
+        [ObservableProperty]
         private string? _dateError;
-        public string? DateError
-        {
-            get => _dateError;
-            set => SetProperty(ref _dateError, value);
-        }
 
+        [ObservableProperty]
         private bool _isBusy;
-        public bool IsBusy
-        {
-            get => _isBusy;
-            set => SetProperty(ref _isBusy, value);
-        }
 
+        [ObservableProperty]
         private JobCategory _selectedJobCategory;
-        public JobCategory SelectedJobCategory
-        {
-            get => _selectedJobCategory;
-            set => SetProperty(ref _selectedJobCategory, value);
-        }
+
         #endregion
 
         #region Computed Properties
@@ -247,15 +217,35 @@ namespace Market.ViewModels.AddItem
         public bool HasCompanyNameError => !string.IsNullOrEmpty(CompanyNameError);
         public bool HasJobLocationError => !string.IsNullOrEmpty(JobLocationError);
 
-        public bool CanSave => !IsBusy &&
-                               !HasTitleError &&
-                               !HasDescriptionError &&
-                               !HasSalaryError &&
-                               !HasEmploymentTypeError &&
-                               !HasDateError &&
-                               !HasCompanyNameError &&
-                               !HasJobLocationError &&
-                               !HasApplyContactError;
+        public bool CanSave
+        {
+            get
+            {
+                var canSave = !IsBusy &&
+                              !HasTitleError &&
+                              !HasDescriptionError &&
+                              !HasSalaryError &&
+                              !HasEmploymentTypeError &&
+                              !HasDateError &&
+                              !HasCompanyNameError &&
+                              !HasJobLocationError &&
+                              !HasApplyContactError;
+
+                Debug.WriteLine($"CanSave evaluation:");
+                Debug.WriteLine($"  IsBusy: {IsBusy}");
+                Debug.WriteLine($"  HasTitleError: {HasTitleError}");
+                Debug.WriteLine($"  HasDescriptionError: {HasDescriptionError}");
+                Debug.WriteLine($"  HasSalaryError: {HasSalaryError}");
+                Debug.WriteLine($"  HasEmploymentTypeError: {HasEmploymentTypeError}");
+                Debug.WriteLine($"  HasDateError: {HasDateError}");
+                Debug.WriteLine($"  HasCompanyNameError: {HasCompanyNameError}");
+                Debug.WriteLine($"  HasJobLocationError: {HasJobLocationError}");
+                Debug.WriteLine($"  HasApplyContactError: {HasApplyContactError}");
+                Debug.WriteLine($"  Final result: {canSave}");
+
+                return canSave;
+            }
+        }
 
         #endregion
 
@@ -268,39 +258,9 @@ namespace Market.ViewModels.AddItem
                 _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
                 _authService = authService ?? throw new ArgumentNullException(nameof(authService));
 
-                // Initialize lists first
-                _jobCategories = JobCategories; // This will trigger the getter
-                var applyMethodsList = ApplyMethods; // This will trigger the getter
+                // Initialize lists and defaults
+                InitializeDefaults();
 
-                Debug.WriteLine($"JobCategories count: {_jobCategories?.Count ?? 0}");
-                Debug.WriteLine($"ApplyMethods count: {applyMethodsList?.Count ?? 0}");
-
-                // Now initialize the default values
-                if (_jobCategories?.Any() == true)
-                {
-                    SelectedJobCategory = _jobCategories[0];
-                    Debug.WriteLine($"Set default JobCategory: {SelectedJobCategory}");
-                }
-
-                if (applyMethodsList?.Any() == true)
-                {
-                    SelectedApplyMethod = applyMethodsList[0];
-                    Debug.WriteLine($"Set default ApplyMethod: {SelectedApplyMethod}");
-                }
-
-                if (EmploymentTypes?.Any() == true)
-                {
-                    EmploymentType = EmploymentTypes[0];
-                    Debug.WriteLine($"Set default EmploymentType: {EmploymentType}");
-                }
-
-                if (SalaryPeriods?.Any() == true)
-                {
-                    SalaryPeriod = SalaryPeriods[0];
-                    Debug.WriteLine($"Set default SalaryPeriod: {SalaryPeriod}");
-                }
-
-                StartDate = DateTime.Today;
                 Debug.WriteLine("JobItemViewModel initialization completed");
             }
             catch (Exception ex)
@@ -309,6 +269,53 @@ namespace Market.ViewModels.AddItem
                 throw;
             }
         }
+
+        private void InitializeDefaults()
+        {
+            Debug.WriteLine("Starting InitializeDefaults");
+
+            // Initialize basic fields
+            Title = string.Empty;
+            Description = string.Empty;
+            CompanyName = string.Empty;
+            JobLocation = string.Empty;
+            StartDate = DateTime.Today;
+
+            // Set defaults and validate immediate
+            if (JobCategories.Count > 0)
+            {
+                SelectedJobCategory = JobCategories[0];
+                Debug.WriteLine($"Set default JobCategory: {SelectedJobCategory}");
+            }
+
+            if (ApplyMethods.Count > 0)
+            {
+                SelectedApplyMethod = ApplyMethods[0];
+                Debug.WriteLine($"Set default ApplyMethod: {SelectedApplyMethod}");
+            }
+
+            if (EmploymentTypes.Count > 0)
+            {
+                EmploymentType = EmploymentTypes[0];
+                Debug.WriteLine($"Set default EmploymentType: {EmploymentType}");
+            }
+
+            if (SalaryPeriods.Count > 0)
+            {
+                SalaryPeriod = SalaryPeriods[0];
+                Debug.WriteLine($"Set default SalaryPeriod: {SalaryPeriod}");
+            }
+
+            // Clear the contact field and validate it
+            ApplyContact = string.Empty;
+            ValidateApplyContact();
+
+            Debug.WriteLine("Initial validation state:");
+            Debug.WriteLine($"ApplyContactError: {ApplyContactError}");
+            Debug.WriteLine($"HasApplyContactError: {HasApplyContactError}");
+            Debug.WriteLine($"CanSave: {CanSave}");
+        }
+
         #region Validation Methods
 
         private bool ValidateTitle()
@@ -349,20 +356,29 @@ namespace Market.ViewModels.AddItem
 
         private bool ValidateSalary()
         {
-            if (Salary < MIN_SALARY)
+            try
             {
-                SalaryError = "Salary must be greater than zero";
+                if (Salary <= 0)
+                {
+                    SalaryError = "Salary must be greater than zero";
+                    return false;
+                }
+
+                if (Salary > MAX_SALARY)
+                {
+                    SalaryError = $"Salary cannot exceed {MAX_SALARY:C}";
+                    return false;
+                }
+
+                SalaryError = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error validating salary: {ex.Message}");
+                SalaryError = "Invalid salary value";
                 return false;
             }
-
-            if (Salary > MAX_SALARY)
-            {
-                SalaryError = $"Salary cannot exceed {MAX_SALARY:C}";
-                return false;
-            }
-
-            SalaryError = null;
-            return true;
         }
 
         private bool ValidateEmploymentType()
@@ -427,58 +443,62 @@ namespace Market.ViewModels.AddItem
 
         private bool ValidateApplyContact()
         {
+            Debug.WriteLine($"Validating ApplyContact: '{ApplyContact}', Method: {SelectedApplyMethod}");
+
             if (string.IsNullOrWhiteSpace(ApplyContact))
             {
                 ApplyContactError = "Please enter contact information";
+                Debug.WriteLine("ApplyContact validation failed: empty");
                 return false;
             }
 
-            switch (SelectedApplyMethod)
+            bool isValid = SelectedApplyMethod switch
             {
-                case ApplyMethod.Email:
-                    if (!IsValidEmail(ApplyContact))
-                    {
-                        ApplyContactError = "Please enter a valid email address";
-                        return false;
-                    }
-                    break;
-                case ApplyMethod.PhoneNumber:
-                    if (!IsValidPhoneNumber(ApplyContact))
-                    {
-                        ApplyContactError = "Please enter a valid phone number";
-                        return false;
-                    }
-                    break;
-                case ApplyMethod.URL:
-                    if (!IsValidUrl(ApplyContact))
-                    {
-                        ApplyContactError = "Please enter a valid URL";
-                        return false;
-                    }
-                    break;
+                ApplyMethod.Email => IsValidEmail(ApplyContact),
+                ApplyMethod.PhoneNumber => IsValidPhoneNumber(ApplyContact),
+                ApplyMethod.URL => IsValidUrl(ApplyContact),
+                _ => false
+            };
+
+            if (!isValid)
+            {
+                ApplyContactError = $"Please enter a valid {SelectedApplyMethod.ToString().ToLower()}";
+                Debug.WriteLine($"ApplyContact validation failed: invalid {SelectedApplyMethod}");
+                return false;
             }
 
             ApplyContactError = null;
+            Debug.WriteLine("ApplyContact validation passed");
             return true;
         }
 
         private bool ValidateAll()
         {
-            return ValidateTitle()
-                   && ValidateDescription()
-                   && ValidateSalary()
-                   && ValidateEmploymentType()
-                   && ValidateStartDate()
-                   && ValidateCompanyName()
-                   && ValidateJobLocation()
-                   && ValidateApplyContact();
+            var validations = new Dictionary<string, bool>
+            {
+                { "Title", ValidateTitle() },
+                { "Description", ValidateDescription() },
+                { "Salary", ValidateSalary() },
+                { "EmploymentType", ValidateEmploymentType() },
+                { "StartDate", ValidateStartDate() },
+                { "CompanyName", ValidateCompanyName() },
+                { "JobLocation", ValidateJobLocation() },
+                { "ApplyContact", ValidateApplyContact() }
+            };
+
+            foreach (var (field, isValid) in validations)
+            {
+                Debug.WriteLine($"Validation for {field}: {isValid}");
+            }
+
+            return validations.Values.All(v => v);
         }
 
         #endregion
 
         #region Helper Methods
 
-        private bool IsValidEmail(string email)
+        private static bool IsValidEmail(string email)
         {
             try
             {
@@ -491,15 +511,15 @@ namespace Market.ViewModels.AddItem
             }
         }
 
-        private bool IsValidPhoneNumber(string phoneNumber)
+        [GeneratedRegex(@"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$")]
+        private static partial Regex PhoneRegex();
+
+        private static bool IsValidPhoneNumber(string phoneNumber)
         {
-            return Regex.IsMatch(
-                phoneNumber,
-                @"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$"
-            );
+            return PhoneRegex().IsMatch(phoneNumber);
         }
 
-        private bool IsValidUrl(string url)
+        private static bool IsValidUrl(string url)
         {
             return Uri.TryCreate(url, UriKind.Absolute, out Uri? uriResult)
                    && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
@@ -523,23 +543,59 @@ namespace Market.ViewModels.AddItem
 
         #endregion
 
-        #region Save
-        [RelayCommand]
+        #region Save Command
+        [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task Save()
         {
-            if (IsBusy) return;
+            Debug.WriteLine("Save command initiated");
+            Debug.WriteLine($"Current state - IsBusy: {IsBusy}, CanSave: {CanSave}");
+            Debug.WriteLine($"Title: '{Title}', Description length: {Description?.Length ?? 0}");
+            Debug.WriteLine($"Salary: {Salary}, Employment Type: {EmploymentType}");
+            Debug.WriteLine($"Company: {CompanyName}, Location: {JobLocation}");
+            Debug.WriteLine($"ApplyMethod: {SelectedApplyMethod}, Contact: {ApplyContact}");
+
+            if (IsBusy)
+            {
+                Debug.WriteLine("Save canceled - IsBusy is true");
+                return;
+            }
 
             try
             {
                 IsBusy = true;
                 Debug.WriteLine("Starting job listing save process");
 
-                if (!ValidateAll())
+                Debug.WriteLine("Running all validations...");
+                var validations = new Dictionary<string, bool>
+        {
+            { "Title", ValidateTitle() },
+            { "Description", ValidateDescription() },
+            { "Salary", ValidateSalary() },
+            { "EmploymentType", ValidateEmploymentType() },
+            { "StartDate", ValidateStartDate() },
+            { "CompanyName", ValidateCompanyName() },
+            { "JobLocation", ValidateJobLocation() },
+            { "ApplyContact", ValidateApplyContact() }
+        };
+
+                Debug.WriteLine("Validation results:");
+                foreach (var (field, isValid) in validations)
                 {
+                    Debug.WriteLine($"  {field}: {isValid}");
+                    if (!isValid)
+                    {
+                        Debug.WriteLine($"    Error message: {GetErrorMessage(field)}");
+                    }
+                }
+
+                if (!validations.Values.All(v => v))
+                {
+                    Debug.WriteLine("Validation failed - canceling save");
                     return;
                 }
 
-                var job = new Item
+                Debug.WriteLine("All validations passed, creating job item");
+                var jobItem = new Item
                 {
                     Title = Title,
                     Description = BuildFullDescription(),
@@ -548,11 +604,9 @@ namespace Market.ViewModels.AddItem
                     JobType = EmploymentType,
                     RentalPeriod = SalaryPeriod,
                     AvailableFrom = StartDate,
-                    AvailableTo = StartDate.AddMonths(6), // Default 6-month listing
+                    AvailableTo = StartDate.AddMonths(6),
                     ListedDate = DateTime.UtcNow,
                     UserId = await _authService.GetCurrentUserIdAsync(),
-
-                    // Job-specific properties
                     JobCategory = SelectedJobCategory,
                     CompanyName = CompanyName,
                     JobLocation = JobLocation,
@@ -560,29 +614,62 @@ namespace Market.ViewModels.AddItem
                     ApplyContact = ApplyContact
                 };
 
-                Debug.WriteLine($"Saving job: {job.Title}, Category: {job.JobCategory}, Apply Method: {job.ApplyMethod}");
-                var result = await _itemService.AddItemAsync(job);
+                Debug.WriteLine("Job item created with properties:");
+                Debug.WriteLine($"  Title: {jobItem.Title}");
+                Debug.WriteLine($"  Category: {jobItem.Category}");
+                Debug.WriteLine($"  JobCategory: {jobItem.JobCategory}");
+                Debug.WriteLine($"  Price: {jobItem.Price}");
+                Debug.WriteLine($"  UserId: {jobItem.UserId}");
 
-                if (result)
+                Debug.WriteLine("Attempting to save job to database");
+                var saveSuccessful = await _itemService.AddItemAsync(jobItem);
+                Debug.WriteLine($"Save result: {saveSuccessful}");
+
+                if (saveSuccessful)
                 {
+                    Debug.WriteLine("Save successful, showing success message");
                     await Shell.Current.DisplayAlert("Success", "Your job has been posted!", "OK");
+                    Debug.WriteLine("Navigating back");
                     await Shell.Current.GoToAsync("..");
                 }
                 else
                 {
+                    Debug.WriteLine("Save failed, showing error message");
                     await Shell.Current.DisplayAlert("Error", "Failed to post job", "OK");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Save error: {ex.Message}");
+                Debug.WriteLine($"Save error: {ex}");
+                Debug.WriteLine($"Error type: {ex.GetType().Name}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    Debug.WriteLine($"Inner stack trace: {ex.InnerException.StackTrace}");
+                }
                 await Shell.Current.DisplayAlert("Error", "An error occurred while saving", "OK");
             }
             finally
             {
                 IsBusy = false;
+                Debug.WriteLine("Save process completed");
             }
         }
+
+        // Helper method to get error messages
+        private string? GetErrorMessage(string field) => field switch
+        {
+            "Title" => TitleError,
+            "Description" => DescriptionError,
+            "Salary" => SalaryError,
+            "EmploymentType" => EmploymentTypeError,
+            "StartDate" => DateError,
+            "CompanyName" => CompanyNameError,
+            "JobLocation" => JobLocationError,
+            "ApplyContact" => ApplyContactError,
+            _ => null
+        };
         #endregion
     }
 }

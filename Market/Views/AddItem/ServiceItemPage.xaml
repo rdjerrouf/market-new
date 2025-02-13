@@ -27,7 +27,7 @@
                 <Label Text="Service Category"
                        FontSize="16"/>
                 <Picker ItemsSource="{Binding ServiceCategories}"
-                        SelectedItem="{Binding ServiceCategory}"/>
+                        SelectedItem="{Binding SelectedServiceCategory}"/>
                 <Label Text="{Binding CategoryError}"
                        TextColor="Red"
                        FontSize="12"

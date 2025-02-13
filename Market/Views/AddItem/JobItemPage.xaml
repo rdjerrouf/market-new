@@ -25,11 +25,9 @@
             <!-- Job Category Selection -->
             <VerticalStackLayout Spacing="5">
                 <Label Text="Job Category"
-            FontSize="16"/>
+           FontSize="16"/>
                 <Picker ItemsSource="{Binding JobCategories}"
             SelectedItem="{Binding SelectedJobCategory}"/>
-                <Picker ItemsSource="{Binding ApplyMethods}"
-            SelectedItem="{Binding SelectedApplyMethod}"/>
             </VerticalStackLayout>
 
             <!-- Company Name -->
@@ -58,19 +56,27 @@
                        IsVisible="{Binding HasJobLocationError}"/>
             </VerticalStackLayout>
 
+
             <!-- Apply Method -->
             <VerticalStackLayout Spacing="5">
-                <Label Text="Apply Method"
-                       FontSize="16"/>
-                <Picker ItemsSource="{Binding ApplyMethods}"
-                       SelectedItem="{Binding SelectedApplyMethod}"/>
-                <Entry Placeholder="Enter contact information"
-                       Text="{Binding ApplyContact}"
-                       MaxLength="200"/>
+                <Label Text="How to Apply"
+           FontSize="16"/>
+
+                <!-- Picker and Entry in a vertical layout -->
+                <VerticalStackLayout Spacing="10">
+                    <Picker ItemsSource="{Binding ApplyMethods}"
+                SelectedItem="{Binding SelectedApplyMethod}"
+                Title="Select contact method"/>
+
+                    <Entry Placeholder="{Binding SelectedApplyMethod, StringFormat='Enter {0}'}"
+               Text="{Binding ApplyContact}"
+               MaxLength="200"/>
+                </VerticalStackLayout>
+
                 <Label Text="{Binding ApplyContactError}"
-                       TextColor="Red"
-                       FontSize="12"
-                       IsVisible="{Binding HasApplyContactError}"/>
+           TextColor="Red"
+           FontSize="12"
+           IsVisible="{Binding HasApplyContactError}"/>
             </VerticalStackLayout>
 
             <!-- Employment Type Selection -->
@@ -89,21 +95,22 @@
             <Frame BorderColor="LightGray" Padding="15">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Salary Details"
-                           FontSize="16"/>
+               FontSize="16"/>
                     <Grid ColumnDefinitions="*,Auto">
                         <Entry Grid.Column="0"
-                               Placeholder="Enter salary"
-                               Text="{Binding Salary}"
-                               Keyboard="Numeric"/>
+                   Placeholder="Enter salary"
+                   Text="{Binding Salary, StringFormat='{0:N2}'}"
+                   Keyboard="Numeric"
+                   ReturnType="Done"/>
                         <Picker Grid.Column="1"
-                                ItemsSource="{Binding SalaryPeriods}"
-                                SelectedItem="{Binding SalaryPeriod}"
-                                WidthRequest="120"/>
+                    ItemsSource="{Binding SalaryPeriods}"
+                    SelectedItem="{Binding SalaryPeriod}"
+                    WidthRequest="120"/>
                     </Grid>
                     <Label Text="{Binding SalaryError}"
-                           TextColor="Red"
-                           FontSize="12"
-                           IsVisible="{Binding HasSalaryError}"/>
+               TextColor="Red"
+               FontSize="12"
+               IsVisible="{Binding HasSalaryError}"/>
                 </VerticalStackLayout>
             </Frame>
 
