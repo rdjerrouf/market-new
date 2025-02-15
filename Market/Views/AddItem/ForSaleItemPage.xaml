@@ -23,7 +23,9 @@
             <!-- Price Input with Validation -->
             <VerticalStackLayout Spacing="5">
                 <Entry Placeholder="Price"
-                       Text="{Binding Price, Mode=TwoWay}"
+                       TextChanged="OnPriceTextChanged"
+                       Completed="OnPriceCompleted"
+                       Unfocused="OnPriceCompleted"
                        Keyboard="Numeric"/>
                 <Label Text="{Binding PriceError}"
                        TextColor="Red"

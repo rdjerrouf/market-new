@@ -326,12 +326,6 @@ namespace Market.ViewModels.AddItem
 
         private bool ValidateCategory()
         {
-            if (SelectedServiceCategory == null)  // Changed from ServiceCategory
-            {
-                CategoryError = "Please select a service category";
-                return false;
-            }
-
             CategoryError = null;
             return true;
         }

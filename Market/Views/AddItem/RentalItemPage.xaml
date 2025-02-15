@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- RentalItemPage.xaml - Specialized form for rental listings -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:Market.ViewModels.AddItem"
@@ -10,11 +9,11 @@
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="20">
-            <!-- Title Input -->
+            <!-- Item Title Input -->
             <VerticalStackLayout Spacing="5">
-                <Label Text="What are you renting out?"
+                <Label Text="Item Title"
                        FontSize="16"/>
-                <Entry Placeholder="Enter title"
+                <Entry Placeholder="Enter item title"
                        Text="{Binding Title}"
                        MaxLength="100"/>
                 <Label Text="{Binding TitleError}"
@@ -24,45 +23,49 @@
             </VerticalStackLayout>
 
             <!-- Price Section -->
-            <VerticalStackLayout Spacing="5">
-                <Label Text="Rental Rate"
-                       FontSize="16"/>
-                <Grid ColumnDefinitions="*,Auto">
-                    <Entry Grid.Column="0"
-                           Placeholder="Enter amount"
-                           Text="{Binding Price}"
-                           Keyboard="Numeric"/>
-                    <Picker Grid.Column="1"
-                            ItemsSource="{Binding RentalPeriodOptions}"
-                            SelectedItem="{Binding RentalPeriod}"
-                            WidthRequest="120"/>
-                </Grid>
-                <Label Text="{Binding PriceError}"
-                       TextColor="Red"
-                       FontSize="12"
-                       IsVisible="{Binding HasPriceError}"/>
-            </VerticalStackLayout>
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Rental Rate"
+                           FontSize="16"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Entry Grid.Column="0"
+                               Placeholder="Enter rate"
+                               TextChanged="OnPriceTextChanged"
+                               Completed="OnPriceCompleted"
+                                Unfocused="OnPriceCompleted"
+                                Keyboard="Numeric"/>
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding RentalPeriods}"
+                                SelectedItem="{Binding RentalPeriod}"
+                                WidthRequest="120"/>
+                    </Grid>
+                    <Label Text="{Binding PriceError}"
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding HasPriceError}"/>
+                </VerticalStackLayout>
+            </Frame>
 
             <!-- Availability Dates -->
             <Frame BorderColor="LightGray" Padding="15">
-                <VerticalStackLayout Spacing="15">
-                    <Label Text="Availability"
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Availability Period"
                            FontSize="16"/>
+                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="From:"
+                               VerticalOptions="Center"/>
+                        <DatePicker Grid.Row="0" Grid.Column="1"
+                                  Date="{Binding AvailableFrom}"
+                                  MinimumDate="{Binding Source={x:Static system:DateTime.Today}}"/>
 
-                    <!-- Available From -->
-                    <VerticalStackLayout Spacing="5">
-                        <Label Text="Available From"/>
-                        <DatePicker Date="{Binding AvailableFrom}"
-                                  MinimumDate="{x:Static system:DateTime.Today}"/>
-                    </VerticalStackLayout>
-
-                    <!-- Available Until -->
-                    <VerticalStackLayout Spacing="5">
-                        <Label Text="Available Until"/>
-                        <DatePicker Date="{Binding AvailableTo}"
-                                  MinimumDate="{x:Static system:DateTime.Today}"/>
-                    </VerticalStackLayout>
-
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="To:"
+                               VerticalOptions="Center"/>
+                        <DatePicker Grid.Row="1" Grid.Column="1"
+                                  Date="{Binding AvailableTo}"
+                                  MinimumDate="{Binding AvailableFrom}"/>
+                    </Grid>
                     <Label Text="{Binding DateError}"
                            TextColor="Red"
                            FontSize="12"
@@ -70,48 +73,86 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- Description Input -->
+            <!-- Photos Section -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Photos"
+                           FontSize="16"/>
+                    <Label Text="Add up to 3 photos (minimum 1 required)"
+                           FontSize="12"
+                           TextColor="Gray"/>
+
+                    <!-- Add Photo Button -->
+                    <Button Text="Add Photo"
+        Clicked="OnAddPhotoClicked"
+        IsEnabled="{Binding CanAddPhoto}"
+        BackgroundColor="#2196F3"
+        Margin="0,10"/>
+                    <!-- Photo Count -->
+                    <Label Text="{Binding PhotoCount, StringFormat='Photos: {0}/3'}"
+                           FontSize="14"/>
+
+                    <!-- Photo Error -->
+                    <Label Text="{Binding PhotoError}"
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding HasPhotoError}"/>
+
+                    <!-- Photo List -->
+                    <CollectionView ItemsSource="{Binding SelectedPhotos}"
+                                  HeightRequest="100"
+                                  IsVisible="{Binding PhotoCount}">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal"
+                                             ItemSpacing="10"/>
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid WidthRequest="100">
+                                    <Image Source="{Binding .}"
+                                           Aspect="AspectFill"/>
+                                    <Button Text="X"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:RentalItemViewModel}}, Path=RemovePhotoCommand}"
+                                            CommandParameter="{Binding .}"
+                                            HeightRequest="30"
+                                            WidthRequest="30"
+                                            CornerRadius="15"
+                                            Padding="0"
+                                            Margin="5"
+                                            BackgroundColor="Red"
+                                            TextColor="White"
+                                            HorizontalOptions="End"
+                                            VerticalOptions="Start"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Item Description -->
             <VerticalStackLayout Spacing="5">
-                <Label Text="Description"
+                <Label Text="Item Description"
                        FontSize="16"/>
-                <Editor Placeholder="Describe your rental (features, conditions, requirements, etc.)"
-                        Text="{Binding Description}"
-                        HeightRequest="120"
-                        AutoSize="TextChanges"/>
+                <Editor Placeholder="Describe your rental item in detail"
+                       Text="{Binding Description, Mode=TwoWay}"
+                       HeightRequest="150"
+                       AutoSize="TextChanges"/>
                 <Label Text="{Binding DescriptionError}"
                        TextColor="Red"
                        FontSize="12"
                        IsVisible="{Binding HasDescriptionError}"/>
             </VerticalStackLayout>
 
-            <!-- Photo Upload Section -->
-            <VerticalStackLayout Spacing="10">
-                <Button Text="Add Photos"
-                        Command="{Binding UploadPhotoCommand}"
-                        IsEnabled="{Binding IsNotBusy}"/>
-                <Label Text="Photos help your listing get more attention!"
-                       FontSize="12"
-                       TextColor="Gray"
-                       IsVisible="{Binding HasNoPhoto}"/>
-            </VerticalStackLayout>
-
-            <!-- Photo Preview -->
-            <Image IsVisible="{Binding HasPhoto}"
-                   Source="{Binding PhotoUrl}"
-                   HeightRequest="200"
-                   Aspect="AspectFit"/>
-
             <!-- Post Button -->
-            <Button Text="Post Rental"
-                    Command="{Binding SaveCommand}"
-                    IsEnabled="{Binding CanSave}"
-                    BackgroundColor="#4CAF50"
-                    Margin="0,20"/>
+            <Button Command="{Binding SaveCommand}" 
+                       Text="Post"
+                       IsEnabled="{Binding CanSave}"/>
 
             <!-- Loading Indicator -->
             <ActivityIndicator IsRunning="{Binding IsBusy}"
-                             IsVisible="{Binding IsBusy}"
-                             HorizontalOptions="Center"/>
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center"/>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

@@ -15,7 +15,7 @@ namespace Market.ViewModels.AddItem
         /// Used for items being sold outright
         /// </summary>
         [RelayCommand]
-        private async Task ForSale()
+        private static async Task ForSale()
         {
             try
             {
@@ -34,7 +34,7 @@ namespace Market.ViewModels.AddItem
         /// Used for property and item rentals with date ranges
         /// </summary>
         [RelayCommand]
-        private async Task Rental()
+        private static async Task Rental()
         {
             try
             {
@@ -53,7 +53,7 @@ namespace Market.ViewModels.AddItem
         /// Used for posting job opportunities
         /// </summary>
         [RelayCommand]
-        private async Task Job()
+        private static  async Task Job()
         {
             try
             {
@@ -72,7 +72,7 @@ namespace Market.ViewModels.AddItem
         /// Used for offering services
         /// </summary>
         [RelayCommand]
-        private async Task Service()
+        private static async Task Service()
         {
             try
             {

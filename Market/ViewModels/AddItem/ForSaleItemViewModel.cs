@@ -18,7 +18,7 @@ namespace Market.ViewModels.AddItem
         // Validation constants
         private const int TITLE_MIN_LENGTH = 3;
         private const int TITLE_MAX_LENGTH = 100;
-        private const int DESCRIPTION_MIN_LENGTH = 10;
+        private const int DESCRIPTION_MIN_LENGTH = 5;
         private const decimal MIN_PRICE = 0.01m;
         private const decimal MAX_PRICE = 999999.99m;
         private const long MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
@@ -128,6 +128,7 @@ namespace Market.ViewModels.AddItem
             }
 
             TitleError = null;
+            Debug.WriteLine("Title validated");
             return true;
         }
 
@@ -149,6 +150,7 @@ namespace Market.ViewModels.AddItem
             }
 
             DescriptionError = null;
+            Debug.WriteLine("Description is VALIDATED");
             return true;
         }
 
@@ -241,12 +243,10 @@ namespace Market.ViewModels.AddItem
         private async Task Save()
         {
             if (IsBusy) return;
-
             try
             {
                 IsBusy = true;
                 Debug.WriteLine("Starting save process...");
-
                 // Validation check
                 if (!ValidateAll())
                 {
@@ -254,7 +254,6 @@ namespace Market.ViewModels.AddItem
                     return;
                 }
                 Debug.WriteLine("Validation passed");
-
                 // Get current user ID
                 Debug.WriteLine("Getting current user ID...");
                 int userId;
@@ -271,7 +270,6 @@ namespace Market.ViewModels.AddItem
                     await Shell.Current.GoToAsync("///SignInPage");
                     return;
                 }
-
                 // Create item
                 Debug.WriteLine("Creating item object...");
                 var item = new Item
@@ -285,11 +283,9 @@ namespace Market.ViewModels.AddItem
                     UserId = userId
                 };
                 Debug.WriteLine($"Item created: Title={item.Title}, Price={item.Price}, PhotoUrl={item.PhotoUrl}");
-
                 // Save item
                 Debug.WriteLine("Attempting to save item to database...");
                 var result = await _itemService.AddItemAsync(item);
-
                 if (result)
                 {
                     Debug.WriteLine("Item saved successfully");
@@ -301,6 +297,7 @@ namespace Market.ViewModels.AddItem
                     Debug.WriteLine("Failed to save item to database");
                     await Shell.Current.DisplayAlert("Error", "Failed to post item", "OK");
                 }
+                IsBusy = false;
             }
             catch (Exception ex)
             {
@@ -315,7 +312,6 @@ namespace Market.ViewModels.AddItem
             }
             finally
             {
-                IsBusy = false;
                 Debug.WriteLine("Save process completed");
             }
         }
@@ -336,7 +332,7 @@ namespace Market.ViewModels.AddItem
         /// <summary>
         /// Validates the uploaded photo
         /// </summary>
-        private async Task<bool> ValidatePhoto(FileResult photo)
+        private static async Task<bool> ValidatePhoto(FileResult photo)
         {
             try
             {
@@ -369,7 +365,7 @@ namespace Market.ViewModels.AddItem
         /// <summary>
         /// Saves the photo to local storage
         /// </summary>
-        private async Task<string?> SavePhoto(FileResult photo)
+        private static async Task<string?> SavePhoto(FileResult photo)
         {
             try
             {

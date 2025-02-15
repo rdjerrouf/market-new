@@ -5,6 +5,7 @@
              xmlns:system="clr-namespace:System;assembly=netstandard"
              x:Class="Market.Views.AddItem.JobItemPage"
              x:DataType="viewmodels:JobItemViewModel"
+             xmlns:converters="clr-namespace:Market.Converters"
              Title="Post a Job">
 
     <ScrollView>
@@ -59,8 +60,7 @@
 
             <!-- Apply Method -->
             <VerticalStackLayout Spacing="5">
-                <Label Text="How to Apply"
-           FontSize="16"/>
+                <Label Text="How to Apply" FontSize="16"/>
 
                 <!-- Picker and Entry in a vertical layout -->
                 <VerticalStackLayout Spacing="10">
@@ -78,6 +78,7 @@
            FontSize="12"
            IsVisible="{Binding HasApplyContactError}"/>
             </VerticalStackLayout>
+
 
             <!-- Employment Type Selection -->
             <VerticalStackLayout Spacing="5">
@@ -98,10 +99,12 @@
                FontSize="16"/>
                     <Grid ColumnDefinitions="*,Auto">
                         <Entry Grid.Column="0"
-                   Placeholder="Enter salary"
-                   Text="{Binding Salary, StringFormat='{0:N2}'}"
-                   Keyboard="Numeric"
-                   ReturnType="Done"/>
+                           Placeholder="Enter salary"
+                           TextChanged="OnSalaryTextChanged"
+                           Completed="OnSalaryCompleted"
+                           Unfocused="OnSalaryCompleted"
+                           Keyboard="Numeric"
+                           ReturnType="Done"/>
                         <Picker Grid.Column="1"
                     ItemsSource="{Binding SalaryPeriods}"
                     SelectedItem="{Binding SalaryPeriod}"
@@ -140,6 +143,7 @@
                        IsVisible="{Binding HasDescriptionError}"/>
             </VerticalStackLayout>
 
+           
             <!-- Post Button -->
             <Button Text="Post Job"
                     Command="{Binding SaveCommand}"

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Market.Converters;
 using System.Threading.Tasks;
 using Market.Services;
 using Market.DataAccess.Models;
@@ -9,6 +10,7 @@ using System.Net.Mail;
 using System.Text;
 
 namespace Market.ViewModels.AddItem
+#pragma warning disable MVVMTK0045 // Observable property not AOT compatible
 {
     public partial class JobItemViewModel : ObservableObject
     {
@@ -17,10 +19,10 @@ namespace Market.ViewModels.AddItem
         private readonly IItemService _itemService;
         private readonly IAuthService _authService;
 
-        private const int TITLE_MIN_LENGTH = 5;
-        private const int DESCRIPTION_MIN_LENGTH = 30;
+        private const int TITLE_MIN_LENGTH = 2;
+        private const int DESCRIPTION_MIN_LENGTH = 10;
         private const decimal MIN_SALARY = 0.01m;
-        private const decimal MAX_SALARY = 999999.99m;
+        private const decimal MAX_SALARY = 9999999.99m;
 
         public List<string> EmploymentTypes { get; } =
         [
@@ -39,7 +41,7 @@ namespace Market.ViewModels.AddItem
             "per Year"
         ];
 
-        private List<ApplyMethod> _applyMethods;
+        private List<ApplyMethod> _applyMethods = [];
         public List<ApplyMethod> ApplyMethods
         {
             get
@@ -145,7 +147,7 @@ namespace Market.ViewModels.AddItem
                 if (SetProperty(ref _selectedApplyMethod, value))
                 {
                     Debug.WriteLine($"SelectedApplyMethod changed to: {value}");
-                    ValidateApplyContact(); // Revalidate contact when method changes
+                    ValidateApplyContact();
                     OnPropertyChanged(nameof(HasApplyContactError));
                     OnPropertyChanged(nameof(CanSave));
                 }
@@ -441,30 +443,38 @@ namespace Market.ViewModels.AddItem
             return true;
         }
 
+
+        // Use the enum type for SelectedApplyMethod
+
+        // Update the validation method to handle enum
         private bool ValidateApplyContact()
         {
             Debug.WriteLine($"Validating ApplyContact: '{ApplyContact}', Method: {SelectedApplyMethod}");
 
+            // If the field is empty, that's okay during typing
             if (string.IsNullOrWhiteSpace(ApplyContact))
             {
                 ApplyContactError = "Please enter contact information";
-                Debug.WriteLine("ApplyContact validation failed: empty");
                 return false;
             }
 
-            bool isValid = SelectedApplyMethod switch
+            // Only validate format if the field is not empty
+            if (ApplyContact.Length > 3)  // Only validate once there's substantial input
             {
-                ApplyMethod.Email => IsValidEmail(ApplyContact),
-                ApplyMethod.PhoneNumber => IsValidPhoneNumber(ApplyContact),
-                ApplyMethod.URL => IsValidUrl(ApplyContact),
-                _ => false
-            };
+                bool isValid = SelectedApplyMethod switch
+                {
+                    ApplyMethod.Email => IsValidEmail(ApplyContact),
+                    ApplyMethod.PhoneNumber => IsValidPhoneNumber(ApplyContact),
+                    ApplyMethod.URL => IsValidUrl(ApplyContact),
+                    _ => false
+                };
 
-            if (!isValid)
-            {
-                ApplyContactError = $"Please enter a valid {SelectedApplyMethod.ToString().ToLower()}";
-                Debug.WriteLine($"ApplyContact validation failed: invalid {SelectedApplyMethod}");
-                return false;
+                if (!isValid)
+                {
+                    ApplyContactError = $"Please enter a valid {SelectedApplyMethod.ToString().ToLower()}";
+                    Debug.WriteLine($"ApplyContact validation failed: invalid {SelectedApplyMethod}");
+                    return false;
+                }
             }
 
             ApplyContactError = null;
@@ -554,6 +564,12 @@ namespace Market.ViewModels.AddItem
             Debug.WriteLine($"Company: {CompanyName}, Location: {JobLocation}");
             Debug.WriteLine($"ApplyMethod: {SelectedApplyMethod}, Contact: {ApplyContact}");
 
+            if (!CanSave)
+            {
+                Debug.WriteLine("Save canceled - validation errors present");
+                return;
+            }
+
             if (IsBusy)
             {
                 Debug.WriteLine("Save canceled - IsBusy is true");
@@ -629,8 +645,12 @@ namespace Market.ViewModels.AddItem
                 {
                     Debug.WriteLine("Save successful, showing success message");
                     await Shell.Current.DisplayAlert("Success", "Your job has been posted!", "OK");
-                    Debug.WriteLine("Navigating back");
-                    await Shell.Current.GoToAsync("..");
+
+                    // Clear the form fields
+                    ClearForm();
+
+                    Debug.WriteLine("Navigating to main page");
+                    await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {
@@ -654,7 +674,25 @@ namespace Market.ViewModels.AddItem
             {
                 IsBusy = false;
                 Debug.WriteLine("Save process completed");
+
+                // Trigger CanSave re-evaluation
+                OnPropertyChanged(nameof(CanSave));
             }
+        }
+
+        // Helper method to clear form fields
+        private void ClearForm()
+        {
+            Title = string.Empty;
+            Description = string.Empty;
+            CompanyName = string.Empty;
+            JobLocation = string.Empty;
+            StartDate = DateTime.Today;
+            Salary = 0;
+            EmploymentType = EmploymentTypes.FirstOrDefault() ?? string.Empty;
+            SalaryPeriod = SalaryPeriods.FirstOrDefault() ?? string.Empty;
+            SelectedApplyMethod = ApplyMethods.FirstOrDefault();
+            ApplyContact = string.Empty;
         }
 
         // Helper method to get error messages
@@ -673,3 +711,4 @@ namespace Market.ViewModels.AddItem
         #endregion
     }
 }
+#pragma warning restore MVVMTK0045

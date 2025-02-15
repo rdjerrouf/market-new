@@ -151,9 +151,11 @@ namespace Market
         {
             Debug.WriteLine("Registering ViewModels...");
             // In ConfigureServices or similar method
+#if WINDOWS
+    builder.Services.AddTransient<RentalItemViewModel>();
+#endif
             builder.Services.AddTransient<AddItemViewModel>();
             builder.Services.AddTransient<ForSaleItemViewModel>();
-            builder.Services.AddTransient<RentalItemViewModel>();
             builder.Services.AddTransient<JobItemViewModel>();
             builder.Services.AddTransient<ServiceItemViewModel>();
             builder.Services.AddTransient<SignInViewModel>();
