@@ -21,10 +21,32 @@ namespace Market.ViewModels.AddItem
         private const decimal MAX_RATE = 999999.99m;
 
         // Service categories
-        public List<ServiceCategory> ServiceCategories { get; } = Enum.GetValues(typeof(ServiceCategory))
-            .Cast<ServiceCategory>()
-            .ToList();
+        public List<ServiceCategory> ServiceCategories
+        {
+            get
+            {
+                try
+                {
+                    var categories = Enum.GetValues(typeof(ServiceCategory))
+                        .Cast<ServiceCategory>()
+                        .ToList();
 
+                    // Add detailed logging
+                    Debug.WriteLine("ServiceCategories:");
+                    foreach (var category in categories)
+                    {
+                        Debug.WriteLine($"- {category} (value: {(int)category})");
+                    }
+
+                    return categories;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error getting ServiceCategories: {ex}");
+                    return new List<ServiceCategory>();
+                }
+            }
+        }
         // Rate period options
         public List<string> RatePeriods { get; } = new()
         {
@@ -35,10 +57,32 @@ namespace Market.ViewModels.AddItem
         };
 
         // Service availability options
-        public List<ServiceAvailability> ServiceAvailabilities { get; } = Enum.GetValues(typeof(ServiceAvailability))
-            .Cast<ServiceAvailability>()
-            .ToList();
+        public List<ServiceAvailability> ServiceAvailabilities
+        {
+            get
+            {
+                try
+                {
+                    var availabilities = Enum.GetValues(typeof(ServiceAvailability))
+                        .Cast<ServiceAvailability>()
+                        .ToList();
 
+                    // Add detailed logging
+                    Debug.WriteLine("ServiceAvailabilities:");
+                    foreach (var availability in availabilities)
+                    {
+                        Debug.WriteLine($"- {availability} (value: {(int)availability})");
+                    }
+
+                    return availabilities;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error getting ServiceAvailabilities: {ex}");
+                    return new List<ServiceAvailability>();
+                }
+            }
+        }
         #endregion
 
         #region Observable Properties
@@ -47,14 +91,28 @@ namespace Market.ViewModels.AddItem
         public string Title
         {
             get => _title;
-            set => SetProperty(ref _title, value);
+            set
+            {
+                if (SetProperty(ref _title, value))
+                {
+                    ValidateTitle();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
         private string _description = string.Empty;
         public string Description
         {
             get => _description;
-            set => SetProperty(ref _description, value);
+            set
+            {
+                if (SetProperty(ref _description, value))
+                {
+                    ValidateDescription();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
         private decimal _rate;
@@ -75,14 +133,37 @@ namespace Market.ViewModels.AddItem
         public ServiceCategory SelectedServiceCategory
         {
             get => _selectedServiceCategory;
-            set => SetProperty(ref _selectedServiceCategory, value);
+            set
+            {
+                if (SetProperty(ref _selectedServiceCategory, value))
+                {
+                    Debug.WriteLine($"SelectedServiceCategory changed:");
+                    Debug.WriteLine($"- New Value: {value}");
+                    Debug.WriteLine($"- Enum Value: {(int)value}");
+
+                    // Additional validation or logic if needed
+                    ValidateCategory();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
         private string _ratePeriod = string.Empty;
         public string RatePeriod
         {
             get => _ratePeriod;
-            set => SetProperty(ref _ratePeriod, value);
+            set
+            {
+                Debug.WriteLine($"RatePeriod setter called:");
+                Debug.WriteLine($"- Previous Value: {_ratePeriod}");
+                Debug.WriteLine($"- New Value: {value}");
+
+                if (SetProperty(ref _ratePeriod, value))
+                {
+                    Debug.WriteLine("RatePeriod value changed successfully");
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
         private string? _experience;
@@ -132,9 +213,18 @@ namespace Market.ViewModels.AddItem
         public ServiceAvailability SelectedServiceAvailability
         {
             get => _selectedServiceAvailability;
-            set => SetProperty(ref _selectedServiceAvailability, value);
-        }
+            set
+            {
+                if (SetProperty(ref _selectedServiceAvailability, value))
+                {
+                    Debug.WriteLine($"SelectedServiceAvailability changed:");
+                    Debug.WriteLine($"- New Value: {value}");
+                    Debug.WriteLine($"- Enum Value: {(int)value}");
 
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
+        }
         // Error properties
         private string? _titleError;
         public string? TitleError
@@ -197,14 +287,29 @@ namespace Market.ViewModels.AddItem
 
         #region Computed Properties
 
-        public bool CanSave => !IsBusy &&
-                               !HasTitleError &&
-                               !HasDescriptionError &&
-                               !HasRateError &&
-                               !HasCategoryError &&
-                               !HasYearsOfExperienceError &&
-                               !HasNumberOfEmployeesError &&
-                               !HasServiceLocationError;
+        public bool CanSave
+        {
+            get
+            {
+                bool titleValid = !string.IsNullOrWhiteSpace(Title) && Title.Length >= 2;
+                bool descriptionValid = !string.IsNullOrWhiteSpace(Description) && Description.Length >= 10;
+                bool rateValid = Rate > 0;
+
+                var canSave = !IsBusy &&
+                              titleValid &&
+                              descriptionValid &&
+                              rateValid;
+
+                Debug.WriteLine($"CanSave evaluation:");
+                Debug.WriteLine($"  IsBusy: {IsBusy}");
+                Debug.WriteLine($"  Title Valid: {titleValid} ('{Title}')");
+                Debug.WriteLine($"  Description Valid: {descriptionValid} (length: {Description?.Length ?? 0})");
+                Debug.WriteLine($"  Rate Valid: {rateValid} (value: {Rate})");
+                Debug.WriteLine($"  Final result: {canSave}");
+
+                return canSave;
+            }
+        }
 
         public bool HasTitleError => !string.IsNullOrEmpty(TitleError);
         public bool HasDescriptionError => !string.IsNullOrEmpty(DescriptionError);
@@ -278,9 +383,9 @@ namespace Market.ViewModels.AddItem
                 return false;
             }
 
-            if (Title.Length < TITLE_MIN_LENGTH)
+            if (Title.Length < 2)
             {
-                TitleError = $"Title must be at least {TITLE_MIN_LENGTH} characters";
+                TitleError = "Title must be at least 2 characters";
                 return false;
             }
 
@@ -296,9 +401,9 @@ namespace Market.ViewModels.AddItem
                 return false;
             }
 
-            if (Description.Length < DESCRIPTION_MIN_LENGTH)
+            if (Description.Length < 10)
             {
-                DescriptionError = $"Description must be at least {DESCRIPTION_MIN_LENGTH} characters";
+                DescriptionError = "Description must be at least 10 characters";
                 return false;
             }
 
@@ -308,15 +413,9 @@ namespace Market.ViewModels.AddItem
 
         private bool ValidateRate()
         {
-            if (Rate < MIN_RATE)
+            if (Rate <= 0)
             {
-                RateError = "Rate must be greater than zero";
-                return false;
-            }
-
-            if (Rate > MAX_RATE)
-            {
-                RateError = $"Rate cannot exceed {MAX_RATE:C}";
+                RateError = "Please enter a valid rate";
                 return false;
             }
 
@@ -398,8 +497,12 @@ namespace Market.ViewModels.AddItem
                 IsBusy = true;
                 Debug.WriteLine("Starting service listing save process");
 
-                if (!ValidateAll())
+                // Remove strict validations
+                if (string.IsNullOrWhiteSpace(Title) ||
+                    string.IsNullOrWhiteSpace(Description) ||
+                    Rate <= 0)
                 {
+                    Debug.WriteLine("Validation failed. Cannot save.");
                     return;
                 }
 
@@ -415,9 +518,9 @@ namespace Market.ViewModels.AddItem
                     UserId = await _authService.GetCurrentUserIdAsync(),
                     ServiceCategory = SelectedServiceCategory,
                     ServiceAvailability = SelectedServiceAvailability,
+                    ServiceLocation = ServiceLocation,
                     YearsOfExperience = YearsOfExperience,
-                    NumberOfEmployees = NumberOfEmployees,
-                    ServiceLocation = ServiceLocation
+                    NumberOfEmployees = NumberOfEmployees
                 };
 
                 Debug.WriteLine($"Saving service: {service.Title}, {service.Price} {service.RentalPeriod}");
@@ -444,19 +547,14 @@ namespace Market.ViewModels.AddItem
             }
         }
 
+
         #endregion
 
         #region Helper Methods
 
         private bool ValidateAll()
         {
-            return ValidateTitle()
-                   && ValidateDescription()
-                   && ValidateRate()
-                   && ValidateCategory()
-                   && ValidateYearsOfExperience()
-                   && ValidateNumberOfEmployees()
-                   && ValidateServiceLocation();
+            return true;
         }
 
         private string BuildFullDescription()

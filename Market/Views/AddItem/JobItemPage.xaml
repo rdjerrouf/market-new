@@ -61,16 +61,15 @@
             <!-- Apply Method -->
             <VerticalStackLayout Spacing="5">
                 <Label Text="How to Apply" FontSize="16"/>
-
-                <!-- Picker and Entry in a vertical layout -->
                 <VerticalStackLayout Spacing="10">
-                    <Picker ItemsSource="{Binding ApplyMethods}"
-                SelectedItem="{Binding SelectedApplyMethod}"
-                Title="Select contact method"/>
+                    <Picker Title="Select contact method"
+                ItemsSource="{Binding ApplyMethods}"
+                SelectedItem="{Binding SelectedApplyMethod}"/>
 
                     <Entry Placeholder="{Binding SelectedApplyMethod, StringFormat='Enter {0}'}"
                Text="{Binding ApplyContact}"
-               MaxLength="200"/>
+               MaxLength="200"
+               TextChanged="OnApplyContactTextChanged"/>
                 </VerticalStackLayout>
 
                 <Label Text="{Binding ApplyContactError}"

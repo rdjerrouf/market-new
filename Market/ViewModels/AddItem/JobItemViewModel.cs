@@ -48,14 +48,34 @@ namespace Market.ViewModels.AddItem
             {
                 try
                 {
-                    _applyMethods ??= Enum.GetValues(typeof(ApplyMethod))
-                        .Cast<ApplyMethod>()
-                        .ToList();
+                    Debug.WriteLine($"Getter called. Current _applyMethods count: {_applyMethods?.Count ?? 0}");
+                    // Force population of _applyMethods
+                    if (_applyMethods == null || _applyMethods.Count == 0)
+                    {
+                        Debug.WriteLine("Attempting to initialize ApplyMethods");
+
+                        // Add more diagnostic information
+                        Debug.WriteLine($"Enum exists: {Enum.IsDefined(typeof(ApplyMethod), 0)}");
+                        Debug.WriteLine($"Enum underlying type: {Enum.GetUnderlyingType(typeof(ApplyMethod))}");
+
+                        _applyMethods = Enum.GetValues(typeof(ApplyMethod))
+                            .Cast<ApplyMethod>()
+                            .ToList();
+
+                        Debug.WriteLine($"ApplyMethods initialized with {_applyMethods.Count} items");
+
+                        foreach (var method in _applyMethods)
+                        {
+                            Debug.WriteLine($"Available ApplyMethod: {method} (value: {(int)method})");
+                        }
+                    }
                     return _applyMethods;
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"Error in ApplyMethods getter: {ex}");
+                    Debug.WriteLine($"Exception details: {ex.GetType().FullName}");
+                    Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                     return [];
                 }
             }
@@ -283,6 +303,11 @@ namespace Market.ViewModels.AddItem
             JobLocation = string.Empty;
             StartDate = DateTime.Today;
 
+
+            // Ensure ApplyMethods is populated
+            var applyMethods = ApplyMethods;
+            Debug.WriteLine($"Total ApplyMethods: {applyMethods.Count}");
+
             // Set defaults and validate immediate
             if (JobCategories.Count > 0)
             {
@@ -290,10 +315,16 @@ namespace Market.ViewModels.AddItem
                 Debug.WriteLine($"Set default JobCategory: {SelectedJobCategory}");
             }
 
-            if (ApplyMethods.Count > 0)
+          
+            if (applyMethods.Count > 0)
             {
-                SelectedApplyMethod = ApplyMethods[0];
+                SelectedApplyMethod = applyMethods[0];
                 Debug.WriteLine($"Set default ApplyMethod: {SelectedApplyMethod}");
+            }
+            else
+            {
+                Debug.WriteLine("WARNING: No ApplyMethods found!");
+                SelectedApplyMethod = ApplyMethod.Email;
             }
 
             if (EmploymentTypes.Count > 0)
@@ -317,7 +348,6 @@ namespace Market.ViewModels.AddItem
             Debug.WriteLine($"HasApplyContactError: {HasApplyContactError}");
             Debug.WriteLine($"CanSave: {CanSave}");
         }
-
         #region Validation Methods
 
         private bool ValidateTitle()
@@ -454,11 +484,16 @@ namespace Market.ViewModels.AddItem
             // If the field is empty, that's okay during typing
             if (string.IsNullOrWhiteSpace(ApplyContact))
             {
-                ApplyContactError = "Please enter contact information";
-                return false;
+                // Only set error if we're not in the process of typing
+                if (ApplyContact.Length == 0)
+                {
+                    ApplyContactError = "Please enter contact information";
+                    return false;
+                }
+                
             }
 
-            // Only validate format if the field is not empty
+            // Only validate format if the field is substantial
             if (ApplyContact.Length > 3)  // Only validate once there's substantial input
             {
                 bool isValid = SelectedApplyMethod switch
@@ -481,7 +516,6 @@ namespace Market.ViewModels.AddItem
             Debug.WriteLine("ApplyContact validation passed");
             return true;
         }
-
         private bool ValidateAll()
         {
             var validations = new Dictionary<string, bool>

@@ -54,4 +54,13 @@ public partial class JobItemPage : ContentPage
             }
         }
     }
+
+    private void OnApplyContactTextChanged(object sender, TextChangedEventArgs e)
+    {
+        // Ensure the binding updates and validation runs
+        if (sender is Entry entry)
+        {
+            ((JobItemViewModel)BindingContext).ApplyContact = entry.Text;
+        }
+    }
 }
