@@ -1,15 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Market.Services;
+using Market.Market.DataAccess.Models;
 using Market.DataAccess.Models;
 using System.Diagnostics;
 
 namespace Market.ViewModels.AddItem
 {
-    /// <summary>
-    /// ViewModel for the For Sale item creation page
-    /// Handles form validation and item submission for items being sold
-    /// </summary>
     public partial class ForSaleItemViewModel : ObservableObject
     {
         private readonly IItemService _itemService;
@@ -23,39 +20,72 @@ namespace Market.ViewModels.AddItem
         private const decimal MAX_PRICE = 999999.99m;
         private const long MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
 
-        /// <summary>
-        /// Constructor with dependency injection
-        /// </summary>
         public ForSaleItemViewModel(IItemService itemService, IAuthService authService)
         {
             _itemService = itemService;
             _authService = authService;
-            title = string.Empty; // Initialize title
-            description = string.Empty; // Initialize description
+            title = string.Empty;
+            description = string.Empty;
             Debug.WriteLine("ForSaleItemViewModel initialized");
         }
+
         #region Properties
+        public List<AlState> States => Enum.GetValues<AlState>().ToList();
+
+        private AlState? selectedState;
+        public AlState? SelectedState
+        {
+            get => selectedState;
+            set
+            {
+                if (SetProperty(ref selectedState, value))
+                {
+                    ValidateState();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
+        }
 
         private string title;
         public string Title
         {
             get => title;
-            set => SetProperty(ref title, value);
+            set
+            {
+                if (SetProperty(ref title, value))
+                {
+                    ValidateTitle();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
-
 
         private string description;
         public string Description
         {
             get => description;
-            set => SetProperty(ref description, value);
+            set
+            {
+                if (SetProperty(ref description, value))
+                {
+                    ValidateDescription();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
         private decimal price;
         public decimal Price
         {
             get => price;
-            set => SetProperty(ref price, value);
+            set
+            {
+                if (SetProperty(ref price, value))
+                {
+                    ValidatePrice();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
         }
 
         private string? photoUrl;
@@ -72,11 +102,6 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref isBusy, value);
         }
 
-        // Add this to the computed properties section
-        public bool CanSave => !IsBusy &&
-                               !HasTitleError &&
-                               !HasDescriptionError &&
-                               !HasPriceError;
         // Error message properties
         private string? titleError;
         public string? TitleError
@@ -99,20 +124,30 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref priceError, value);
         }
 
+        private string? stateError;
+        public string? StateError
+        {
+            get => stateError;
+            set => SetProperty(ref stateError, value);
+        }
+
         // Computed properties
         public bool IsNotBusy => !IsBusy;
         public bool HasPhoto => !string.IsNullOrEmpty(PhotoUrl);
         public bool HasTitleError => !string.IsNullOrEmpty(TitleError);
         public bool HasDescriptionError => !string.IsNullOrEmpty(DescriptionError);
         public bool HasPriceError => !string.IsNullOrEmpty(PriceError);
+        public bool HasStateError => !string.IsNullOrEmpty(StateError);
 
+        public bool CanSave => !IsBusy &&
+                              !HasTitleError &&
+                              !HasDescriptionError &&
+                              !HasPriceError &&
+                              !HasStateError &&
+                              SelectedState.HasValue; // Make sure state is selected
         #endregion
 
         #region Validation Methods
-
-        /// <summary>
-        /// Validates the item title
-        /// </summary>
         private bool ValidateTitle()
         {
             if (string.IsNullOrWhiteSpace(Title))
@@ -132,9 +167,6 @@ namespace Market.ViewModels.AddItem
             return true;
         }
 
-        /// <summary>
-        /// Validates the item description
-        /// </summary>
         private bool ValidateDescription()
         {
             if (string.IsNullOrWhiteSpace(Description))
@@ -150,13 +182,10 @@ namespace Market.ViewModels.AddItem
             }
 
             DescriptionError = null;
-            Debug.WriteLine("Description is VALIDATED");
+            Debug.WriteLine("Description validated");
             return true;
         }
 
-        /// <summary>
-        /// Validates the item price
-        /// </summary>
         private bool ValidatePrice()
         {
             if (Price < MIN_PRICE)
@@ -172,18 +201,33 @@ namespace Market.ViewModels.AddItem
             }
 
             PriceError = null;
-            
             Debug.WriteLine("Price validated");
             return true;
         }
 
+        private bool ValidateState()
+        {
+            if (!SelectedState.HasValue)
+            {
+                StateError = "Please select a state";
+                return false;
+            }
+
+            StateError = null;
+            Debug.WriteLine("State validated");
+            return true;
+        }
+
+        private bool ValidateAll()
+        {
+            return ValidateTitle() &&
+                   ValidateDescription() &&
+                   ValidatePrice() &&
+                   ValidateState();
+        }
         #endregion
 
         #region Commands
-
-        /// <summary>
-        /// Handles photo upload functionality
-        /// </summary>
         [RelayCommand]
         private async Task UploadPhoto()
         {
@@ -235,27 +279,25 @@ namespace Market.ViewModels.AddItem
             }
         }
 
-        /// <summary>
-        /// Saves the For Sale item
-        /// </summary>
-
         [RelayCommand]
         private async Task Save()
         {
             if (IsBusy) return;
+
             try
             {
                 IsBusy = true;
                 Debug.WriteLine("Starting save process...");
-                // Validation check
+
                 if (!ValidateAll())
                 {
                     Debug.WriteLine("Validation failed");
                     return;
                 }
+
                 Debug.WriteLine("Validation passed");
-                // Get current user ID
                 Debug.WriteLine("Getting current user ID...");
+
                 int userId;
                 try
                 {
@@ -265,12 +307,11 @@ namespace Market.ViewModels.AddItem
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"Failed to get current user ID: {ex.Message}");
-                    Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                     await Shell.Current.DisplayAlert("Error", "Please sign in to post items", "OK");
                     await Shell.Current.GoToAsync("///SignInPage");
                     return;
                 }
-                // Create item
+
                 Debug.WriteLine("Creating item object...");
                 var item = new Item
                 {
@@ -280,11 +321,12 @@ namespace Market.ViewModels.AddItem
                     Category = "For Sale",
                     PhotoUrl = PhotoUrl,
                     ListedDate = DateTime.UtcNow,
-                    UserId = userId
+                    UserId = userId,
+                    State = SelectedState //?? throw new InvalidOperationException("State must be selected") // Ensure SelectedState is not null
                 };
-                Debug.WriteLine($"Item created: Title={item.Title}, Price={item.Price}, PhotoUrl={item.PhotoUrl}");
-                // Save item
-                Debug.WriteLine("Attempting to save item to database...");
+
+                Debug.WriteLine($"Item created: Title={item.Title}, Price={item.Price}, State={item.State}");
+
                 var result = await _itemService.AddItemAsync(item);
                 if (result)
                 {
@@ -297,7 +339,6 @@ namespace Market.ViewModels.AddItem
                     Debug.WriteLine("Failed to save item to database");
                     await Shell.Current.DisplayAlert("Error", "Failed to post item", "OK");
                 }
-                IsBusy = false;
             }
             catch (Exception ex)
             {
@@ -312,26 +353,13 @@ namespace Market.ViewModels.AddItem
             }
             finally
             {
+                IsBusy = false;
                 Debug.WriteLine("Save process completed");
             }
         }
         #endregion
 
         #region Helper Methods
-
-        /// <summary>
-        /// Validates all form fields
-        /// </summary>
-        private bool ValidateAll()
-        {
-            return ValidateTitle()
-                   && ValidateDescription()
-                   && ValidatePrice();
-        }
-
-        /// <summary>
-        /// Validates the uploaded photo
-        /// </summary>
         private static async Task<bool> ValidatePhoto(FileResult photo)
         {
             try
@@ -362,19 +390,14 @@ namespace Market.ViewModels.AddItem
             }
         }
 
-        /// <summary>
-        /// Saves the photo to local storage
-        /// </summary>
         private static async Task<string?> SavePhoto(FileResult photo)
         {
             try
             {
-                // Use MAUI's cache directory for photos
                 var photosDir = Path.Combine(FileSystem.CacheDirectory, "Photos");
                 if (!Directory.Exists(photosDir))
                     Directory.CreateDirectory(photosDir);
 
-                // Generate a unique filename
                 var fileName = $"item_photo_{Guid.NewGuid()}{Path.GetExtension(photo.FileName)}";
                 var localPath = Path.Combine(photosDir, fileName);
 
@@ -393,10 +416,9 @@ namespace Market.ViewModels.AddItem
             {
                 Debug.WriteLine($"Photo save error: {ex.Message}");
                 Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-                throw; // Rethrow to handle in the calling method
+                throw;
             }
         }
-
         #endregion
     }
 }

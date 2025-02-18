@@ -130,6 +130,24 @@
                 </VerticalStackLayout>
             </Frame>
 
+
+
+            <!-- State Selection -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Location" 
+               FontSize="16"/>
+                    <Picker ItemsSource="{Binding States}"
+                SelectedItem="{Binding SelectedState}"
+                Title="Select State"/>
+                    <Label Text="{Binding StateError}"
+               TextColor="Red"
+               FontSize="12"
+               IsVisible="{Binding HasStateError}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+
             <!-- Item Description -->
             <VerticalStackLayout Spacing="5">
                 <Label Text="Item Description"

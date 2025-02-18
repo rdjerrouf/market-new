@@ -8,7 +8,8 @@ using Market.ViewModels.AddItem;
 using Market.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-
+using CommunityToolkit.Maui;
+using Microsoft.Extensions.DependencyInjection; 
 namespace Market
 {
     // Static class responsible for MAUI application setup and configuration
@@ -26,34 +27,32 @@ namespace Market
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var dbPath = Path.Combine(FileSystem.AppDataDirectory, "market.db");
 
+                bool needsRecreation = false;
+
                 if (!File.Exists(dbPath))
                 {
                     Debug.WriteLine("Database file not found, creating new database...");
-                    await context.Database.EnsureCreatedAsync();
-                    Debug.WriteLine("New database created successfully");
+                    needsRecreation = true;
                 }
                 else
                 {
-                    Debug.WriteLine("Database exists, checking connection...");
-                    if (!await context.Database.CanConnectAsync())
-                    {
-                        Debug.WriteLine("Cannot connect to existing database");
-                        throw new Exception("Database connection failed");
-                    }
-
-                    // Only create if tables don't exist
                     try
                     {
-                        // Try a simple query to check if tables exist
-                        await context.Users.FirstOrDefaultAsync();
-                        Debug.WriteLine("Database schema verified");
+                        // Try to execute a query that uses the new columns
+                        await context.Items.FirstOrDefaultAsync(i => i.State != null);
+                        Debug.WriteLine("Database schema is up to date");
                     }
-                    catch
+                    catch (Exception)
                     {
-                        Debug.WriteLine("Tables not found, creating schema...");
-                        await context.Database.EnsureCreatedAsync();
-                        Debug.WriteLine("Schema created successfully");
+                        Debug.WriteLine("Database schema is outdated, recreating...");
+                        needsRecreation = true;
                     }
+                }
+
+                if (needsRecreation)
+                {
+                    await context.RecreateDatabase();
+                    Debug.WriteLine("Database created/recreated successfully");
                 }
 
                 // Verify final connection
@@ -64,7 +63,7 @@ namespace Market
             {
                 Debug.WriteLine($"Database initialization error: {ex.Message}");
                 Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-                throw; // Rethrow to prevent app from starting with invalid database
+                throw;
             }
         }
 
@@ -96,6 +95,7 @@ namespace Market
         {
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()  // Add this line
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -138,6 +138,11 @@ namespace Market
             // Add ItemService registration
             builder.Services.AddScoped<IItemService, ItemService>();
             builder.Services.AddScoped<IMessageService, MessageService>();
+
+            // add GeoLocationService registration
+            builder.Services.AddTransient<IGeolocationService, GeolocationService>();
+
+
             // Converter Registrations (Add these lines HERE)
             builder.Services.AddTransient<StringToBoolConverter>();
             builder.Services.AddTransient<StringEqualityConverter>();

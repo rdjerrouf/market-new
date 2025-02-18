@@ -1,5 +1,6 @@
 ﻿using Market.DataAccess.Data;
 using Market.DataAccess.Models;
+using Market.Market.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
@@ -165,5 +166,73 @@ namespace Market.Services
         /// </summary>
         public Task<IEnumerable<Item>> GetItemsByUserAsync(int userId) =>
             GetUserItemsAsync(userId);
+
+        public async Task<IEnumerable<Item>> SearchByStateAsync(AlState state)
+        {
+            try
+            {
+                return await _context.Items
+                    .Where(i => i.State == state)
+                    .OrderByDescending(i => i.ListedDate)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error searching items by state: {ex.Message}");
+                return Enumerable.Empty<Item>();
+            }
+        }
+
+        public async Task<IEnumerable<Item>> SearchByLocationAsync(double latitude, double longitude, double radiusKm)
+        {
+            try
+            {
+                // Convert to radians
+                var lat1 = latitude * Math.PI / 180;
+                var lon1 = longitude * Math.PI / 180;
+
+                return await _context.Items
+                    .Where(i => i.Latitude != null && i.Longitude != null)
+                    .Select(i => new
+                    {
+                        Item = i,
+                        Distance = 6371 * Math.Acos(
+                            Math.Sin(lat1) * Math.Sin(i.Latitude!.Value * Math.PI / 180) +
+                            Math.Cos(lat1) * Math.Cos(i.Latitude!.Value * Math.PI / 180) *
+                            Math.Cos((i.Longitude!.Value * Math.PI / 180) - lon1)
+                        )
+                    })
+                    .Where(x => x.Distance <= radiusKm)
+                    .OrderBy(x => x.Distance)
+                    .Select(x => x.Item)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error searching items by location: {ex.Message}");
+                return Enumerable.Empty<Item>();
+            }
+        }
+
+        public async Task<IEnumerable<Item>> SearchByCategoryAndStateAsync(string category, AlState state)
+        {
+            try
+            {
+                return await _context.Items
+                    .Where(i => i.Category == category && i.State == state)
+                    .OrderByDescending(i => i.ListedDate)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error searching items by category and state: {ex.Message}");
+                return Enumerable.Empty<Item>();
+            }
+        }
     }
+
 }
+
+
+
+

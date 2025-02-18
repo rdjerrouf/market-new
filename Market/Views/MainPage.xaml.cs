@@ -1,6 +1,7 @@
 ﻿using Market.ViewModels;
 using Market.Services;
 
+
 namespace Market.Views
 {
     public partial class MainPage : ContentPage
@@ -8,12 +9,10 @@ namespace Market.Views
         /// <summary>
         /// Initialize MainPage with proper dependency injection
         /// </summary>
-        public MainPage(IItemService itemService)
+        public MainPage(MainViewModel viewModel)  // Change this line
         {
             InitializeComponent();
-            // Create ViewModel with the injected ItemService
-            var viewModel = new MainViewModel(itemService);
-            BindingContext = viewModel;
+            BindingContext = viewModel;  // Simply assign the injected viewModel
         }
     }
 }

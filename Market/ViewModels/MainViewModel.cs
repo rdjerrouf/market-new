@@ -2,24 +2,18 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Market.DataAccess.Models;
+using Market.Market.DataAccess.Models; // Add this for AlState
 using Market.Services;
 using System.Diagnostics;
 using System.Windows.Input;
 
 namespace Market.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the main marketplace page. Handles item display, filtering,
-    /// and user interactions for the main marketplace interface.
-    /// </summary>
     public partial class MainViewModel : ObservableObject
     {
         private readonly IItemService _itemService;
 
         #region Properties
-        /// <summary>
-        /// Collection of marketplace items displayed to the user
-        /// </summary>
         private ObservableCollection<Item> items = new();
         public ObservableCollection<Item> Items
         {
@@ -27,9 +21,6 @@ namespace Market.ViewModels
             set => SetProperty(ref items, value);
         }
 
-        /// <summary>
-        /// Current search query entered by the user
-        /// </summary>
         private string searchQuery = string.Empty;
         public string SearchQuery
         {
@@ -37,9 +28,6 @@ namespace Market.ViewModels
             set => SetProperty(ref searchQuery, value);
         }
 
-        /// <summary>
-        /// Indicates whether the view is currently refreshing
-        /// </summary>
         private bool isRefreshing;
         public bool IsRefreshing
         {
@@ -47,9 +35,6 @@ namespace Market.ViewModels
             set => SetProperty(ref isRefreshing, value);
         }
 
-        /// <summary>
-        /// Indicates whether data loading operations are in progress
-        /// </summary>
         private bool isLoading;
         public bool IsLoading
         {
@@ -57,9 +42,6 @@ namespace Market.ViewModels
             set => SetProperty(ref isLoading, value);
         }
 
-        /// <summary>
-        /// Title displayed at the top of the marketplace page
-        /// </summary>
         private string title = "Marketplace";
         public string Title
         {
@@ -67,9 +49,22 @@ namespace Market.ViewModels
             set => SetProperty(ref title, value);
         }
 
-        /// <summary>
-        /// Command to handle search operations
-        /// </summary>
+        private AlState? selectedState;
+        public AlState? SelectedState
+        {
+            get => selectedState;
+            set
+            {
+                if (SetProperty(ref selectedState, value) && value.HasValue)
+                {
+                    FilterByStateCommand.Execute(value);
+                }
+            }
+        }
+
+        // List of all states for the picker
+        public List<AlState> States => Enum.GetValues<AlState>().ToList();
+
         private ICommand? _searchCommand;
         public ICommand SearchCommand => _searchCommand ??= new Command<string>(async (query) =>
         {
@@ -80,11 +75,6 @@ namespace Market.ViewModels
         });
         #endregion
 
-        /// <summary>
-        /// Initializes a new instance of the MainViewModel
-        /// </summary>
-        /// <param name="itemService">Service for managing marketplace items</param>
-        /// <exception cref="ArgumentNullException">Thrown when itemService is null</exception>
         public MainViewModel(IItemService itemService)
         {
             _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
@@ -92,9 +82,6 @@ namespace Market.ViewModels
         }
 
         #region Loading Methods
-        /// <summary>
-        /// Loads or reloads all marketplace items from the service
-        /// </summary>
         private async Task LoadItemsAsync()
         {
             if (IsLoading) return;
@@ -105,7 +92,7 @@ namespace Market.ViewModels
                 Debug.WriteLine("Loading items...");
 
                 var allItems = await _itemService.GetItemsAsync();
-                
+
                 Debug.WriteLine($"Loaded {allItems.Count()} items from service");
 
                 Items.Clear();
@@ -123,16 +110,11 @@ namespace Market.ViewModels
             {
                 IsLoading = false;
                 Debug.WriteLine("Finished loading items");
-
             }
         }
         #endregion
 
         #region Search Methods
-        /// <summary>
-        /// Filters items based on user search query
-        /// </summary>
-        /// <param name="query">Search terms entered by user</param>
         private async Task SearchItemsAsync(string query)
         {
             if (IsLoading) return;
@@ -167,47 +149,103 @@ namespace Market.ViewModels
         }
         #endregion
 
+        #region Filter Commands
+        [RelayCommand]
+        private async Task FilterByState(AlState? state)
+        {
+            if (IsLoading || !state.HasValue) return;
+
+            try
+            {
+                IsLoading = true;
+                Debug.WriteLine($"Filtering items by state: {state}");
+
+                var filteredItems = await _itemService.SearchByStateAsync(state.Value);
+
+                Items.Clear();
+                foreach (var item in filteredItems)
+                {
+                    Items.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error filtering items by state: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to filter items by state.", "OK");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task FilterByCategoryAndState(string category)
+        {
+            if (IsLoading || !SelectedState.HasValue) return;
+
+            try
+            {
+                IsLoading = true;
+                Debug.WriteLine($"Filtering items by category: {category} and state: {SelectedState}");
+
+                var filteredItems = await _itemService.SearchByCategoryAndStateAsync(category, SelectedState.Value);
+
+                Items.Clear();
+                foreach (var item in filteredItems)
+                {
+                    Items.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error filtering by category and state: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to filter items.", "OK");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        #endregion
+
         #region Category Commands
-        /// <summary>
-        /// Filters items to show only items for sale
-        /// </summary>
         [RelayCommand]
         private async Task ForSale()
         {
-            await FilterByCategoryAsync("For Sale");
+            if (SelectedState.HasValue)
+                await FilterByCategoryAndState("For Sale");
+            else
+                await FilterByCategoryAsync("For Sale");
         }
 
-        /// <summary>
-        /// Filters items to show only job listings
-        /// </summary>
         [RelayCommand]
         private async Task Jobs()
         {
-            await FilterByCategoryAsync("Jobs");
+            if (SelectedState.HasValue)
+                await FilterByCategoryAndState("Jobs");
+            else
+                await FilterByCategoryAsync("Jobs");
         }
 
-        /// <summary>
-        /// Filters items to show only service offerings
-        /// </summary>
         [RelayCommand]
         private async Task Services()
         {
-            await FilterByCategoryAsync("Services");
+            if (SelectedState.HasValue)
+                await FilterByCategoryAndState("Services");
+            else
+                await FilterByCategoryAsync("Services");
         }
 
-        /// <summary>
-        /// Filters items to show only rental listings
-        /// </summary>
         [RelayCommand]
         private async Task Rentals()
         {
-            await FilterByCategoryAsync("Rentals");
+            if (SelectedState.HasValue)
+                await FilterByCategoryAndState("Rentals");
+            else
+                await FilterByCategoryAsync("Rentals");
         }
 
-        /// <summary>
-        /// Filters the item list by specified category
-        /// </summary>
-        /// <param name="category">Category to filter by</param>
         private async Task FilterByCategoryAsync(string category)
         {
             if (IsLoading) return;
@@ -240,18 +278,12 @@ namespace Market.ViewModels
         #endregion
 
         #region Navigation Commands
-        /// <summary>
-        /// Navigates to the add item page
-        /// </summary>
         [RelayCommand]
         private static async Task Post()
         {
             await Shell.Current.GoToAsync("AddItemPage");
         }
 
-        /// <summary>
-        /// Navigates to the user's inbox
-        /// </summary>
         [RelayCommand]
         private static async Task Inbox()
         {
@@ -270,9 +302,6 @@ namespace Market.ViewModels
             }
         }
 
-        /// <summary>
-        /// Loads and displays the current user's listings
-        /// </summary>
         [RelayCommand]
         private async Task MyListings()
         {
@@ -300,18 +329,13 @@ namespace Market.ViewModels
             }
         }
 
-        /// <summary>
-        /// Returns to the home view and reloads all items
-        /// </summary>
         [RelayCommand]
         private async Task Home()
         {
+            SelectedState = null; // Reset state filter
             await LoadItemsAsync();
         }
 
-        /// <summary>
-        /// Navigates to the account management page
-        /// </summary>
         [RelayCommand]
         private static async Task Account()
         {
@@ -329,9 +353,6 @@ namespace Market.ViewModels
         #endregion
 
         #region Refresh Command
-        /// <summary>
-        /// Refreshes the items list when triggered by pull-to-refresh
-        /// </summary>
         [RelayCommand]
         private async Task Refresh()
         {
@@ -353,3 +374,4 @@ namespace Market.ViewModels
         #endregion
     }
 }
+

@@ -1,4 +1,5 @@
-﻿using Market.DataAccess.Models;
+﻿using Market.Market.DataAccess.Models;
+using Market.DataAccess.Models;
 
 namespace Market.Services
 {
@@ -29,5 +30,11 @@ namespace Market.Services
         // adding my listings
 
         Task<IEnumerable<Item>> GetItemsByUserAsync(int userId);
+
+        // adding location search
+        Task<IEnumerable<Item>> SearchByStateAsync(AlState state);
+        Task<IEnumerable<Item>> SearchByLocationAsync(double latitude, double longitude, double radiusKm);
+        Task<IEnumerable<Item>> SearchByCategoryAndStateAsync(string category, AlState state);
     }
 }
+

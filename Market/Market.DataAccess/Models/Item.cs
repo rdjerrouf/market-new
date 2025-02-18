@@ -1,4 +1,5 @@
 ﻿using System;
+using Market.Market.DataAccess.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace Market.DataAccess.Models
@@ -38,5 +39,12 @@ namespace Market.DataAccess.Models
         public int? NumberOfEmployees { get; set; }
         public string? ServiceLocation { get; set; }
         public double? AverageRating { get; set; }
+
+        // Add to your existing Item.cs
+        public AlState? State { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+
+
     }
 }

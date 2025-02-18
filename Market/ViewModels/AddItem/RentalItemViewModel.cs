@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Market.Services;
 using Market.DataAccess.Models;
+using Market.Market.DataAccess.Models;
 using System.Diagnostics;
 using System.Text;
 
@@ -68,7 +69,21 @@ namespace Market.ViewModels.AddItem
         }
 
 
+        public List<AlState> States => Enum.GetValues<AlState>().ToList();
 
+        private AlState? selectedState;
+        public AlState? SelectedState
+        {
+            get => selectedState;
+            set
+            {
+                if (SetProperty(ref selectedState, value))
+                {
+                    ValidateState();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
+        }
 
         private decimal _price;
         public decimal Price
@@ -149,6 +164,15 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref _titleError, value);
         }
 
+
+        private string? stateError;
+        public string? StateError
+        {
+            get => stateError;
+            set => SetProperty(ref stateError, value);
+        }
+
+
         private string? _descriptionError;
         public string? DescriptionError
         {
@@ -193,6 +217,9 @@ namespace Market.ViewModels.AddItem
         #endregion
 
         #region Computed Properties
+
+        public bool HasStateError => !string.IsNullOrEmpty(StateError);
+
         public bool HasTitleError => !string.IsNullOrEmpty(TitleError);
         public bool HasDescriptionError => !string.IsNullOrEmpty(DescriptionError);
         public bool HasPriceError => !string.IsNullOrEmpty(PriceError);
@@ -204,12 +231,14 @@ namespace Market.ViewModels.AddItem
             get
             {
                 var canSave = !IsBusy &&
-                              !HasTitleError &&
-                              !HasDescriptionError &&
-                              !HasPriceError &&
-                              !HasDateError &&
-                              !HasPhotoError &&
-                              PhotoCount >= MIN_PHOTOS;
+                     !HasTitleError &&
+                     !HasDescriptionError &&
+                     !HasPriceError &&
+                     !HasDateError &&
+                     !HasPhotoError &&
+                     !HasStateError &&
+                     SelectedState.HasValue &&
+                     PhotoCount >= MIN_PHOTOS;
 
                 Debug.WriteLine("CanSave evaluation:");
                 Debug.WriteLine($"- IsBusy: {IsBusy}");
@@ -220,6 +249,8 @@ namespace Market.ViewModels.AddItem
                 Debug.WriteLine($"- HasPhotoError: {HasPhotoError}");
                 Debug.WriteLine($"- PhotoCount: {PhotoCount} (minimum: {MIN_PHOTOS})");
                 Debug.WriteLine($"Final CanSave value: {canSave}");
+                Debug.WriteLine($"- HasStateError: {HasStateError}");
+                Debug.WriteLine($"- SelectedState: {SelectedState}");
 
                 return canSave;
             }
@@ -258,6 +289,21 @@ namespace Market.ViewModels.AddItem
         }
 
         #region Validation Methods
+
+        private bool ValidateState()
+        {
+            if (!SelectedState.HasValue)
+            {
+                StateError = "Please select a state";
+                return false;
+            }
+
+            StateError = null;
+            Debug.WriteLine("State validated");
+            return true;
+        }
+
+
         private bool ValidateTitle()
         {
             if (string.IsNullOrWhiteSpace(Title))
@@ -410,12 +456,15 @@ namespace Market.ViewModels.AddItem
             var photosValid = ValidatePhotos();
             Debug.WriteLine($"- Photos validation: {photosValid}");
 
+            var stateValid = ValidateState();
+            Debug.WriteLine($"- State validation: {stateValid}");
+
             var allValid = titleValid &&
                            descriptionValid &&
                            priceValid &&
                            datesValid &&
-                           photosValid;
-
+                           photosValid&&
+                           stateValid;
             Debug.WriteLine($"ValidateAll result: {allValid}");
 
             return allValid;
@@ -537,7 +586,13 @@ namespace Market.ViewModels.AddItem
                     Debug.WriteLine("Validation failed during save");
                     return;
                 }
-
+                // Check if SelectedState has a value
+                if (!SelectedState.HasValue)
+                {
+                    Debug.WriteLine("State not selected");
+                    await Shell.Current.DisplayAlert("Error", "Please select a state", "OK");
+                    return;
+                }
                 var item = new Item
                 {
                     Title = Title,
@@ -549,7 +604,8 @@ namespace Market.ViewModels.AddItem
                     AvailableTo = AvailableTo,
                     ListedDate = DateTime.UtcNow,
                     UserId = await _authService.GetCurrentUserIdAsync(),
-                    PhotoUrl = string.Join(";", SelectedPhotos)
+                    PhotoUrl = string.Join(";", SelectedPhotos),
+                    State = SelectedState.Value  // Added state
                 };
 
                 Debug.WriteLine($"Attempting to save rental item: {item.Title}");
@@ -587,6 +643,7 @@ namespace Market.ViewModels.AddItem
             var fullDescription = new StringBuilder();
             fullDescription.AppendLine(Description);
             fullDescription.AppendLine();
+            fullDescription.AppendLine($"Location: {SelectedState}");  // Add this line
             fullDescription.AppendLine($"Available From: {AvailableFrom:d}");
             fullDescription.AppendLine($"Available To: {AvailableTo:d}");
             fullDescription.AppendLine($"Rate: {Price:C} {RentalPeriod}");
