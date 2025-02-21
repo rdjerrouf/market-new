@@ -68,8 +68,31 @@ namespace Market.ViewModels.AddItem
             }
         }
 
+        public static List<ForRentCategory> Categories => Enum.GetValues<ForRentCategory>().ToList();
 
-        public List<AlState> States => Enum.GetValues<AlState>().ToList();
+        private ForRentCategory? selectedCategory;
+        public ForRentCategory? SelectedCategory
+        {
+            get => selectedCategory;
+            set
+            {
+                if (SetProperty(ref selectedCategory, value))
+                {
+                    ValidateCategory();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
+        }
+
+        private string? categoryError;
+        public string? CategoryError
+        {
+            get => categoryError;
+            set => SetProperty(ref categoryError, value);
+        }
+
+        public bool HasCategoryError => !string.IsNullOrEmpty(CategoryError);
+        public static List<AlState> States => Enum.GetValues<AlState>().ToList();
 
         private AlState? selectedState;
         public AlState? SelectedState
@@ -290,6 +313,18 @@ namespace Market.ViewModels.AddItem
 
         #region Validation Methods
 
+        private bool ValidateCategory()
+        {
+            if (!SelectedCategory.HasValue)
+            {
+                CategoryError = "Please select a category";
+                return false;
+            }
+
+            CategoryError = null;
+            Debug.WriteLine("Category validated");
+            return true;
+        }
         private bool ValidateState()
         {
             if (!SelectedState.HasValue)
@@ -459,11 +494,15 @@ namespace Market.ViewModels.AddItem
             var stateValid = ValidateState();
             Debug.WriteLine($"- State validation: {stateValid}");
 
+            var categoryValid = ValidateCategory();
+            Debug.WriteLine($"- Category validation: {categoryValid}");
+
             var allValid = titleValid &&
                            descriptionValid &&
                            priceValid &&
                            datesValid &&
                            photosValid&&
+                           categoryValid &&
                            stateValid;
             Debug.WriteLine($"ValidateAll result: {allValid}");
 
@@ -587,7 +626,7 @@ namespace Market.ViewModels.AddItem
                     return;
                 }
                 // Check if SelectedState has a value
-                if (!SelectedState.HasValue)
+                if (!SelectedState.HasValue || !SelectedCategory.HasValue)
                 {
                     Debug.WriteLine("State not selected");
                     await Shell.Current.DisplayAlert("Error", "Please select a state", "OK");
@@ -605,7 +644,9 @@ namespace Market.ViewModels.AddItem
                     ListedDate = DateTime.UtcNow,
                     UserId = await _authService.GetCurrentUserIdAsync(),
                     PhotoUrl = string.Join(";", SelectedPhotos),
-                    State = SelectedState.Value  // Added state
+                    State = SelectedState.Value,  // Added state
+                    ForRentCategory = SelectedCategory.Value
+
                 };
 
                 Debug.WriteLine($"Attempting to save rental item: {item.Title}");
@@ -615,7 +656,7 @@ namespace Market.ViewModels.AddItem
                 {
                     Debug.WriteLine("Save successful");
                     await Shell.Current.DisplayAlert("Success", "Your rental item has been posted!", "OK");
-                    await Shell.Current.GoToAsync("..");
+                    await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {
@@ -643,7 +684,8 @@ namespace Market.ViewModels.AddItem
             var fullDescription = new StringBuilder();
             fullDescription.AppendLine(Description);
             fullDescription.AppendLine();
-            fullDescription.AppendLine($"Location: {SelectedState}");  // Add this line
+            fullDescription.AppendLine($"Category: {SelectedCategory?.ToString() ?? "Not specified"}");
+            fullDescription.AppendLine($"Location: {SelectedState?.ToString() ?? "Not specified"}");
             fullDescription.AppendLine($"Available From: {AvailableFrom:d}");
             fullDescription.AppendLine($"Available To: {AvailableTo:d}");
             fullDescription.AppendLine($"Rate: {Price:C} {RentalPeriod}");

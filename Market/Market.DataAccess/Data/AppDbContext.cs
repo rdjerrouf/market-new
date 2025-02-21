@@ -160,6 +160,25 @@ namespace Market.DataAccess.Data
                 entity.Property(e => e.ListedDate)
                     .HasDefaultValueSql("CURRENT_TIMESTAMP")
                     .ValueGeneratedOnAdd();
+
+                // Add new fields for sale and rent categories
+                entity.Property(e => e.ForSaleCategory)
+        .HasConversion(
+            v => v.HasValue ? v.Value.ToString() : null,
+            v => !string.IsNullOrEmpty(v) ?
+                (ForSaleCategory)Enum.Parse(typeof(ForSaleCategory), v) :
+                (ForSaleCategory?)null
+        )
+        .IsRequired(false);
+
+                entity.Property(e => e.ForRentCategory)
+                    .HasConversion(
+                        v => v.HasValue ? v.Value.ToString() : null,
+                        v => !string.IsNullOrEmpty(v) ?
+                            (ForRentCategory)Enum.Parse(typeof(ForRentCategory), v) :
+                            (ForRentCategory?)null
+                    )
+                    .IsRequired(false);
             });
 
             modelBuilder.Entity<Message>(entity =>

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Market.Market.DataAccess.Models;
 using Market.Converters;
 using System.Threading.Tasks;
 using Market.Services;
@@ -106,7 +107,47 @@ namespace Market.ViewModels.AddItem
             }
         }
 
-        public DateTime MinimumDate => DateTime.Today;
+
+        // including enum of states
+        // Add this property
+        public static List<AlState> States => Enum.GetValues<AlState>().ToList();
+
+        private AlState? selectedState;
+        public AlState? SelectedState
+        {
+            get => selectedState;
+            set
+            {
+                if (SetProperty(ref selectedState, value))
+                {
+                    ValidateState();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
+        }
+
+        private string? stateError;
+        public string? StateError
+        {
+            get => stateError;
+            set => SetProperty(ref stateError, value);
+        }
+
+        public bool HasStateError => !string.IsNullOrEmpty(StateError);
+        public static DateTime MinimumDate => DateTime.Today;
+
+        private bool ValidateState()
+        {
+            if (!SelectedState.HasValue)
+            {
+                StateError = "Please select a state";
+                return false;
+            }
+
+            StateError = null;
+            Debug.WriteLine("State validated");
+            return true;
+        }
         #endregion
 
         #region Observable Properties
@@ -526,7 +567,8 @@ namespace Market.ViewModels.AddItem
                 { "EmploymentType", ValidateEmploymentType() },
                 { "StartDate", ValidateStartDate() },
                 { "CompanyName", ValidateCompanyName() },
-                { "JobLocation", ValidateJobLocation() },
+                { "JobLocation", ValidateJobLocation()},
+                { "State", ValidateState() },
                 { "ApplyContact", ValidateApplyContact() }
             };
 
@@ -575,6 +617,8 @@ namespace Market.ViewModels.AddItem
             fullDescription.AppendLine(Description);
             fullDescription.AppendLine();
             fullDescription.AppendLine($"Employment Type: {EmploymentType}");
+            fullDescription.AppendLine($"Company: {CompanyName}");
+            fullDescription.AppendLine($"Location: {SelectedState}");
             fullDescription.AppendLine($"Salary: {Salary:C} {SalaryPeriod}");
             fullDescription.AppendLine($"Start Date: {StartDate:d}");
             fullDescription.AppendLine();
@@ -643,7 +687,12 @@ namespace Market.ViewModels.AddItem
                     Debug.WriteLine("Validation failed - canceling save");
                     return;
                 }
-
+                if (!SelectedState.HasValue)
+                {
+                    Debug.WriteLine("State not selected");
+                    await Shell.Current.DisplayAlert("Error", "Please select a state", "OK");
+                    return;
+                }
                 Debug.WriteLine("All validations passed, creating job item");
                 var jobItem = new Item
                 {
@@ -659,6 +708,7 @@ namespace Market.ViewModels.AddItem
                     UserId = await _authService.GetCurrentUserIdAsync(),
                     JobCategory = SelectedJobCategory,
                     CompanyName = CompanyName,
+                    State = SelectedState.Value,
                     JobLocation = JobLocation,
                     ApplyMethod = SelectedApplyMethod,
                     ApplyContact = ApplyContact

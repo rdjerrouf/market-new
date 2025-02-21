@@ -4,6 +4,7 @@ using Market.Services;
 using Market.Market.DataAccess.Models;
 using Market.DataAccess.Models;
 using System.Diagnostics;
+using System.Text;
 
 namespace Market.ViewModels.AddItem
 {
@@ -30,7 +31,32 @@ namespace Market.ViewModels.AddItem
         }
 
         #region Properties
-        public List<AlState> States => Enum.GetValues<AlState>().ToList();
+
+        public static List<ForSaleCategory> Categories => Enum.GetValues<ForSaleCategory>().ToList();
+
+        private ForSaleCategory? selectedCategory;
+        public ForSaleCategory? SelectedCategory
+        {
+            get => selectedCategory;
+            set
+            {
+                if (SetProperty(ref selectedCategory, value))
+                {
+                    ValidateCategory();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
+        }
+
+        private string? categoryError;
+        public string? CategoryError
+        {
+            get => categoryError;
+            set => SetProperty(ref categoryError, value);
+        }
+
+        public bool HasCategoryError => !string.IsNullOrEmpty(CategoryError);
+        public static  List<AlState> States => Enum.GetValues<AlState>().ToList();
 
         private AlState? selectedState;
         public AlState? SelectedState
@@ -148,6 +174,19 @@ namespace Market.ViewModels.AddItem
         #endregion
 
         #region Validation Methods
+
+        private bool ValidateCategory()
+        {
+            if (!SelectedCategory.HasValue)
+            {
+                CategoryError = "Please select a category";
+                return false;
+            }
+
+            CategoryError = null;
+            Debug.WriteLine("Category validated");
+            return true;
+        }
         private bool ValidateTitle()
         {
             if (string.IsNullOrWhiteSpace(Title))
@@ -223,6 +262,7 @@ namespace Market.ViewModels.AddItem
             return ValidateTitle() &&
                    ValidateDescription() &&
                    ValidatePrice() &&
+                   ValidateCategory() &&
                    ValidateState();
         }
         #endregion
@@ -311,7 +351,12 @@ namespace Market.ViewModels.AddItem
                     await Shell.Current.GoToAsync("///SignInPage");
                     return;
                 }
-
+                if (!SelectedState.HasValue || !SelectedCategory.HasValue)
+                {
+                    Debug.WriteLine("State or Category not selected");
+                    await Shell.Current.DisplayAlert("Error", "Please select both state and category", "OK");
+                    return;
+                }
                 Debug.WriteLine("Creating item object...");
                 var item = new Item
                 {
@@ -322,7 +367,8 @@ namespace Market.ViewModels.AddItem
                     PhotoUrl = PhotoUrl,
                     ListedDate = DateTime.UtcNow,
                     UserId = userId,
-                    State = SelectedState //?? throw new InvalidOperationException("State must be selected") // Ensure SelectedState is not null
+                    State = SelectedState, //?? throw new InvalidOperationException("State must be selected") // Ensure SelectedState is not null
+                    ForSaleCategory = SelectedCategory.Value
                 };
 
                 Debug.WriteLine($"Item created: Title={item.Title}, Price={item.Price}, State={item.State}");
@@ -419,6 +465,19 @@ namespace Market.ViewModels.AddItem
                 throw;
             }
         }
+        private string BuildFullDescription()
+        {
+            var fullDescription = new StringBuilder();
+            fullDescription.AppendLine(Description);
+            fullDescription.AppendLine();
+            fullDescription.AppendLine($"Category: {SelectedCategory?.ToString() ?? "Not specified"}");
+            fullDescription.AppendLine($"Location: {SelectedState?.ToString() ?? "Not specified"}");
+            fullDescription.AppendLine($"Price: {Price:C}");
+
+            return fullDescription.ToString();
+        }
+
         #endregion
+
     }
 }

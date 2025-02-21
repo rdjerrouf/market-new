@@ -22,6 +22,55 @@
                        IsVisible="{Binding HasTitleError}"/>
             </VerticalStackLayout>
 
+            <!-- Category Selection -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Category" 
+    FontSize="16"
+    FontAttributes="Bold"/>
+                    <Picker ItemsSource="{Binding Categories}"
+     SelectedItem="{Binding SelectedCategory}"
+     Title="Select Category"
+     FontSize="16"/>
+                    <Label Text="{Binding CategoryError}"
+    TextColor="Red"
+    FontSize="12"
+    IsVisible="{Binding HasCategoryError}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- State Selection -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Location" 
+     FontSize="16"
+     FontAttributes="Bold"/>
+                    <Picker ItemsSource="{Binding States}"
+      SelectedItem="{Binding SelectedState}"
+      Title="Select State"
+      FontSize="16"/>
+                    <Label Text="{Binding StateError}"
+     TextColor="Red"
+     FontSize="12"
+     IsVisible="{Binding HasStateError}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Item Description -->
+            <VerticalStackLayout Spacing="5">
+                <Label Text="Item Description"
+             FontSize="16"/>
+                <Editor Placeholder="Describe your rental item in detail"
+             Text="{Binding Description, Mode=TwoWay}"
+             HeightRequest="150"
+             AutoSize="TextChanges"/>
+                <Label Text="{Binding DescriptionError}"
+             TextColor="Red"
+             FontSize="12"
+             IsVisible="{Binding HasDescriptionError}"/>
+            </VerticalStackLayout>
+
+
             <!-- Price Section -->
             <Frame BorderColor="LightGray" Padding="15">
                 <VerticalStackLayout Spacing="10">
@@ -131,38 +180,8 @@
             </Frame>
 
 
-
-            <!-- State Selection -->
-            <Frame BorderColor="LightGray" Padding="15">
-                <VerticalStackLayout Spacing="5">
-                    <Label Text="Location" 
-               FontSize="16"/>
-                    <Picker ItemsSource="{Binding States}"
-                SelectedItem="{Binding SelectedState}"
-                Title="Select State"/>
-                    <Label Text="{Binding StateError}"
-               TextColor="Red"
-               FontSize="12"
-               IsVisible="{Binding HasStateError}"/>
-                </VerticalStackLayout>
-            </Frame>
-
-
-            <!-- Item Description -->
-            <VerticalStackLayout Spacing="5">
-                <Label Text="Item Description"
-                       FontSize="16"/>
-                <Editor Placeholder="Describe your rental item in detail"
-                       Text="{Binding Description, Mode=TwoWay}"
-                       HeightRequest="150"
-                       AutoSize="TextChanges"/>
-                <Label Text="{Binding DescriptionError}"
-                       TextColor="Red"
-                       FontSize="12"
-                       IsVisible="{Binding HasDescriptionError}"/>
-            </VerticalStackLayout>
-
-            <!-- Post Button -->
+           
+             <!-- Post Button -->
             <Button Command="{Binding SaveCommand}" 
                        Text="Post"
                        IsEnabled="{Binding CanSave}"/>

@@ -45,6 +45,8 @@ namespace Market.DataAccess.Models
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
 
-
+        // category-specific properties for sale and rent
+        public ForSaleCategory? ForSaleCategory { get; set; }
+        public ForRentCategory? ForRentCategory { get; set; }
     }
 }

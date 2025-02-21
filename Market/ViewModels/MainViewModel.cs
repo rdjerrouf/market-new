@@ -2,7 +2,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Market.DataAccess.Models;
-using Market.Market.DataAccess.Models; // Add this for AlState
+using Market.Market.DataAccess.Models;
+using Market.DataAccess.Models.Filters;
 using Market.Services;
 using System.Diagnostics;
 using System.Windows.Input;
@@ -14,57 +15,157 @@ namespace Market.ViewModels
         private readonly IItemService _itemService;
 
         #region Properties
-        private ObservableCollection<Item> items = new();
+
+        [ObservableProperty]
+        private bool showFilters;
+
+        [ObservableProperty]
+        private ObservableCollection<CategoryOption> availableCategories;
+
+        [ObservableProperty]
+        private ObservableCollection<CategoryOption> selectedCategories;
+
+        private readonly ObservableCollection<Item> _items = [];
         public ObservableCollection<Item> Items
         {
-            get => items;
-            set => SetProperty(ref items, value);
-        }
-
-        private string searchQuery = string.Empty;
-        public string SearchQuery
-        {
-            get => searchQuery;
-            set => SetProperty(ref searchQuery, value);
-        }
-
-        private bool isRefreshing;
-        public bool IsRefreshing
-        {
-            get => isRefreshing;
-            set => SetProperty(ref isRefreshing, value);
-        }
-
-        private bool isLoading;
-        public bool IsLoading
-        {
-            get => isLoading;
-            set => SetProperty(ref isLoading, value);
-        }
-
-        private string title = "Marketplace";
-        public string Title
-        {
-            get => title;
-            set => SetProperty(ref title, value);
-        }
-
-        private AlState? selectedState;
-        public AlState? SelectedState
-        {
-            get => selectedState;
+            get => _items;
             set
             {
-                if (SetProperty(ref selectedState, value) && value.HasValue)
+                _items.Clear();
+                if (value != null)
                 {
-                    FilterByStateCommand.Execute(value);
+                    foreach (var item in value)
+                    {
+                        _items.Add(item);
+                    }
+                }
+                OnPropertyChanged(nameof(Items));
+            }
+        }
+
+        private readonly List<SortOption> _sortOptions = [.. Enum.GetValues<SortOption>()];
+        public List<SortOption> SortOptions
+        {
+            get => _sortOptions;
+            set
+            {
+                _sortOptions.Clear();
+                if (value != null)
+                {
+                    _sortOptions.AddRange(value);
+                }
+                OnPropertyChanged(nameof(SortOptions));
+            }
+        }
+        private decimal _minPrice;
+        public decimal MinPrice
+        {
+            get => _minPrice;
+            set
+            {
+                if (SetProperty(ref _minPrice, value))
+                {
+                    ApplyFilters().ConfigureAwait(false);
                 }
             }
         }
 
-        // List of all states for the picker
-        public List<AlState> States => Enum.GetValues<AlState>().ToList();
+        private decimal _maxPrice = decimal.MaxValue;
+        public decimal MaxPrice
+        {
+            get => _maxPrice;
+            set
+            {
+                if (SetProperty(ref _maxPrice, value))
+                {
+                    ApplyFilters().ConfigureAwait(false);
+                }
+            }
+        }
 
+        private SortOption _selectedSort = SortOption.Relevance;
+        public SortOption SelectedSort
+        {
+            get => _selectedSort;
+            set
+            {
+                if (SetProperty(ref _selectedSort, value))
+                {
+                    SortItems();
+                }
+            }
+        }
+
+        private string _searchQuery = string.Empty;
+        public string SearchQuery
+        {
+            get => _searchQuery;
+            set => SetProperty(ref _searchQuery, value);
+        }
+
+        private bool _isRefreshing;
+        public bool IsRefreshing
+        {
+            get => _isRefreshing;
+            set => SetProperty(ref _isRefreshing, value);
+        }
+
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set => SetProperty(ref _isLoading, value);
+        }
+
+        private string _title = "Marketplace";
+        public string Title
+        {
+            get => _title;
+            set => SetProperty(ref _title, value);
+        }
+
+        private AlState? _selectedState;
+        public AlState? SelectedState
+        {
+            get => _selectedState;
+            set
+            {
+                Debug.WriteLine($"SelectedState setter called with value: {value}");
+                if (SetProperty(ref _selectedState, value))
+                {
+                    if (value.HasValue)
+                    {
+                        MainThread.BeginInvokeOnMainThread(async () =>
+                        {
+                            Debug.WriteLine($"Calling FilterByState with state: {value}");
+                            await FilterByState(value);
+                        });
+                    }
+                    else
+                    {
+                        MainThread.BeginInvokeOnMainThread(async () =>
+                        {
+                            Debug.WriteLine("State is null, loading all items");
+                            await LoadItemsAsync();
+                        });
+                    }
+                }
+            }
+        }
+
+       
+        private List<AlState> _states;
+        public List<AlState> States
+        {
+            get
+            {
+                if (_states == null)
+                {
+                    _states = [.. Enum.GetValues<AlState>().OrderBy(s => s.ToString())];
+                }
+                return _states;
+            }
+        }
         private ICommand? _searchCommand;
         public ICommand SearchCommand => _searchCommand ??= new Command<string>(async (query) =>
         {
@@ -73,14 +174,24 @@ namespace Market.ViewModels
                 await SearchItemsAsync(query);
             }
         });
+
+        public enum SortOption
+        {
+            Relevance,
+            PriceLowToHigh,
+            PriceHighToLow
+        }
         #endregion
 
         public MainViewModel(IItemService itemService)
         {
             _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
+            availableCategories = new ObservableCollection<CategoryOption>();
+            selectedCategories = new ObservableCollection<CategoryOption>();
+            _states = new List<AlState>();
+            InitializeCategories();
             LoadItemsAsync().ConfigureAwait(false);
         }
-
         #region Loading Methods
         private async Task LoadItemsAsync()
         {
@@ -92,7 +203,6 @@ namespace Market.ViewModels
                 Debug.WriteLine("Loading items...");
 
                 var allItems = await _itemService.GetItemsAsync();
-
                 Debug.WriteLine($"Loaded {allItems.Count()} items from service");
 
                 Items.Clear();
@@ -110,6 +220,58 @@ namespace Market.ViewModels
             {
                 IsLoading = false;
                 Debug.WriteLine("Finished loading items");
+            }
+        }
+             private void InitializeCategories()
+        {
+            AvailableCategories = new ObservableCollection<CategoryOption>
+        {
+            new() { Name = "For Sale" },
+            new() { Name = "Jobs" },
+            new() { Name = "Services" },
+            new() { Name = "Rentals" }
+        };
+        }
+
+        [RelayCommand]
+        private void ToggleFilters()
+        {
+            ShowFilters = !ShowFilters;
+        }
+
+        [RelayCommand]
+        private async Task ClearFilters()
+        {
+            MinPrice = 0;
+            MaxPrice = decimal.MaxValue;
+            SelectedSort = SortOption.Relevance;
+            SelectedState = null;
+            foreach (var category in AvailableCategories)
+            {
+                category.IsSelected = false;
+            }
+            await LoadItemsAsync();
+        }
+        
+        #endregion
+
+        #region Sorting Methods
+        private void SortItems()
+        {
+            if (Items.Count == 0) return;
+
+            var sortedItems = SelectedSort switch
+            {
+                SortOption.PriceLowToHigh => Items.OrderBy(i => i.Price).ToList(),
+                SortOption.PriceHighToLow => Items.OrderByDescending(i => i.Price).ToList(),
+                SortOption.Relevance => Items.OrderBy(i => i.Title).ToList(),
+                _ => Items.ToList()
+            };
+
+            Items.Clear();
+            foreach (var item in sortedItems)
+            {
+                Items.Add(item);
             }
         }
         #endregion
@@ -153,6 +315,7 @@ namespace Market.ViewModels
         [RelayCommand]
         private async Task FilterByState(AlState? state)
         {
+            Debug.WriteLine($"FilterByState called with state: {state}");
             if (IsLoading || !state.HasValue) return;
 
             try
@@ -372,6 +535,59 @@ namespace Market.ViewModels
             }
         }
         #endregion
+
+        private async Task ApplyFilters()
+        {
+            if (IsLoading) return;
+
+            try
+            {
+                IsLoading = true;
+                Debug.WriteLine($"Applying filters... MinPrice: {MinPrice}, MaxPrice: {MaxPrice}");
+
+                var allItems = await _itemService.GetItemsAsync();
+                var filteredItems = allItems.AsEnumerable();
+
+                // Apply filters in order of most restrictive first
+                // Price filter
+                if (MinPrice > 0 || MaxPrice < decimal.MaxValue)
+                {
+                    Debug.WriteLine($"Applying price filter: {MinPrice} - {MaxPrice}");
+                    filteredItems = filteredItems.Where(i => i.Price >= MinPrice && i.Price <= MaxPrice);
+                }
+
+                // State filter
+                if (SelectedState.HasValue)
+                {
+                    filteredItems = filteredItems.Where(i => i.State == SelectedState.Value);
+                }
+
+                // Apply sort
+                filteredItems = SelectedSort switch
+                {
+                    SortOption.PriceLowToHigh => filteredItems.OrderBy(i => i.Price),
+                    SortOption.PriceHighToLow => filteredItems.OrderByDescending(i => i.Price),
+                    _ => filteredItems.OrderByDescending(i => i.ListedDate) // Default to newest
+                };
+
+                // Update UI
+                Items.Clear();
+                foreach (var item in filteredItems)
+                {
+                    Items.Add(item);
+                }
+
+                Debug.WriteLine($"Filter applied. Items count: {Items.Count}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error applying filters: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to apply filters", "OK");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
     }
 }
-

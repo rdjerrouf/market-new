@@ -1,16 +1,150 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             xmlns:models="clr-namespace:Market.DataAccess.Models"
              x:Class="Market.Views.SearchPage"
-             Title="SearchPage">
-    <VerticalStackLayout>
-        <SearchBar 
-            Placeholder="Search here..."
-            VerticalOptions="Center"
-            HorizontalOptions="FillAndExpand" />
-        <Label 
-            Text="Welcome Search!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             x:DataType="viewmodels:SearchViewModel"
+             Title="Search">
+
+    <Grid RowDefinitions="Auto,*" Padding="15">
+        <!-- Search Filters Section -->
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="15">
+                <!-- Search Bar -->
+                <SearchBar Placeholder="Search items..."
+                          Text="{Binding SearchQuery}"
+                          SearchCommand="{Binding SearchCommand}"/>
+
+                <!-- Category Filter -->
+                <Frame BorderColor="LightGray" Padding="10">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Category"
+                               FontSize="16"
+                               FontAttributes="Bold"/>
+                        <Picker ItemsSource="{Binding Categories}"
+                                SelectedItem="{Binding SelectedCategory}"
+                                Title="Select Category"/>
+
+                        <Label Text="Subcategory"
+                               FontSize="16"
+                               FontAttributes="Bold"/>
+                        <Picker ItemsSource="{Binding SubCategories}"
+                                SelectedItem="{Binding SelectedSubCategory}"
+                                Title="Select Subcategory"
+                                IsEnabled="{Binding SelectedCategory, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Location Filter -->
+                <Frame BorderColor="LightGray" Padding="10">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Location"
+                               FontSize="16"
+                               FontAttributes="Bold"/>
+                        <Picker ItemsSource="{Binding States}"
+                                SelectedItem="{Binding SelectedState}"
+                                Title="Select State"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Price Range -->
+                <Frame BorderColor="LightGray" Padding="10">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Price Range"
+                               FontSize="16"
+                               FontAttributes="Bold"/>
+                        <Grid ColumnDefinitions="*,Auto,*">
+                            <Entry Grid.Column="0"
+                                   Placeholder="Min Price"
+                                   Text="{Binding MinPrice}"
+                                   Keyboard="Numeric"/>
+                            <Label Grid.Column="1"
+                                   Text="-"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   Margin="10,0"/>
+                            <Entry Grid.Column="2"
+                                   Placeholder="Max Price"
+                                   Text="{Binding MaxPrice}"
+                                   Keyboard="Numeric"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Action Buttons -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Grid.Column="0"
+                            Text="Search"
+                            Command="{Binding SearchCommand}"
+                            BackgroundColor="#2196F3"/>
+                    <Button Grid.Column="1"
+                            Text="Clear Filters"
+                            Command="{Binding ClearFiltersCommand}"/>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Search Results -->
+        <CollectionView Grid.Row="1"
+                       ItemsSource="{Binding SearchResults}"
+                       Margin="0,15,0,0">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                   VerticalOptions="Center">
+                    <Label Text="No items found"
+                           TextColor="Gray"
+                           FontSize="16"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Item">
+                    <Frame Margin="0,0,0,10"
+                           Padding="10"
+                           BorderColor="LightGray">
+                        <Grid RowDefinitions="Auto,Auto,Auto"
+                              ColumnDefinitions="*,Auto"
+                              RowSpacing="5">
+                            <Label Grid.Column="0"
+                                   Text="{Binding Title}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"/>
+                            <Label Grid.Column="1"
+                                   Text="{Binding Price, StringFormat='{0:C}'}"
+                                   FontAttributes="Bold"
+                                   TextColor="DarkGreen"/>
+
+                            <StackLayout Grid.Row="1"
+                                       Grid.ColumnSpan="2"
+                                       Orientation="Horizontal"
+                                       Spacing="5">
+                                <Label Text="{Binding Category}"
+                                       TextColor="Gray"/>
+                                <Label Text="•"
+                                       TextColor="Gray"/>
+                                <Label Text="{Binding State}"
+                                       TextColor="Gray"/>
+                            </StackLayout>
+
+                            <Label Grid.Row="2"
+                                   Grid.ColumnSpan="2"
+                                   Text="{Binding Description}"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="2"
+                                   TextColor="DimGray"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.RowSpan="2"
+                          IsRunning="{Binding IsBusy}"
+                          IsVisible="{Binding IsBusy}"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center"/>
+    </Grid>
 </ContentPage>

@@ -3,6 +3,7 @@ using Market.DataAccess.Models;
 using Market.Market.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using Market.DataAccess.Models.Filters;
 
 namespace Market.Services
 {
@@ -228,6 +229,48 @@ namespace Market.Services
                 Debug.WriteLine($"Error searching items by category and state: {ex.Message}");
                 return Enumerable.Empty<Item>();
             }
+        }
+
+        // search items with advanced filters
+        public async Task<IEnumerable<Item>> GetItemsWithFiltersAsync(FilterCriteria criteria)
+        {
+            var query = _context.Items.AsQueryable();
+
+            // Apply filters
+            if (criteria.MinPrice.HasValue)
+                query = query.Where(i => i.Price >= criteria.MinPrice.Value);
+
+            if (criteria.MaxPrice.HasValue)
+                query = query.Where(i => i.Price <= criteria.MaxPrice.Value);
+
+            if (criteria.State.HasValue)
+                query = query.Where(i => i.State == criteria.State.Value);
+
+            if (criteria.Categories?.Any() == true)
+                query = query.Where(i => criteria.Categories.Contains(i.Category));
+
+            if (!string.IsNullOrWhiteSpace(criteria.SearchText))
+                query = query.Where(i =>
+                    i.Title.Contains(criteria.SearchText) ||
+                    i.Description.Contains(criteria.SearchText));
+
+            if (criteria.DateFrom.HasValue)
+                query = query.Where(i => i.ListedDate >= criteria.DateFrom.Value);
+
+            if (criteria.DateTo.HasValue)
+                query = query.Where(i => i.ListedDate <= criteria.DateTo.Value);
+
+            // Apply sorting
+            query = criteria.SortBy switch
+            {
+                SortOption.PriceLowToHigh => query.OrderBy(i => i.Price),
+                SortOption.PriceHighToLow => query.OrderByDescending(i => i.Price),
+                SortOption.DateNewest => query.OrderByDescending(i => i.ListedDate),
+                SortOption.DateOldest => query.OrderBy(i => i.ListedDate),
+                _ => query.OrderByDescending(i => i.ListedDate) // Default to newest
+            };
+
+            return await query.ToListAsync();
         }
     }
 

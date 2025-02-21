@@ -31,6 +31,24 @@
             SelectedItem="{Binding SelectedJobCategory}"/>
             </VerticalStackLayout>
 
+            <!-- State Location -->
+            <Frame BorderColor="LightGray" Padding="15">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Location" 
+               FontSize="16"
+               FontAttributes="Bold"/>
+                    <Picker ItemsSource="{Binding States}"
+                SelectedItem="{Binding SelectedState}"
+                Title="Select State"
+                FontSize="16"/>
+                    <Label Text="{Binding StateError}"
+               TextColor="Red"
+               FontSize="12"
+               IsVisible="{Binding HasStateError}"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+
             <!-- Company Name -->
             <VerticalStackLayout Spacing="5">
                 <Label Text="Company Name"

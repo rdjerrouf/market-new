@@ -1,5 +1,6 @@
 ﻿using Market.Market.DataAccess.Models;
 using Market.DataAccess.Models;
+using Market.DataAccess.Models.Filters;
 
 namespace Market.Services
 {
@@ -35,6 +36,9 @@ namespace Market.Services
         Task<IEnumerable<Item>> SearchByStateAsync(AlState state);
         Task<IEnumerable<Item>> SearchByLocationAsync(double latitude, double longitude, double radiusKm);
         Task<IEnumerable<Item>> SearchByCategoryAndStateAsync(string category, AlState state);
+       
+        //  new method for advanced filtering
+        Task<IEnumerable<Item>> GetItemsWithFiltersAsync(FilterCriteria criteria);
     }
 }
 
