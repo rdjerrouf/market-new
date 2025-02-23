@@ -1,44 +1,39 @@
-﻿using Market.Market.DataAccess.Models;
-using Market.DataAccess.Models;
-using Market.DataAccess.Models.Filters;
+﻿using Market.DataAccess.Models;
+using Market.DataAccess.Models.Dtos;
+using Market.Market.DataAccess.Models;
+using Market.Market.DataAccess.Models.Dtos;
 
 namespace Market.Services
 {
-    // Defines operations available for managing marketplace items
     public interface IItemService
     {
-        // Creates a new item listing in the marketplace
         Task<bool> AddItemAsync(Item item);
-
-        // Updates existing item's information
-        Task<bool> UpdateItemAsync(Item item);
-
-        // Removes an item from the marketplace
+        Task<int?> AddItemAsync(int userId, CreateItemDto itemDto);
+        Task<bool> UpdateItemAsync(int userId, int itemId, ItemUpdateDto updateDto);
         Task<bool> DeleteItemAsync(int id);
-
-        // Retrieves a specific item by its ID
         Task<Item?> GetItemAsync(int id);
-
-        // Gets all items in the marketplace
         Task<IEnumerable<Item>> GetItemsAsync();
-
-        // Gets all items posted by a specific user
         Task<IEnumerable<Item>> GetUserItemsAsync(int userId);
-
-        // Searches items based on text and optional category
-        Task<IEnumerable<Item>> SearchItemsAsync(string searchTerm, string? category = null);
-
-        // adding my listings
-
         Task<IEnumerable<Item>> GetItemsByUserAsync(int userId);
-
-        // adding location search
+        Task<IEnumerable<Item>> SearchItemsAsync(string searchTerm, string? category = null);
         Task<IEnumerable<Item>> SearchByStateAsync(AlState state);
         Task<IEnumerable<Item>> SearchByLocationAsync(double latitude, double longitude, double radiusKm);
         Task<IEnumerable<Item>> SearchByCategoryAndStateAsync(string category, AlState state);
-       
-        //  new method for advanced filtering
-        Task<IEnumerable<Item>> GetItemsWithFiltersAsync(FilterCriteria criteria);
+        Task<bool> AddFavoriteAsync(int userId, int itemId);
+        Task<bool> RemoveFavoriteAsync(int userId, int itemId);
+        Task<bool> AddRatingAsync(int userId, int itemId, int score, string review);
+        Task<IEnumerable<Item>> GetUserFavoriteItemsAsync(int userId);
+        Task<IEnumerable<Rating>> GetUserRatingsAsync(int userId);
+        Task<UserProfileStatistics> GetUserProfileStatisticsAsync(int userId);
+        Task<bool> UpdateItemStatusAsync(int userId, int itemId, ItemStatus status);
+        Task<bool> IsItemAvailableAsync(int itemId);
+        Task<bool> AddItemPhotoAsync(int userId, int itemId, string photoUrl);
+        Task<bool> RemoveItemPhotoAsync(int userId, int photoId);
+        Task<bool> SetPrimaryPhotoAsync(int userId, int photoId);
+        Task<IEnumerable<ItemPhoto>> GetItemPhotosAsync(int itemId);
+        Task<IEnumerable<ItemPerformanceDto>> GetTopPerformingItemsAsync(int count);
+        Task<bool> IncrementItemViewAsync(int itemId);
+        Task<ItemStatistics?> GetItemStatisticsAsync(int itemId);
+        Task<bool> RecordItemInquiryAsync(int itemId);
     }
 }
-

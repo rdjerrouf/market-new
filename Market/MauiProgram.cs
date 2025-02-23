@@ -9,7 +9,10 @@ using Market.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using CommunityToolkit.Maui;
-using Microsoft.Extensions.DependencyInjection; 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration.Json;
+using Microsoft.Extensions.Configuration;
+using System.Reflection;
 namespace Market
 {
     // Static class responsible for MAUI application setup and configuration
@@ -74,6 +77,17 @@ namespace Market
 
             var builder = MauiApp.CreateBuilder();
 
+            // Configure appsettings.json
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("Market.appsettings.json");
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonStream(stream ?? new MemoryStream())
+                .Build();
+
+            builder.Configuration.AddConfiguration(configuration);
+
             ConfigureBasicSettings(builder);
             ConfigureDatabase(builder);
             RegisterServices(builder);
@@ -126,15 +140,15 @@ namespace Market
         private static void RegisterServices(MauiAppBuilder builder)
         {
             Debug.WriteLine("Registering services...");
-
-            // Register AuthService
+            builder.Services.AddScoped<IVerificationService, VerificationService>();
+            // Register AuthService with both dependencies
             builder.Services.AddScoped<IAuthService>(provider => {
                 var context = provider.GetRequiredService<AppDbContext>();
-                var service = new AuthService(context);
+                var verificationService = provider.GetRequiredService<IVerificationService>();
+                var service = new AuthService(context, verificationService);
                 service.InitializeAsync().GetAwaiter().GetResult();
                 return service;
             });
-
             // Add ItemService registration
             builder.Services.AddScoped<IItemService, ItemService>();
             builder.Services.AddScoped<IMessageService, MessageService>();
@@ -142,6 +156,8 @@ namespace Market
             // add GeoLocationService registration
             builder.Services.AddTransient<IGeolocationService, GeolocationService>();
 
+            // Add EmailService registration
+            builder.Services.AddSingleton<IEmailService, SendGridEmailService>();
 
             // Converter Registrations (Add these lines HERE)
             builder.Services.AddTransient<StringToBoolConverter>();

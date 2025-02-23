@@ -1,32 +1,27 @@
-﻿// Services/IAuthService.cs
-using Market.DataAccess.Models;
+﻿using Market.DataAccess.Models;
+using Market.Market.DataAccess.Models.Dtos;
 
 namespace Market.Services
 {
     public interface IAuthService
     {
-       
-            Task<int> GetCurrentUserIdAsync(); // Add this method
-        
-        // Existing methods
         Task<bool> RegisterUserAsync(User user);
         Task<User?> SignInAsync(string email, string password);
-        Task<User?> GetCurrentUserAsync();
-        // New methods to resolve build errors
-        /// <summary>
-        /// Retrieves a user by their email address
-        /// </summary>
-        /// <param name="email">Email address of the user</param>
-        /// <returns>User object if found, null otherwise</returns>
         Task<User?> GetUserByEmailAsync(string email);
-
-        /// <summary>
-        /// Changes a user's password
-        /// </summary>
-        /// <param name="email">User's email</param>
-        /// <param name="currentPassword">Current password for verification</param>
-        /// <param name="newPassword">New password to set</param>
-        /// <returns>True if password changed successfully, false otherwise</returns>
         Task<bool> ChangePasswordAsync(string email, string currentPassword, string newPassword);
+        Task<bool> ResetPasswordAsync(string email, string newPassword);
+        Task<bool> IsEmailRegisteredAsync(string email);
+        Task<User?> GetCurrentUserAsync();
+        Task<int> GetCurrentUserIdAsync();
+        Task<bool> UpdateUserProfileAsync(int userId, string displayName, string profilePicture, string bio);
+        Task<bool> UpdateUserPrivacyAsync(int userId, bool showEmail, bool showPhoneNumber);
+        Task<bool> UpdateUserContactInfoAsync(int userId, string? phoneNumber, string? city, string? province);
+        Task<UserProfileDto?> GetUserProfileAsync(int userId);
+        Task<bool> SendEmailVerificationTokenAsync(int userId);
+        Task<bool> VerifyEmailAsync(string token);
+        Task<bool> IsEmailVerifiedAsync(int userId);
+        Task<bool> ConfirmEmailAsync(string userId, string token);
+        Task<string> GenerateEmailVerificationTokenAsync(User user);
+        Task InitializeAsync();
     }
 }

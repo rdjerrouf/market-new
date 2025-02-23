@@ -336,27 +336,24 @@ namespace Market.ViewModels.AddItem
                 }
 
                 Debug.WriteLine("Validation passed");
-                Debug.WriteLine("Getting current user ID...");
+                Debug.WriteLine("Getting current user...");
 
-                int userId;
-                try
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null)
                 {
-                    userId = await _authService.GetCurrentUserIdAsync();
-                    Debug.WriteLine($"Got user ID: {userId}");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Failed to get current user ID: {ex.Message}");
+                    Debug.WriteLine("No user found");
                     await Shell.Current.DisplayAlert("Error", "Please sign in to post items", "OK");
                     await Shell.Current.GoToAsync("///SignInPage");
                     return;
                 }
+
                 if (!SelectedState.HasValue || !SelectedCategory.HasValue)
                 {
                     Debug.WriteLine("State or Category not selected");
                     await Shell.Current.DisplayAlert("Error", "Please select both state and category", "OK");
                     return;
                 }
+
                 Debug.WriteLine("Creating item object...");
                 var item = new Item
                 {
@@ -366,8 +363,9 @@ namespace Market.ViewModels.AddItem
                     Category = "For Sale",
                     PhotoUrl = PhotoUrl,
                     ListedDate = DateTime.UtcNow,
-                    UserId = userId,
-                    State = SelectedState, //?? throw new InvalidOperationException("State must be selected") // Ensure SelectedState is not null
+                    PostedByUserId = user.Id,
+                    PostedByUser = user,  // Add this required property
+                    State = SelectedState,
                     ForSaleCategory = SelectedCategory.Value
                 };
 

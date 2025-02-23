@@ -1,9 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Market.Services;
 using Market.DataAccess.Models;
+using Market.Market.DataAccess.Models;
+using Market.Services;
 using System.Diagnostics;
 using System.Text;
+using System; // Add this using directive
+using System.Collections.Generic; // Add this using directive
+using System.Linq; // Add this using directive
 
 namespace Market.ViewModels.AddItem
 {
@@ -294,17 +298,20 @@ namespace Market.ViewModels.AddItem
                 bool titleValid = !string.IsNullOrWhiteSpace(Title) && Title.Length >= 2;
                 bool descriptionValid = !string.IsNullOrWhiteSpace(Description) && Description.Length >= 10;
                 bool rateValid = Rate > 0;
+                bool stateValid = SelectedState.HasValue && !HasStateError;
 
                 var canSave = !IsBusy &&
                               titleValid &&
                               descriptionValid &&
-                              rateValid;
+                              rateValid &&
+                              stateValid;
 
                 Debug.WriteLine($"CanSave evaluation:");
                 Debug.WriteLine($"  IsBusy: {IsBusy}");
                 Debug.WriteLine($"  Title Valid: {titleValid} ('{Title}')");
                 Debug.WriteLine($"  Description Valid: {descriptionValid} (length: {Description?.Length ?? 0})");
                 Debug.WriteLine($"  Rate Valid: {rateValid} (value: {Rate})");
+                Debug.WriteLine($"  State Valid: {stateValid} (value: {SelectedState})");
                 Debug.WriteLine($"  Final result: {canSave}");
 
                 return canSave;
@@ -321,6 +328,44 @@ namespace Market.ViewModels.AddItem
 
         #endregion
 
+        #region State Properties
+        public static List<AlState> States => Enum.GetValues(typeof(AlState)).Cast<AlState>().ToList();
+
+        private AlState? _selectedState;
+        public AlState? SelectedState
+        {
+            get => _selectedState;
+            set
+            {
+                if (SetProperty(ref _selectedState, value))
+                {
+                    ValidateState();
+                    OnPropertyChanged(nameof(CanSave));
+                }
+            }
+        }
+
+        private string? _stateError;
+        public string? StateError
+        {
+            get => _stateError;
+            set => SetProperty(ref _stateError, value);
+        }
+
+        public bool HasStateError => !string.IsNullOrEmpty(StateError);
+        #endregion
+
+        private bool ValidateState()
+        {
+            if (!SelectedState.HasValue)
+            {
+                StateError = "Please select a state";
+                return false;
+            }
+
+            StateError = null;
+            return true;
+        }
         public ServiceItemViewModel(IItemService itemService, IAuthService authService)
         {
             try
@@ -490,46 +535,46 @@ namespace Market.ViewModels.AddItem
         [RelayCommand]
         private async Task Save()
         {
-            if (IsBusy) return;
+            if (IsBusy || !CanSave) return;
 
             try
             {
                 IsBusy = true;
                 Debug.WriteLine("Starting service listing save process");
 
-                // Remove strict validations
-                if (string.IsNullOrWhiteSpace(Title) ||
-                    string.IsNullOrWhiteSpace(Description) ||
-                    Rate <= 0)
+                // Get current user first
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null)
                 {
-                    Debug.WriteLine("Validation failed. Cannot save.");
+                    await Shell.Current.DisplayAlert("Error", "Please sign in to post services", "OK");
+                    await Shell.Current.GoToAsync("///SignInPage");
                     return;
                 }
 
-                var service = new Item
+                if (!ValidateAll()) return;
+
+                var serviceItem = new Item
                 {
                     Title = Title,
                     Description = BuildFullDescription(),
-                    Price = Rate,
+                    Price = Rate,  // Using Rate instead of Price
                     Category = "Services",
-                    ServiceType = SelectedServiceCategory.ToString(),
-                    RentalPeriod = RatePeriod,
+                    ServiceType = RatePeriod,  // Using RatePeriod instead of ServiceType
                     ListedDate = DateTime.UtcNow,
-                    UserId = await _authService.GetCurrentUserIdAsync(),
+                    PostedByUserId = user.Id,
+                    PostedByUser = user,
                     ServiceCategory = SelectedServiceCategory,
-                    ServiceAvailability = SelectedServiceAvailability,
                     ServiceLocation = ServiceLocation,
+                    State = SelectedState ?? throw new InvalidOperationException("State must be selected"),
                     YearsOfExperience = YearsOfExperience,
-                    NumberOfEmployees = NumberOfEmployees
+                    ServiceAvailability = SelectedServiceAvailability  // Using SelectedServiceAvailability instead of SelectedAvailability
                 };
 
-                Debug.WriteLine($"Saving service: {service.Title}, {service.Price} {service.RentalPeriod}");
-                var result = await _itemService.AddItemAsync(service);
-
+                var result = await _itemService.AddItemAsync(serviceItem);
                 if (result)
                 {
                     await Shell.Current.DisplayAlert("Success", "Your service has been posted!", "OK");
-                    await Shell.Current.GoToAsync("..");
+                    await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {

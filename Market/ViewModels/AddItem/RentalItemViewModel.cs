@@ -603,36 +603,28 @@ namespace Market.ViewModels.AddItem
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
+        // In RentalItemViewModel.cs
         private async Task Save()
         {
-            Debug.WriteLine("Save command executed");
-            if (IsBusy)
-            {
-                Debug.WriteLine("Save canceled - IsBusy is true");
-                return;
-            }
+            if (IsBusy || !CanSave) return;
 
             try
             {
                 IsBusy = true;
-                Debug.WriteLine("Starting rental item save process");
+                Debug.WriteLine("Starting rental listing save process");
 
-                var isValid = ValidateAll();
-                Debug.WriteLine($"ValidateAll result: {isValid}");
-
-                if (!isValid)
+                // Get current user first
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null)
                 {
-                    Debug.WriteLine("Validation failed during save");
+                    await Shell.Current.DisplayAlert("Error", "Please sign in to post rentals", "OK");
+                    await Shell.Current.GoToAsync("///SignInPage");
                     return;
                 }
-                // Check if SelectedState has a value
-                if (!SelectedState.HasValue || !SelectedCategory.HasValue)
-                {
-                    Debug.WriteLine("State not selected");
-                    await Shell.Current.DisplayAlert("Error", "Please select a state", "OK");
-                    return;
-                }
-                var item = new Item
+
+                if (!ValidateAll()) return;
+
+                var rentalItem = new Item
                 {
                     Title = Title,
                     Description = BuildFullDescription(),
@@ -642,38 +634,31 @@ namespace Market.ViewModels.AddItem
                     AvailableFrom = AvailableFrom,
                     AvailableTo = AvailableTo,
                     ListedDate = DateTime.UtcNow,
-                    UserId = await _authService.GetCurrentUserIdAsync(),
-                    PhotoUrl = string.Join(";", SelectedPhotos),
-                    State = SelectedState.Value,  // Added state
-                    ForRentCategory = SelectedCategory.Value
-
+                    PostedByUserId = user.Id,
+                    PostedByUser = user,
+                    ForRentCategory = SelectedCategory, // Change from SelectedRentalCategory to SelectedCategory
+                    State = SelectedState ?? throw new InvalidOperationException("State must be selected")
                 };
 
-                Debug.WriteLine($"Attempting to save rental item: {item.Title}");
-                var saveResult = await _itemService.AddItemAsync(item);
-
-                if (saveResult)
+                var result = await _itemService.AddItemAsync(rentalItem);
+                if (result)
                 {
-                    Debug.WriteLine("Save successful");
-                    await Shell.Current.DisplayAlert("Success", "Your rental item has been posted!", "OK");
+                    await Shell.Current.DisplayAlert("Success", "Your rental has been posted!", "OK");
                     await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {
-                    Debug.WriteLine("Save failed");
-                    await Shell.Current.DisplayAlert("Error", "Failed to post rental item", "OK");
+                    await Shell.Current.DisplayAlert("Error", "Failed to post rental", "OK");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Save error: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Shell.Current.DisplayAlert("Error", "An error occurred while saving", "OK");
             }
             finally
             {
                 IsBusy = false;
-                Debug.WriteLine("Save process completed");
             }
         }
         #endregion

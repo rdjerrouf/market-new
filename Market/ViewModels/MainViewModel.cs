@@ -15,16 +15,27 @@ namespace Market.ViewModels
         private readonly IItemService _itemService;
 
         #region Properties
+        private readonly List<AlState> _states;
+        private bool _showFilters;
+        public bool ShowFilters
+        {
+            get => _showFilters;
+            set => SetProperty(ref _showFilters, value);
+        }
 
-        [ObservableProperty]
-        private bool showFilters;
+        private ObservableCollection<CategoryOption> _availableCategories = new();
+        public ObservableCollection<CategoryOption> AvailableCategories
+        {
+            get => _availableCategories;
+            set => SetProperty(ref _availableCategories, value);
+        }
 
-        [ObservableProperty]
-        private ObservableCollection<CategoryOption> availableCategories;
-
-        [ObservableProperty]
-        private ObservableCollection<CategoryOption> selectedCategories;
-
+        private ObservableCollection<CategoryOption> _selectedCategories = new();
+        public ObservableCollection<CategoryOption> SelectedCategories
+        {
+            get => _selectedCategories;
+            set => SetProperty(ref _selectedCategories, value);
+        }
         private readonly ObservableCollection<Item> _items = [];
         public ObservableCollection<Item> Items
         {
@@ -153,20 +164,8 @@ namespace Market.ViewModels
             }
         }
 
-       
-        private List<AlState> _states;
-        public List<AlState> States
-        {
-            get
-            {
-                if (_states == null)
-                {
-                    _states = [.. Enum.GetValues<AlState>().OrderBy(s => s.ToString())];
-                }
-                return _states;
-            }
-        }
-        private ICommand? _searchCommand;
+
+        public List<AlState> States => Enum.GetValues<AlState>().OrderBy(s => s.ToString()).ToList(); private ICommand? _searchCommand;
         public ICommand SearchCommand => _searchCommand ??= new Command<string>(async (query) =>
         {
             if (query is not null)
@@ -186,12 +185,13 @@ namespace Market.ViewModels
         public MainViewModel(IItemService itemService)
         {
             _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
-            availableCategories = new ObservableCollection<CategoryOption>();
-            selectedCategories = new ObservableCollection<CategoryOption>();
+            _availableCategories = new ObservableCollection<CategoryOption>();
+            _selectedCategories = new ObservableCollection<CategoryOption>();
             _states = new List<AlState>();
             InitializeCategories();
             LoadItemsAsync().ConfigureAwait(false);
         }
+
         #region Loading Methods
         private async Task LoadItemsAsync()
         {
@@ -222,17 +222,17 @@ namespace Market.ViewModels
                 Debug.WriteLine("Finished loading items");
             }
         }
-             private void InitializeCategories()
+        private void InitializeCategories()
         {
-            AvailableCategories = new ObservableCollection<CategoryOption>
-        {
-            new() { Name = "For Sale" },
-            new() { Name = "Jobs" },
-            new() { Name = "Services" },
-            new() { Name = "Rentals" }
-        };
+            _availableCategories = new ObservableCollection<CategoryOption>
+    {
+        new() { Name = "For Sale" },
+        new() { Name = "Jobs" },
+        new() { Name = "Services" },
+        new() { Name = "Rentals" }
+    };
+            OnPropertyChanged(nameof(AvailableCategories));
         }
-
         [RelayCommand]
         private void ToggleFilters()
         {
@@ -536,6 +536,7 @@ namespace Market.ViewModels
         }
         #endregion
 
+        [RelayCommand]
         private async Task ApplyFilters()
         {
             if (IsLoading) return;
@@ -543,23 +544,29 @@ namespace Market.ViewModels
             try
             {
                 IsLoading = true;
-                Debug.WriteLine($"Applying filters... MinPrice: {MinPrice}, MaxPrice: {MaxPrice}");
+                Debug.WriteLine("Applying filters...");
 
                 var allItems = await _itemService.GetItemsAsync();
                 var filteredItems = allItems.AsEnumerable();
 
-                // Apply filters in order of most restrictive first
-                // Price filter
+                // Apply price range filter
                 if (MinPrice > 0 || MaxPrice < decimal.MaxValue)
                 {
                     Debug.WriteLine($"Applying price filter: {MinPrice} - {MaxPrice}");
                     filteredItems = filteredItems.Where(i => i.Price >= MinPrice && i.Price <= MaxPrice);
                 }
 
-                // State filter
+                // Apply state filter
                 if (SelectedState.HasValue)
                 {
                     filteredItems = filteredItems.Where(i => i.State == SelectedState.Value);
+                }
+
+                // Apply category filters
+                var selectedCategories = AvailableCategories.Where(c => c.IsSelected).Select(c => c.Name).ToList();
+                if (selectedCategories.Any())
+                {
+                    filteredItems = filteredItems.Where(i => selectedCategories.Contains(i.Category));
                 }
 
                 // Apply sort
@@ -567,10 +574,9 @@ namespace Market.ViewModels
                 {
                     SortOption.PriceLowToHigh => filteredItems.OrderBy(i => i.Price),
                     SortOption.PriceHighToLow => filteredItems.OrderByDescending(i => i.Price),
-                    _ => filteredItems.OrderByDescending(i => i.ListedDate) // Default to newest
+                    _ => filteredItems.OrderByDescending(i => i.ListedDate)
                 };
 
-                // Update UI
                 Items.Clear();
                 foreach (var item in filteredItems)
                 {

@@ -1,7 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" 
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:filters="clr-namespace:Market.DataAccess.Models.Filters"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             xmlns:models="clr-namespace:Market.DataAccess.Models"
+             xmlns:models2="clr-namespace:Market.Market.DataAccess.Models"
+             xmlns:converters="clr-namespace:Market.Converters"
              x:Class="Market.Views.MainPage"
+             x:DataType="viewmodels:MainViewModel"
              Title="{Binding Title}">
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Padding="15,10">
@@ -27,11 +34,11 @@
                    HorizontalOptions="End"
                    VerticalOptions="Center">
                 <ImageButton Source="accounticon.png"
-                             HeightRequest="40"
-                             WidthRequest="40"
-                             Command="{Binding AccountCommand}"
-                             Aspect="AspectFit"
-                             BackgroundColor="Transparent">
+                            HeightRequest="40"
+                            WidthRequest="40"
+                            Command="{Binding AccountCommand}"
+                            Aspect="AspectFit"
+                            BackgroundColor="Transparent">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup Name="CommonStates">
                             <VisualState Name="Normal" />
@@ -48,26 +55,29 @@
 
         <!-- State Picker and Filters Toggle -->
         <Grid Grid.Row="1" 
-              ColumnDefinitions="*,Auto" 
-              Margin="0,0,0,10">
+      ColumnDefinitions="*,Auto" 
+      Margin="0,0,0,10">
             <Picker Title="Select State"
-                    Grid.Column="0"
-                    ItemsSource="{Binding States}"
-                    SelectedItem="{Binding SelectedState, Mode=TwoWay}"
-                    HorizontalOptions="Fill"
-                    BackgroundColor="White"
-                    TextColor="Black"
-                    FontSize="16"/>
-
+            Grid.Column="0"
+            ItemsSource="{Binding States}"
+            SelectedItem="{Binding SelectedState, Mode=TwoWay}"
+            HorizontalOptions="Fill"
+            BackgroundColor="White"
+            TextColor="Black"
+            FontSize="16">
+                <Picker.ItemDisplayBinding>
+                    <Binding Path="."
+                     Converter="{StaticResource EnumToStringConverter}"/>
+                </Picker.ItemDisplayBinding>
+            </Picker>
             <Button Grid.Column="1"
-                    Text="Show/Hide Filters"
-                    Command="{Binding ToggleFiltersCommand}"
-                    HorizontalOptions="End"
-                    Margin="10,0,0,0"
-                    BackgroundColor="Transparent"
-                    TextColor="#2196F3"/>
+            Text="Show/Hide Filters"
+            Command="{Binding ToggleFiltersCommand}"
+            HorizontalOptions="End"
+            Margin="10,0,0,0"
+            BackgroundColor="Transparent"
+            TextColor="#2196F3"/>
         </Grid>
-
         <!-- Filters Section -->
         <Grid Grid.Row="2" 
               Margin="0,0,0,10"
@@ -108,20 +118,17 @@
                             BackgroundColor="White"/>
 
                     <!-- Categories with Checkboxes -->
-                    <Label Text="Categories" 
-                           FontSize="16" 
-                           FontAttributes="Bold"/>
                     <CollectionView ItemsSource="{Binding AvailableCategories}"
-                                    SelectionMode="Multiple"
-                                    SelectedItems="{Binding SelectedCategories}">
+                SelectionMode="Multiple"
+                SelectedItems="{Binding SelectedCategories}">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="filters:CategoryOption">
                                 <Grid Padding="5">
                                     <CheckBox IsChecked="{Binding IsSelected}"
-                                              VerticalOptions="Center"/>
+                         VerticalOptions="Center"/>
                                     <Label Text="{Binding Name}"
-                                           VerticalOptions="Center"
-                                           Margin="40,0,0,0"/>
+                       VerticalOptions="Center"
+                       Margin="40,0,0,0"/>
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -149,12 +156,14 @@
         <Grid Grid.Row="3" 
               ColumnDefinitions="*,*,*,*"
               Margin="0,0,0,20">
-            <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+            <!-- For Sale -->
+            <VerticalStackLayout Grid.Column="0" 
+                                HorizontalOptions="Center">
                 <ImageButton Source="sellicon.png"
-                             Command="{Binding ForSaleCommand}"
-                             HeightRequest="50"
-                             WidthRequest="50"
-                             Margin="0,0,0,5">
+                            Command="{Binding ForSaleCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup Name="CommonStates">
                             <VisualState Name="Normal" />
@@ -166,15 +175,18 @@
                         </VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
                 </ImageButton>
-                <Label Text="For Sale" HorizontalOptions="Center"/>
+                <Label Text="For Sale"
+                       HorizontalOptions="Center"/>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+            <!-- Jobs -->
+            <VerticalStackLayout Grid.Column="1"
+                                HorizontalOptions="Center">
                 <ImageButton Source="jobsicon.png"
-                             Command="{Binding JobsCommand}"
-                             HeightRequest="50"
-                             WidthRequest="50"
-                             Margin="0,0,0,5">
+                            Command="{Binding JobsCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup Name="CommonStates">
                             <VisualState Name="Normal" />
@@ -186,15 +198,18 @@
                         </VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
                 </ImageButton>
-                <Label Text="Jobs" HorizontalOptions="Center"/>
+                <Label Text="Jobs"
+                       HorizontalOptions="Center"/>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+            <!-- Services -->
+            <VerticalStackLayout Grid.Column="2"
+                                HorizontalOptions="Center">
                 <ImageButton Source="servicesicon.png"
-                             Command="{Binding ServicesCommand}"
-                             HeightRequest="50"
-                             WidthRequest="50"
-                             Margin="0,0,0,5">
+                            Command="{Binding ServicesCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup Name="CommonStates">
                             <VisualState Name="Normal" />
@@ -206,15 +221,18 @@
                         </VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
                 </ImageButton>
-                <Label Text="Services" HorizontalOptions="Center"/>
+                <Label Text="Services"
+                       HorizontalOptions="Center"/>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Grid.Column="3" HorizontalOptions="Center">
+            <!-- Rentals -->
+            <VerticalStackLayout Grid.Column="3"
+                                HorizontalOptions="Center">
                 <ImageButton Source="renticon.png"
-                             Command="{Binding RentalsCommand}"
-                             HeightRequest="50"
-                             WidthRequest="50"
-                             Margin="0,0,0,5">
+                            Command="{Binding RentalsCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup Name="CommonStates">
                             <VisualState Name="Normal" />
@@ -226,7 +244,8 @@
                         </VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
                 </ImageButton>
-                <Label Text="Rentals" HorizontalOptions="Center"/>
+                <Label Text="Rentals"
+                       HorizontalOptions="Center"/>
             </VerticalStackLayout>
         </Grid>
 
@@ -235,13 +254,13 @@
                      Command="{Binding RefreshCommand}"
                      IsRefreshing="{Binding IsRefreshing}">
             <CollectionView ItemsSource="{Binding Items}"
-                            SelectionMode="Single"
-                            EmptyView="No items found"
-                            Margin="0,10">
+                          SelectionMode="Single"
+                          EmptyView="No items found"
+                          Margin="0,10">
                 <CollectionView.EmptyViewTemplate>
                     <DataTemplate>
                         <StackLayout HorizontalOptions="Center" 
-                                     VerticalOptions="Center">
+                                   VerticalOptions="Center">
                             <Label Text="No items found"
                                    HorizontalOptions="Center"
                                    TextColor="Gray"
@@ -250,7 +269,7 @@
                     </DataTemplate>
                 </CollectionView.EmptyViewTemplate>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:Item">
                         <Frame Margin="0,0,0,10" 
                                Padding="10"
                                BorderColor="LightGray">
@@ -269,9 +288,9 @@
 
                                 <!-- Category Info -->
                                 <FlexLayout Grid.Row="1" 
-                                            Grid.ColumnSpan="2"
-                                            Wrap="Wrap"
-                                            AlignItems="Center">
+                                          Grid.ColumnSpan="2"
+                                          Wrap="Wrap"
+                                          AlignItems="Center">
                                     <!-- Main Category -->
                                     <Label Text="{Binding Category}"
                                            TextColor="Gray"
@@ -307,12 +326,14 @@
         <Grid Grid.Row="5" 
               ColumnDefinitions="*,*,*,*"
               Margin="0,10,0,0">
-            <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+            <!-- Home -->
+            <VerticalStackLayout Grid.Column="0" 
+                                HorizontalOptions="Center">
                 <ImageButton Source="homeicon.png"
-                             Command="{Binding HomeCommand}"
-                             HeightRequest="50"
-                             WidthRequest="50"
-                             Margin="0,0,0,5">
+                            Command="{Binding HomeCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup Name="CommonStates">
                             <VisualState Name="Normal" />
@@ -324,15 +345,18 @@
                         </VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
                 </ImageButton>
-                <Label Text="Home" HorizontalOptions="Center"/>
+                <Label Text="Home" 
+                       HorizontalOptions="Center"/>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+            <!-- Inbox -->
+            <VerticalStackLayout Grid.Column="1"
+                                HorizontalOptions="Center">
                 <ImageButton Source="inboxicon.png"
-                             Command="{Binding InboxCommand}"
-                             HeightRequest="50"
-                             WidthRequest="50"
-                             Margin="0,0,0,5">
+                            Command="{Binding InboxCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup Name="CommonStates">
                             <VisualState Name="Normal" />
@@ -344,15 +368,18 @@
                         </VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
                 </ImageButton>
-                <Label Text="Inbox" HorizontalOptions="Center"/>
+                <Label Text="Inbox"
+                       HorizontalOptions="Center"/>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+            <!-- Post -->
+            <VerticalStackLayout Grid.Column="2"
+                                HorizontalOptions="Center">
                 <ImageButton Source="addicon.png"
-                             Command="{Binding PostCommand}"
-                             HeightRequest="50"
-                             WidthRequest="50"
-                             Margin="0,0,0,5">
+                            Command="{Binding PostCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup Name="CommonStates">
                             <VisualState Name="Normal" />
@@ -364,7 +391,31 @@
                         </VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
                 </ImageButton>
-                <Label Text="Listings" HorizontalOptions="Center"/>
+                <Label Text="Post"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- My Listings -->
+            <VerticalStackLayout Grid.Column="3"
+                                HorizontalOptions="Center">
+                <ImageButton Source="listicon.png"
+                            Command="{Binding MyListingsCommand}"
+                            HeightRequest="50"
+                            WidthRequest="50"
+                            Margin="0,0,0,5">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal" />
+                            <VisualState Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </ImageButton>
+                <Label Text="My Listings"
+                       HorizontalOptions="Center"/>
             </VerticalStackLayout>
         </Grid>
     </Grid>

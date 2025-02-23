@@ -1,6 +1,9 @@
 ﻿using Market.DataAccess.Data;
 using Market.DataAccess.Models;
+using Market.Market.DataAccess.Models;
+using Market.Market.DataAccess.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
+using Market.Services;
 using System.Diagnostics;
 
 namespace Market.Services
@@ -11,9 +14,17 @@ namespace Market.Services
     public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
+        private readonly IVerificationService _verificationService;
         private static SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
         private bool _isInitialized;
 
+        public AuthService(
+            AppDbContext context,
+            IVerificationService verificationService)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _verificationService = verificationService ?? throw new ArgumentNullException(nameof(verificationService));
+        }
         // In AuthService.cs, add these methods:
         public async Task<User?> GetUserByEmailAsync(string email)
         {
@@ -34,6 +45,29 @@ namespace Market.Services
             }
         }
 
+
+        public async Task<bool> UpdateUserProfileAsync(int userId, string displayName, string profilePicture, string bio)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            user.DisplayName = displayName;
+            user.ProfilePicture = profilePicture;
+            user.Bio = bio;
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> UpdateUserPrivacyAsync(int userId, bool showEmail, bool showPhoneNumber)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            user.ShowEmail = showEmail;
+            user.ShowPhoneNumber = showPhoneNumber;
+
+            return await _context.SaveChangesAsync() > 0;
+        }
         public async Task<bool> ChangePasswordAsync(string email, string currentPassword, string newPassword)
         {
             await InitializeAsync();
@@ -65,10 +99,6 @@ namespace Market.Services
             }
         }
 
-        public AuthService(AppDbContext context)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-        }
 
         /// <summary>
         /// Initialize database and verify connection
@@ -294,5 +324,240 @@ namespace Market.Services
                 throw; // Re-throw to allow caller to handle the error
             }
         }
+
+
+        public async Task<bool> UpdateUserContactInfoAsync(int userId, string? phoneNumber, string? city, string? province)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null) return false;
+
+                // Update contact information
+                user.PhoneNumber = phoneNumber;
+                user.City = city;
+                user.Province = province;
+
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error updating user contact info: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string email, string newPassword)
+        {
+            await InitializeAsync();
+
+            try
+            {
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+
+                if (user == null)
+                {
+                    Debug.WriteLine($"No user found with email: {email}");
+                    return false;
+                }
+
+                // Hash the new password
+                user.PasswordHash = PasswordHasher.HashPassword(newPassword);
+
+                // Update the user
+                _context.Users.Update(user);
+                var result = await _context.SaveChangesAsync();
+
+                Debug.WriteLine($"Password reset result: {result}");
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Password reset error: {ex.Message}");
+                return false;
+            }
+        }
+
+
+        public async Task<bool> IsEmailRegisteredAsync(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return false;
+
+            await InitializeAsync();
+
+            try
+            {
+                return await _context.Users
+                    .AnyAsync(u => u.Email.ToLower() == email.ToLower());
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error checking email registration: {ex.Message}");
+                return false;
+            }
+        }
+
+
+        public async Task<UserProfileDto?> GetUserProfileAsync(int userId)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .Include(u => u.PostedItems)
+                    .Include(u => u.FavoriteItems)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user == null) return null;
+
+                return new UserProfileDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    DisplayName = user.DisplayName,
+                    ProfilePicture = user.ProfilePicture,
+                    Bio = user.Bio,
+                    CreatedAt = user.CreatedAt,
+                    PhoneNumber = user.ShowPhoneNumber ? user.PhoneNumber : null,
+                    City = user.City,
+                    Province = user.Province,
+                    PostedItemsCount = user.PostedItems.Count,
+                    FavoriteItemsCount = user.FavoriteItems.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error retrieving user profile: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> SendEmailVerificationTokenAsync(int userId)
+        {
+            try
+            {
+                // Find the user
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    Debug.WriteLine($"User not found. UserId: {userId}");
+                    return false;
+                }
+
+                // Generate verification token
+                string token = await _verificationService.GenerateVerificationTokenAsync(
+                    userId,
+                    VerificationType.EmailVerification
+                );
+
+                // TODO: Implement actual email sending logic
+                Debug.WriteLine($"Verification token generated for user {userId}: {token}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error sending email verification: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Verifies the email using the provided token
+        /// </summary>
+        public async Task<bool> VerifyEmailAsync(string token)
+        {
+            try
+            {
+                var verificationToken = await _context.VerificationTokens
+                    .FirstOrDefaultAsync(vt => vt.Token == token && !vt.IsUsed);
+
+                if (verificationToken == null)
+                    return false;
+
+                var user = await _context.Users.FindAsync(verificationToken.UserId);
+                if (user == null)
+                    return false;
+
+                user.IsEmailVerified = true;
+                user.EmailVerifiedAt = DateTime.UtcNow;
+                verificationToken.IsUsed = true;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error verifying email: {ex.Message}");
+                return false;
+            }
+        }
+    
+        /// <summary>
+        /// Checks if a user's email is verified
+        /// </summary>
+        public async Task<bool> IsEmailVerifiedAsync(int userId)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                return user?.IsEmailVerified ?? false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error checking email verification: {ex.Message}");
+                return false;
+            }
+        }
+
+
+        public async Task<bool> ConfirmEmailAsync(string userId, string token)
+        {
+            try
+            {
+                if (!int.TryParse(userId, out int userIdInt))
+                    return false;
+
+                var verificationToken = await _context.VerificationTokens
+                    .FirstOrDefaultAsync(vt => vt.UserId == userIdInt && vt.Token == token && !vt.IsUsed);
+
+                if (verificationToken == null)
+                    return false;
+
+                var user = await _context.Users.FindAsync(userIdInt);
+                if (user == null)
+                    return false;
+
+                user.IsEmailVerified = true;
+                user.EmailVerifiedAt = DateTime.UtcNow;
+                verificationToken.IsUsed = true;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error confirming email: {ex.Message}");
+                return false;
+            }
+        }
+        public async Task<string> GenerateEmailVerificationTokenAsync(User user)
+        {
+            try
+            {
+                var token = await _verificationService.GenerateVerificationTokenAsync(
+                    user.Id,
+                    VerificationType.EmailVerification);
+
+                // No need to store token in User model anymore as we have VerificationTokens table
+                return token;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error generating verification token: {ex.Message}");
+                throw;
+            }
+        }
+
     }
 }

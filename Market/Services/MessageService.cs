@@ -15,14 +15,15 @@ namespace Market.Services
         /// Database context for data access
         /// </summary>
         private readonly AppDbContext _context;
-
+        private readonly IItemService _itemService;
         /// <summary>
         /// Constructor that injects the database context
         /// </summary>
         /// <param name="context">Database context for message operations</param>
-        public MessageService(AppDbContext context)
+        public MessageService(AppDbContext context, IItemService itemService)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
         }
 
         /// <summary>
@@ -79,6 +80,12 @@ namespace Market.Services
                 // Mark as unread by default
                 message.IsRead = false;
 
+                // If the message is related to an item, record an inquiry
+                if (message.RelatedItemId.HasValue)
+                {
+                    await _itemService.RecordItemInquiryAsync(message.RelatedItemId.Value);
+                }
+
                 // Add message to database
                 await _context.Messages.AddAsync(message);
                 int result = await _context.SaveChangesAsync();
@@ -92,7 +99,6 @@ namespace Market.Services
                 return false;
             }
         }
-
         /// <summary>
         /// Marks a specific message as read
         /// </summary>

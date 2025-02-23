@@ -1,4 +1,5 @@
-﻿using Market.DataAccess.Models;
+﻿// RegistrationViewModel.cs
+using Market.DataAccess.Models;
 using Market.Services;
 using System.Windows.Input;
 using Market.Helpers;
@@ -9,14 +10,16 @@ namespace Market.ViewModels
     public class RegistrationViewModel : BindableObject
     {
         private readonly IAuthService _authService;
+        private readonly IEmailService _emailService;
         private string _email = string.Empty;
         private string _password = string.Empty;
         private string _confirmPassword = string.Empty;
         private bool _isBusy;
 
-        public RegistrationViewModel(IAuthService authService)
+        public RegistrationViewModel(IAuthService authService, IEmailService emailService)
         {
             _authService = authService;
+            _emailService = emailService;
             RegisterCommand = new Command(async () => await RegisterAsync(), () => !IsBusy);
         }
 
@@ -50,6 +53,12 @@ namespace Market.ViewModels
         }
 
         public ICommand RegisterCommand { get; }
+
+        public async Task InitializeAsync()
+        {
+            // Empty for now
+            await Task.CompletedTask;
+        }
 
         private async Task RegisterAsync()
         {
@@ -105,8 +114,16 @@ namespace Market.ViewModels
                 if (success)
                 {
                     Debug.WriteLine("Registration successful");
-                    await ShowMessage("Success", "Registration successful!");
-                    await Shell.Current.GoToAsync("//MainPage");
+
+                    // Generate email verification token
+                    var token = await _authService.GenerateEmailVerificationTokenAsync(user);
+                    var confirmationLink = $"/confirm-email?userId={user.Id}&token={System.Net.WebUtility.UrlEncode(token)}";
+
+                    // Send verification email
+                    await _emailService.SendEmailVerificationAsync(user.Email, confirmationLink);
+
+                    await ShowMessage("Success", "Registration successful! Please check your email for verification instructions.");
+                    await Shell.Current.GoToAsync("//LoginPage");
                 }
                 else
                 {

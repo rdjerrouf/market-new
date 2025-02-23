@@ -9,10 +9,14 @@ namespace Market.DataAccess.Data
 {
     public class AppDbContext : DbContext
     {
+
         public DbSet<User> Users { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<Message> Messages { get; set; }
-
+        public DbSet<Rating> Ratings { get; set; }
+        public DbSet<ItemStatistics> ItemStatistics { get; set; }
+        public DbSet<ItemPhoto> ItemPhotos { get; set; }
+        public DbSet<VerificationToken> VerificationTokens { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
             Database.EnsureCreated();
@@ -35,6 +39,8 @@ namespace Market.DataAccess.Data
 
             modelBuilder.Entity<User>(entity =>
             {
+                // User configuration
+
                 entity.ToTable("Users"); // Explicitly specify table name
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.Email).IsUnique();
@@ -52,8 +58,13 @@ namespace Market.DataAccess.Data
                 entity.Property(e => e.CreatedAt)
                     .HasDefaultValueSql("CURRENT_TIMESTAMP")
                     .ValueGeneratedOnAdd();
-            });
 
+                // Configure the User-FavoriteItems relationship
+                entity.HasMany(u => u.FavoriteItems)
+                    .WithMany(i => i.FavoritedByUsers)
+                    .UsingEntity(j => j.ToTable("UserFavorites"));
+            });
+            // Item configuration
             modelBuilder.Entity<Item>(entity =>
             {
                 entity.ToTable("Items");
@@ -179,8 +190,13 @@ namespace Market.DataAccess.Data
                             (ForRentCategory?)null
                     )
                     .IsRequired(false);
-            });
 
+                entity.HasOne(i => i.PostedByUser)
+                    .WithMany(u => u.PostedItems)
+                    .HasForeignKey(i => i.PostedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            // Message configuration
             modelBuilder.Entity<Message>(entity =>
             {
                 entity.ToTable("Messages");
@@ -193,6 +209,109 @@ namespace Market.DataAccess.Data
                     .ValueGeneratedOnAdd();
                 entity.Property(e => e.IsRead).HasDefaultValue(false);
                 entity.Property(e => e.RelatedItemId).IsRequired(false);
+            });
+            // Rating configuration
+            modelBuilder.Entity<Rating>(entity =>
+            {
+                entity.ToTable("Ratings");
+                entity.HasKey(e => e.Id);
+
+                // Configure relationships
+                entity.HasOne(r => r.User)
+                    .WithMany()
+                    .HasForeignKey(r => r.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.Item)
+                    .WithMany()
+                    .HasForeignKey(r => r.ItemId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Constraints
+                entity.Property(e => e.Score)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAdd();
+
+                // Optional fields
+                entity.Property(e => e.Review)
+                    .HasMaxLength(1000)
+                    .IsRequired(false);
+
+                entity.Property(e => e.IsVerifiedPurchase)
+                    .HasDefaultValue(false);
+
+                entity.Property(e => e.HelpfulVotes)
+                    .HasDefaultValue(0);
+            });
+
+            // Item photo model
+            modelBuilder.Entity<ItemPhoto>(entity =>
+            {
+                entity.ToTable("ItemPhotos");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.PhotoUrl)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.DisplayOrder)
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.IsPrimaryPhoto)
+                    .HasDefaultValue(false);
+
+                entity.Property(e => e.UploadedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAdd();
+
+                // Configure relationship with Item
+                entity.HasOne(p => p.Item)
+                    .WithMany(i => i.Photos)
+                    .HasForeignKey(p => p.ItemId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            // Item statistics model
+
+            modelBuilder.Entity<ItemStatistics>(entity =>
+            {
+                entity.ToTable("ItemStatistics");
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(s => s.Item)
+                    .WithOne()
+                    .HasForeignKey<ItemStatistics>(s => s.ItemId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(e => e.ViewCount).HasDefaultValue(0);
+                entity.Property(e => e.InquiryCount).HasDefaultValue(0);
+                entity.Property(e => e.FavoriteCount).HasDefaultValue(0);
+                entity.Property(e => e.FirstViewedAt).IsRequired(false);
+                entity.Property(e => e.LastViewedAt).IsRequired(false);
+            });
+
+            // Verification token model
+            modelBuilder.Entity<VerificationToken>(entity =>
+            {
+                entity.ToTable("VerificationTokens");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Token).IsRequired();
+                entity.Property(e => e.Type).IsRequired();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.ExpiresAt).IsRequired();
+                entity.Property(e => e.IsUsed).HasDefaultValue(false);
+
+                entity.HasOne(vt => vt.User)
+                    .WithMany()
+                    .HasForeignKey(vt => vt.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             Debug.WriteLine("Database model configuration completed");

@@ -642,15 +642,9 @@ namespace Market.ViewModels.AddItem
             Debug.WriteLine($"Company: {CompanyName}, Location: {JobLocation}");
             Debug.WriteLine($"ApplyMethod: {SelectedApplyMethod}, Contact: {ApplyContact}");
 
-            if (!CanSave)
+            if (!CanSave || IsBusy)
             {
-                Debug.WriteLine("Save canceled - validation errors present");
-                return;
-            }
-
-            if (IsBusy)
-            {
-                Debug.WriteLine("Save canceled - IsBusy is true");
+                Debug.WriteLine("Save canceled - validation errors present or busy");
                 return;
             }
 
@@ -658,6 +652,16 @@ namespace Market.ViewModels.AddItem
             {
                 IsBusy = true;
                 Debug.WriteLine("Starting job listing save process");
+
+                // Get current user first
+                var user = await _authService.GetCurrentUserAsync();
+                if (user == null)
+                {
+                    Debug.WriteLine("No user found");
+                    await Shell.Current.DisplayAlert("Error", "Please sign in to post jobs", "OK");
+                    await Shell.Current.GoToAsync("///SignInPage");
+                    return;
+                }
 
                 Debug.WriteLine("Running all validations...");
                 var validations = new Dictionary<string, bool>
@@ -687,12 +691,14 @@ namespace Market.ViewModels.AddItem
                     Debug.WriteLine("Validation failed - canceling save");
                     return;
                 }
+
                 if (!SelectedState.HasValue)
                 {
                     Debug.WriteLine("State not selected");
                     await Shell.Current.DisplayAlert("Error", "Please select a state", "OK");
                     return;
                 }
+
                 Debug.WriteLine("All validations passed, creating job item");
                 var jobItem = new Item
                 {
@@ -705,7 +711,8 @@ namespace Market.ViewModels.AddItem
                     AvailableFrom = StartDate,
                     AvailableTo = StartDate.AddMonths(6),
                     ListedDate = DateTime.UtcNow,
-                    UserId = await _authService.GetCurrentUserIdAsync(),
+                    PostedByUserId = user.Id,
+                    PostedByUser = user,  // Add required property
                     JobCategory = SelectedJobCategory,
                     CompanyName = CompanyName,
                     State = SelectedState.Value,
@@ -719,7 +726,7 @@ namespace Market.ViewModels.AddItem
                 Debug.WriteLine($"  Category: {jobItem.Category}");
                 Debug.WriteLine($"  JobCategory: {jobItem.JobCategory}");
                 Debug.WriteLine($"  Price: {jobItem.Price}");
-                Debug.WriteLine($"  UserId: {jobItem.UserId}");
+                Debug.WriteLine($"  PostedByUserId: {jobItem.PostedByUserId}");
 
                 Debug.WriteLine("Attempting to save job to database");
                 var saveSuccessful = await _itemService.AddItemAsync(jobItem);
@@ -758,8 +765,6 @@ namespace Market.ViewModels.AddItem
             {
                 IsBusy = false;
                 Debug.WriteLine("Save process completed");
-
-                // Trigger CanSave re-evaluation
                 OnPropertyChanged(nameof(CanSave));
             }
         }
