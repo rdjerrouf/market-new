@@ -41,13 +41,14 @@ namespace Market
                 {
                     try
                     {
-                        // Try to execute a query that uses the new columns
+                        // Check both the Item.State and User.IsEmailVerified columns
                         await context.Items.FirstOrDefaultAsync(i => i.State != null);
+                        await context.Users.FirstOrDefaultAsync(u => u.IsEmailVerified == true);
                         Debug.WriteLine("Database schema is up to date");
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Debug.WriteLine("Database schema is outdated, recreating...");
+                        Debug.WriteLine($"Database schema is outdated, recreating... Error: {ex.Message}");
                         needsRecreation = true;
                     }
                 }
@@ -159,6 +160,10 @@ namespace Market
             // Add EmailService registration
             builder.Services.AddSingleton<IEmailService, SendGridEmailService>();
 
+            // Email Service Verification
+            builder.Services.AddTransient<VerifyEmailPage>();
+
+
             // Converter Registrations (Add these lines HERE)
             builder.Services.AddTransient<StringToBoolConverter>();
             builder.Services.AddTransient<StringEqualityConverter>();
@@ -166,6 +171,7 @@ namespace Market
             builder.Services.AddTransient<StringNotNullOrEmptyBoolConverter>();
             builder.Services.AddTransient<BoolToColorConverter>();
             builder.Services.AddTransient<BoolToFontAttributesConverter>();
+            builder.Services.AddTransient<BoolToStringConverter>();
             Debug.WriteLine("Converters registered."); // Add a debug log for verification.
         }   // Registers view models with dependency injection
         private static void RegisterViewModels(MauiAppBuilder builder)
@@ -187,6 +193,14 @@ namespace Market
             builder.Services.AddTransient<MyListingsViewModel>();
             builder.Services.AddTransient<PasswordResetViewModel>();
             builder.Services.AddTransient<ItemDetailViewModel>();
+            builder.Services.AddTransient<VerifyEmailViewModel>();
+            builder.Services.AddTransient<ProfileViewModel>();
+            builder.Services.AddTransient<MessageDetailViewModel>();
+            builder.Services.AddTransient<ItemMapViewModel>();
+            builder.Services.AddTransient<SetLocationViewModel>();
+            builder.Services.AddTransient<NearbyItemsViewModel>();
+
+
         }
 
         // Registers pages with dependency injection
@@ -208,6 +222,14 @@ namespace Market
             builder.Services.AddTransient<InboxPage>();
             builder.Services.AddTransient<MyListingsPage>();
             builder.Services.AddTransient<ItemDetailPage>();
+            builder.Services.AddTransient<VerifyEmailPage>();
+            builder.Services.AddTransient<ProfilePage>();
+            builder.Services.AddTransient<MessageDetailPage>();
+            builder.Services.AddTransient<ItemMapPage>();
+            builder.Services.AddTransient<SetLocationPage>();
+            builder.Services.AddTransient<NearbyItemsPage>();
+
+
         }
 
         // Configures debug settings for development

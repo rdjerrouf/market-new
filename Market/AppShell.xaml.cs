@@ -28,6 +28,12 @@ namespace Market
                 Routing.RegisterRoute(nameof(MyListingsPage), typeof(MyListingsPage));
                 Routing.RegisterRoute(nameof(SignInPage), typeof(SignInPage));
                 Routing.RegisterRoute(nameof(ItemDetailPage), typeof(ItemDetailPage));
+                Routing.RegisterRoute(nameof(VerifyEmailPage), typeof(VerifyEmailPage)); 
+                Routing.RegisterRoute(nameof(ProfilePage), typeof(ProfilePage));
+                Routing.RegisterRoute(nameof(MessageDetailPage), typeof(MessageDetailPage));
+                Routing.RegisterRoute(nameof(ItemMapPage), typeof(ItemMapPage));
+                Routing.RegisterRoute(nameof(SetLocationPage), typeof(SetLocationPage));
+                Routing.RegisterRoute(nameof(NearbyItemsPage), typeof(NearbyItemsPage));
                 // Log registered routes
                 Debug.WriteLine("Successfully registered routes:");
                 Debug.WriteLine($"- {nameof(ServiceItemPage)}");

@@ -629,7 +629,7 @@ namespace Market.ViewModels.AddItem
                     Title = Title,
                     Description = BuildFullDescription(),
                     Price = Price,
-                    Category = "Rentals",
+                    Category = "For Rent",
                     RentalPeriod = RentalPeriod,
                     AvailableFrom = AvailableFrom,
                     AvailableTo = AvailableTo,

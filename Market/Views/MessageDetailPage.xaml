@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             x:Class="Market.Views.MessageDetailPage"
+             x:DataType="viewmodels:MessageDetailViewModel"
+             Title="Message Details">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="15">
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.RowSpan="3" 
+                           IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}"
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center" />
+
+        <!-- Status message -->
+        <Label Grid.Row="0"
+               Text="{Binding StatusMessage}" 
+               IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"
+               TextColor="Red"
+               Margin="0,0,0,10"/>
+
+        <!-- Message content -->
+        <ScrollView Grid.Row="1" Margin="0,0,0,10">
+            <VerticalStackLayout Spacing="15">
+                <!-- Message header -->
+                <Frame Padding="15" BackgroundColor="#f8f9fa" BorderColor="LightGray">
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+                        <!-- From/To Label -->
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Text="{Binding IsOwnMessage, Converter={StaticResource BoolToStringConverter}, ConverterParameter='To:,From:'}"
+                               FontAttributes="Bold"
+                               Margin="0,0,10,0"/>
+
+                        <!-- User/Recipient -->
+                        <Label Grid.Row="0" Grid.Column="1"
+                               Text="{Binding SenderName}"/>
+
+                        <!-- Date/Time Label -->
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="Date:"
+                               FontAttributes="Bold"
+                               Margin="0,0,10,0"/>
+
+                        <!-- Date/Time Value -->
+                        <Label Grid.Row="1" Grid.Column="1"
+                               Text="{Binding Message.Timestamp, StringFormat='{0:g}'}"/>
+
+                        <!-- Related Item (if any) -->
+                        <Label Grid.Row="2" Grid.Column="0"
+                               Text="Item:"
+                               FontAttributes="Bold"
+                               Margin="0,0,10,0"
+                               IsVisible="{Binding HasRelatedItem}"/>
+
+                        <Label Grid.Row="2" Grid.Column="1"
+                               Text="{Binding RelatedItem.Title}"
+                               TextColor="Blue"
+                               TextDecorations="Underline"
+                               IsVisible="{Binding HasRelatedItem}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ViewRelatedItemCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+                </Frame>
+
+                <!-- Message body -->
+                <Frame Padding="15" BorderColor="LightGray">
+                    <VerticalStackLayout>
+                        <Label Text="Message:"
+                               FontAttributes="Bold"
+                               Margin="0,0,0,10"/>
+
+                        <Label Text="{Binding Message.Content}"
+                               TextType="Text"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Delete button -->
+                <Button Text="Delete Message"
+                        Command="{Binding DeleteMessageCommand}"
+                        BackgroundColor="Red"
+                        TextColor="White"
+                        Margin="0,10,0,0"/>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Reply section -->
+        <VerticalStackLayout Grid.Row="2" Spacing="10">
+            <Label Text="Reply"
+                   FontAttributes="Bold"/>
+
+            <Editor Text="{Binding ReplyText}"
+                    Placeholder="Write your reply here..."
+                    HeightRequest="100"
+                    AutoSize="TextChanges"/>
+
+            <Button Text="Send Reply"
+                    Command="{Binding SendReplyCommand}"
+                    IsEnabled="{Binding ReplyText, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"
+                    BackgroundColor="#2196F3"/>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

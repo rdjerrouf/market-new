@@ -215,9 +215,19 @@ namespace Market.Services
             {
                 Debug.WriteLine($"\nAttempting sign in for email: {email}");
 
-                // Find user by email
+                // Find user by email with a more specific query that only selects needed columns
+                // This avoids trying to access columns that might not exist
                 var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+                    .Where(u => u.Email.ToLower() == email.ToLower())
+                    .Select(u => new User
+                    {
+                        Id = u.Id,
+                        Email = u.Email,
+                        PasswordHash = u.PasswordHash,
+                        DisplayName = u.DisplayName,
+                        // Only include other properties you definitely need for sign-in
+                    })
+                    .FirstOrDefaultAsync();
 
                 if (user == null)
                 {
@@ -229,7 +239,13 @@ namespace Market.Services
                 var isPasswordValid = PasswordHasher.VerifyPassword(password, user.PasswordHash);
                 Debug.WriteLine($"Password verification result: {isPasswordValid}");
 
-                return isPasswordValid ? user : null;
+                if (isPasswordValid)
+                {
+                    // If password is valid, get the full user object
+                    return await _context.Users.FindAsync(user.Id);
+                }
+
+                return null;
             }
             catch (Exception ex)
             {

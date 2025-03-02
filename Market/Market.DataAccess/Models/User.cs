@@ -15,32 +15,23 @@ namespace Market.DataAccess.Models
         [Required]
         public required string PasswordHash { get; set; }
 
-        public string? PhoneNumber { get; set; }
-
-        public bool EmailVerified { get; set; }
-        public string? City { get; set; }
-
-        public string? Province { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        // Profile properties
-        public string? DisplayName { get; set; }
+        public string?DisplayName { get; set; }
         public string? ProfilePicture { get; set; }
         public string? Bio { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? City { get; set; }
+        public string? Province { get; set; }
+        public bool ShowEmail { get; set; }
+        public bool ShowPhoneNumber { get; set; }
 
-        // Favorite items
-        public ICollection<Item> FavoriteItems { get; set; } = new List<Item>();
-
-        // Posted items
-        public ICollection<Item> PostedItems { get; set; } = new List<Item>();
-
-        // Privacy settings
-        public bool ShowEmail { get; set; } = false;
-        public bool ShowPhoneNumber { get; set; } = false;
-
-        public bool IsEmailVerified { get; set; } = false;
+        // Missing properties referenced in code
+        public bool IsEmailVerified { get; set; }
         public DateTime? EmailVerifiedAt { get; set; }
+
+        // Navigation properties
+        public ICollection<Item> PostedItems { get; set; } = new List<Item>();
+        public ICollection<Item> FavoriteItems { get; set; } = new List<Item>();
 
     }
 }

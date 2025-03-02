@@ -2,11 +2,11 @@ using Market.ViewModels;
 
 namespace Market.Views
 {
-    public partial class ProfilePage : ContentPage
+    public partial class NearbyItemsPage : ContentPage
     {
-        private readonly ProfileViewModel _viewModel;
+        private readonly NearbyItemsViewModel _viewModel;
 
-        public ProfilePage(ProfileViewModel viewModel)
+        public NearbyItemsPage(NearbyItemsViewModel viewModel)
         {
             InitializeComponent();
             BindingContext = viewModel;

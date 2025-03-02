@@ -1,12 +1,250 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels"
              x:Class="Market.Views.ProfilePage"
-             Title="ProfilePage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             x:DataType="viewmodels:ProfileViewModel"
+             Title="My Profile">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="15">
+        <!-- Loading and Status -->
+        <ActivityIndicator Grid.RowSpan="3" 
+                           IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}"
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center" />
+
+        <Label Grid.Row="0"
+               Text="{Binding StatusMessage}" 
+               IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"
+               Margin="0,0,0,10"
+               TextColor="Red"
+               HorizontalOptions="Center" />
+
+        <!-- Login Required Message -->
+        <VerticalStackLayout Grid.Row="1" 
+                            IsVisible="{Binding IsLoggedIn, Converter={StaticResource InverseBoolConverter}}"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"
+                            Spacing="20">
+            <Label Text="You need to sign in to view your profile" 
+                   FontSize="18"
+                   HorizontalOptions="Center" />
+
+            <Button Text="Sign In" 
+                    Command="{Binding SignInCommand}"
+                    HorizontalOptions="Center"
+                    WidthRequest="120" />
+        </VerticalStackLayout>
+
+        <!-- Main Profile Content -->
+        <ScrollView Grid.Row="1" IsVisible="{Binding IsLoggedIn}">
+            <VerticalStackLayout Spacing="20">
+                <!-- Profile Header -->
+                <Frame Padding="15" Margin="0,0,0,10">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="15">
+                        <!-- Profile Picture -->
+                        <Frame Grid.RowSpan="4"
+                               CornerRadius="75"
+                               HeightRequest="100"
+                               WidthRequest="100"
+                               Padding="0"
+                               IsClippedToBounds="True"
+                               BorderColor="LightGray">
+                            <Image Source="{Binding ProfilePicture}"
+                               Aspect="AspectFill"
+                               HeightRequest="100"
+                               WidthRequest="100">
+                                <Image.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding UploadProfilePictureCommand}" />
+                                </Image.GestureRecognizers>
+                            </Image>
+                        </Frame>
+
+                        <!-- Username/Display Name -->
+                        <Label Grid.Column="1" 
+                               Grid.Row="0"
+                               Text="{Binding DisplayName}" 
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               IsVisible="{Binding IsEditing, Converter={StaticResource InverseBoolConverter}}" />
+
+                        <Entry Grid.Column="1"
+                               Grid.Row="0"
+                               Text="{Binding DisplayName}"
+                               Placeholder="Display Name"
+                               IsVisible="{Binding IsEditing}" />
+
+                        <!-- Email -->
+                        <StackLayout Grid.Column="1" 
+                                    Grid.Row="1"
+                                    Orientation="Horizontal"
+                                    Spacing="5">
+                            <Label Text="{Binding Profile.Email}" 
+                                  FontSize="14" />
+
+                            <Label Text="(Not Verified)" 
+                                  TextColor="Orange"
+                                  FontSize="14"
+                                  IsVisible="{Binding IsEmailVerificationNeeded}" />
+                        </StackLayout>
+
+                        <!-- Verification Button -->
+                        <Button Grid.Column="1"
+                                Grid.Row="2"
+                                Text="Verify Email"
+                                Command="{Binding VerifyEmailCommand}"
+                                IsVisible="{Binding IsEmailVerificationNeeded}"
+                                FontSize="12"
+                                HeightRequest="30"
+                                HorizontalOptions="Start" />
+
+                        <!-- Bio -->
+                        <Label Grid.Column="1"
+                               Grid.Row="3"
+                               Text="{Binding Bio}"
+                               FontSize="14"
+                               LineBreakMode="WordWrap"
+                               IsVisible="{Binding IsEditing, Converter={StaticResource InverseBoolConverter}}" />
+
+                        <Entry Grid.Column="1"
+                               Grid.Row="3"
+                               Text="{Binding Bio}"
+                               Placeholder="Add a short bio"
+                               IsVisible="{Binding IsEditing}" />
+                    </Grid>
+                </Frame>
+
+                <!-- Stats -->
+                <Frame Padding="15">
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                        <Label Grid.Column="0" 
+                               Text="Items Posted" 
+                               HorizontalOptions="Center" />
+
+                        <Label Grid.Column="1" 
+                               Text="Favorites" 
+                               HorizontalOptions="Center" />
+
+                        <Label Grid.Column="0"
+                               Grid.Row="1"
+                               Text="{Binding PostedItemsCount}"
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center" />
+
+                        <Label Grid.Column="1"
+                               Grid.Row="1"
+                               Text="{Binding FavoriteItemsCount}"
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center" />
+                    </Grid>
+                </Frame>
+
+                <!-- Buttons -->
+                <Button Text="View My Listings"
+                        Command="{Binding ViewPostedItemsCommand}" />
+
+                <Button Text="View Favorites"
+                        Command="{Binding ViewFavoriteItemsCommand}" />
+
+                <!-- Contact Information -->
+                <Frame Padding="15">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Contact Information"
+                               FontSize="18"
+                               FontAttributes="Bold" />
+
+                        <!-- Phone -->
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                            <Label Text="Phone:" 
+                                   FontAttributes="Bold" />
+
+                            <Label Grid.Column="1"
+                                   Text="{Binding PhoneNumber}"
+                                   IsVisible="{Binding IsEditing, Converter={StaticResource InverseBoolConverter}}" />
+
+                            <Entry Grid.Column="1"
+                                   Text="{Binding PhoneNumber}"
+                                   Placeholder="Phone Number"
+                                   Keyboard="Telephone"
+                                   IsVisible="{Binding IsEditing}" />
+
+                            <Label Grid.Row="1"
+                                   Grid.ColumnSpan="2"
+                                   Text="Show phone number to others"
+                                   FontSize="12"
+                                   IsVisible="{Binding IsEditing}" />
+
+                            <CheckBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     IsChecked="{Binding ShowPhoneNumber}"
+                                     IsVisible="{Binding IsEditing}"
+                                     HorizontalOptions="Start" />
+                        </Grid>
+
+                        <!-- Location -->
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                            <Label Text="City:" 
+                                   FontAttributes="Bold" />
+
+                            <Label Grid.Column="1"
+                                   Text="{Binding City}"
+                                   IsVisible="{Binding IsEditing, Converter={StaticResource InverseBoolConverter}}" />
+
+                            <Entry Grid.Column="1"
+                                   Text="{Binding City}"
+                                   Placeholder="City"
+                                   IsVisible="{Binding IsEditing}" />
+
+                            <Label Grid.Row="1"
+                                   Text="Province:"
+                                   FontAttributes="Bold" />
+
+                            <Label Grid.Row="1"
+                                   Grid.Column="1"
+                                   Text="{Binding Province}"
+                                   IsVisible="{Binding IsEditing, Converter={StaticResource InverseBoolConverter}}" />
+
+                            <Entry Grid.Row="1"
+                                   Grid.Column="1"
+                                   Text="{Binding Province}"
+                                   Placeholder="Province/State"
+                                   IsVisible="{Binding IsEditing}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Edit/Save Buttons -->
+                <Button Text="Edit Profile"
+                        Command="{Binding EditProfileCommand}"
+                        IsVisible="{Binding IsEditing, Converter={StaticResource InverseBoolConverter}}" />
+
+                <Grid ColumnDefinitions="*,*" IsVisible="{Binding IsEditing}">
+                    <Button Grid.Column="0"
+                            Text="Save"
+                            Command="{Binding SaveProfileCommand}"
+                            Margin="0,0,5,0" />
+
+                    <Button Grid.Column="1"
+                            Text="Cancel"
+                            Command="{Binding CancelEditCommand}"
+                            BackgroundColor="Gray"
+                            Margin="5,0,0,0" />
+                </Grid>
+
+                <!-- Account Actions -->
+                <Button Text="Change Password"
+                        Command="{Binding ChangePasswordCommand}"
+                        BackgroundColor="Gray" />
+
+                <Button Text="Sign Out"
+                        Command="{Binding SignOutCommand}"
+                        BackgroundColor="Red"
+                        TextColor="White"
+                        Margin="0,20,0,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>

@@ -9,7 +9,7 @@ namespace Market.DataAccess.Data
 {
     public class AppDbContext : DbContext
     {
-
+        public DbSet<ItemLocation> ItemLocations { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<Message> Messages { get; set; }
@@ -314,6 +314,13 @@ namespace Market.DataAccess.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            // Item geo-location model
+            modelBuilder.Entity<ItemLocation>()
+                .HasOne(il => il.Item)
+                .WithOne()
+                .HasForeignKey<ItemLocation>(il => il.ItemId);
+
+        
             Debug.WriteLine("Database model configuration completed");
         }
 

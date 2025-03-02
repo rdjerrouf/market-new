@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             x:Class="Market.Views.ItemMapPage"
+             x:DataType="viewmodels:ItemMapViewModel"
+             Title="Item Location">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.RowSpan="3" 
+                           IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}"
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center" />
+
+        <!-- Map view -->
+        <maps:Map Grid.Row="1"
+                  x:Name="LocationMap"
+                  IsShowingUser="True"
+                  MapType="Street">
+            <!-- Pin will be added programmatically in code-behind -->
+        </maps:Map>
+
+        <!-- Controls -->
+        <VerticalStackLayout Grid.Row="2" Padding="15" Spacing="10">
+            <Label Text="{Binding ItemAddress}" 
+                   FontSize="16" 
+                   HorizontalOptions="Center"/>
+
+            <Button Text="Show Directions"
+                    Command="{Binding OpenDirectionsCommand}"
+                    BackgroundColor="#2196F3"
+                    IsEnabled="{Binding HasLocation}"/>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

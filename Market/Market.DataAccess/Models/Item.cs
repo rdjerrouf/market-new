@@ -54,5 +54,15 @@ namespace Market.DataAccess.Models
         public ItemStatus Status { get; set; } = ItemStatus.Active;
         public ICollection<User> FavoritedByUsers { get; set; } = [];
         public ICollection<ItemPhoto> Photos { get; set; } = [];
+
+
+        // Navigation property for location
+        public ItemLocation? ItemLocation { get; set; }
+
+        // Helper property to check if item has a location
+        public bool HasLocation => ItemLocation != null;
+
+        // Add to your Item.cs model
+        public string? ImageUrl { get; set; }
     }
 }
