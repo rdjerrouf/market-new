@@ -595,5 +595,14 @@ namespace Market.ViewModels
                 IsLoading = false;
             }
         }
+
+
+        public class PhotoViewModel
+        {
+            public string ImageUrl { get; set; } = string.Empty;
+        }
+
+        [ObservableProperty]
+        private ObservableCollection<PhotoViewModel> photoItems = new();
     }
 }

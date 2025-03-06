@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Market.DataAccess.Models;
 using Market.Services;
+using Market.Views;
 using Microsoft.Maui.Controls.Maps;
 using Microsoft.Maui.Devices.Sensors;
 using System.Diagnostics;
@@ -29,6 +30,7 @@ namespace Market.ViewModels
         private bool _hasLocation;
 
         private int _itemId;
+        private Item _displayedItem;
 
         public ItemMapViewModel(IItemService itemService, IItemLocationService itemLocationService)
         {
@@ -54,6 +56,7 @@ namespace Market.ViewModels
                     return;
                 }
 
+                _displayedItem = item;
                 ItemTitle = item.Title;
 
                 // Get location data
@@ -112,6 +115,15 @@ namespace Market.ViewModels
                 Debug.WriteLine($"Error opening map: {ex.Message}");
                 await Shell.Current.DisplayAlert("Error", "Could not open maps application", "OK");
             }
+        }
+
+        [RelayCommand]
+        private async Task ReportItem()
+        {
+            // Make sure you have a way to get the current item ID in your map view model
+            if (_displayedItem == null || _displayedItem.Id <= 0) return;
+
+            await Shell.Current.GoToAsync($"{nameof(ReportItemPage)}?ItemId={_displayedItem.Id}");
         }
     }
 }

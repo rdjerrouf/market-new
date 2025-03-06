@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             x:Class="Market.Views.CreateRatingPage"
+             x:DataType="viewmodels:CreateRatingViewModel"
+             Title="Rate Seller">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="15">
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.RowSpan="3" 
+                           IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}"
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center" />
+
+        <!-- Status message -->
+        <Label Grid.Row="0"
+               Text="{Binding StatusMessage}" 
+               IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotNullOrEmptyBoolConverter}}"
+               TextColor="Red"
+               HorizontalOptions="Center"
+               Margin="0,0,0,10" />
+
+        <!-- Rating form -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="20">
+                <!-- Header -->
+                <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+                    <Label Text="Rate Your Experience"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+
+                    <Label Text="{Binding SellerName, StringFormat='with {0}'}"
+                           FontSize="16"
+                           HorizontalOptions="Center" />
+
+                    <Label Text="{Binding ItemTitle, StringFormat='for {0}&quot;'}"
+                           FontSize="14"
+                           TextColor="Gray"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Star rating -->
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Your Rating:"
+                           FontAttributes="Bold" />
+
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+                        <Button Text="★" 
+                                FontSize="32" 
+                                TextColor="{Binding Rating, Converter={StaticResource RatingColorConverter}, ConverterParameter=1}"
+                                Command="{Binding SetRatingCommand}"
+                                CommandParameter="1"
+                                BackgroundColor="Transparent" />
+
+                        <Button Text="★" 
+                                FontSize="32" 
+                                TextColor="{Binding Rating, Converter={StaticResource RatingColorConverter}, ConverterParameter=2}"
+                                Command="{Binding SetRatingCommand}"
+                                CommandParameter="2"
+                                BackgroundColor="Transparent" />
+
+                        <Button Text="★" 
+                                FontSize="32" 
+                                TextColor="{Binding Rating, Converter={StaticResource RatingColorConverter}, ConverterParameter=3}"
+                                Command="{Binding SetRatingCommand}"
+                                CommandParameter="3"
+                                BackgroundColor="Transparent" />
+
+                        <Button Text="★" 
+                                FontSize="32" 
+                                TextColor="{Binding Rating, Converter={StaticResource RatingColorConverter}, ConverterParameter=4}"
+                                Command="{Binding SetRatingCommand}"
+                                CommandParameter="4"
+                                BackgroundColor="Transparent" />
+
+                        <Button Text="★" 
+                                FontSize="32" 
+                                TextColor="{Binding Rating, Converter={StaticResource RatingColorConverter}, ConverterParameter=5}"
+                                Command="{Binding SetRatingCommand}"
+                                CommandParameter="5"
+                                BackgroundColor="Transparent" />
+                    </HorizontalStackLayout>
+
+                    <Label Text="{Binding Rating, Converter={StaticResource RatingTextConverter}}"
+                           HorizontalOptions="Center"
+                           FontAttributes="Bold"
+                           FontSize="14" />
+                </VerticalStackLayout>
+
+                <!-- Review text -->
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Your Review (optional):"
+                           FontAttributes="Bold" />
+
+                    <Frame BorderColor="LightGray" Padding="5">
+                        <Editor Text="{Binding Review}"
+                                Placeholder="Share your experience with this seller..."
+                                HeightRequest="150"
+                                AutoSize="TextChanges" />
+                    </Frame>
+                </VerticalStackLayout>
+
+                <!-- Rating guidelines -->
+                <Frame BorderColor="LightGray" BackgroundColor="#F8F9FA" Padding="10">
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Rating Guidelines"
+                               FontAttributes="Bold"
+                               FontSize="14" />
+
+                        <Label Text="• 5 stars: Excellent experience, highly recommend"
+                               FontSize="12" />
+
+                        <Label Text="• 4 stars: Good experience with minor issues"
+                               FontSize="12" />
+
+                        <Label Text="• 3 stars: Average experience, met expectations"
+                               FontSize="12" />
+
+                        <Label Text="• 2 stars: Below average, significant issues"
+                               FontSize="12" />
+
+                        <Label Text="• 1 star: Poor experience, would not recommend"
+                               FontSize="12" />
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Action buttons -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,15,0,0">
+            <Button Grid.Column="0"
+                    Text="Cancel"
+                    Command="{Binding CancelCommand}"
+                    BackgroundColor="LightGray" />
+
+            <Button Grid.Column="1"
+                    Text="Submit"
+                    Command="{Binding SubmitRatingCommand}"
+                    BackgroundColor="#2196F3"
+                    TextColor="White" />
+        </Grid>
+    </Grid>
+</ContentPage>

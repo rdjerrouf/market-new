@@ -75,6 +75,11 @@
                                Placeholder="Display Name"
                                IsVisible="{Binding IsEditing}" />
 
+                        <!-- Add this to your ProfilePage.xaml where you have other settings/actions -->
+                        <Button Text="Blocked Users"
+        Command="{Binding ManageBlockedUsersCommand}"
+        Margin="0,10,0,0" />
+
                         <!-- Email -->
                         <StackLayout Grid.Column="1" 
                                     Grid.Row="1"
@@ -117,7 +122,7 @@
 
                 <!-- Stats -->
                 <Frame Padding="15">
-                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
                         <Label Grid.Column="0" 
                                Text="Items Posted" 
                                HorizontalOptions="Center" />
@@ -126,19 +131,50 @@
                                Text="Favorites" 
                                HorizontalOptions="Center" />
 
+                        <!-- Added Rating column -->
+                        <Label Grid.Column="2" 
+                               Text="Rating" 
+                               HorizontalOptions="Center" />
+
                         <Label Grid.Column="0"
                                Grid.Row="1"
                                Text="{Binding PostedItemsCount}"
                                FontSize="24"
                                FontAttributes="Bold"
-                               HorizontalOptions="Center" />
+                               HorizontalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ViewPostedItemsCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
 
                         <Label Grid.Column="1"
                                Grid.Row="1"
                                Text="{Binding FavoriteItemsCount}"
                                FontSize="24"
                                FontAttributes="Bold"
-                               HorizontalOptions="Center" />
+                               HorizontalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ViewFavoriteItemsCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+
+                        <!-- Rating display -->
+                        <HorizontalStackLayout Grid.Column="2"
+                                             Grid.Row="1"
+                                             HorizontalOptions="Center"
+                                             Spacing="2">
+                            <Label Text="{Binding AverageRating, StringFormat='{0:F1}'}"
+                                  FontSize="24"
+                                  FontAttributes="Bold"
+                                  TextColor="DarkOrange" />
+                            <Label Text="/5"
+                                  FontSize="14"
+                                  VerticalOptions="End"
+                                  Margin="0,0,0,4" />
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ViewRatingsCommand}" />
+                            </Label.GestureRecognizers>
+                        </HorizontalStackLayout>
                     </Grid>
                 </Frame>
 
@@ -148,6 +184,10 @@
 
                 <Button Text="View Favorites"
                         Command="{Binding ViewFavoriteItemsCommand}" />
+
+                <!-- Added View Ratings button -->
+                <Button Text="View My Ratings"
+                        Command="{Binding ViewRatingsCommand}" />
 
                 <!-- Contact Information -->
                 <Frame Padding="15">
@@ -244,6 +284,12 @@
                         BackgroundColor="Red"
                         TextColor="White"
                         Margin="0,20,0,0" />
+
+                <!-- Blocking inappropriate user -->
+                <Button Text="Blocked Users" 
+        Command="{Binding ManageBlockedUsersCommand}"
+        Margin="0,10,0,0" />
+
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

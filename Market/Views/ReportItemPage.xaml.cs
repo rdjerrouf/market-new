@@ -1,12 +1,13 @@
+// Views/ReportItemPage.xaml.cs
 using Market.ViewModels;
 
 namespace Market.Views
 {
-    public partial class ItemDetailPage : ContentPage
+    public partial class ReportItemPage : ContentPage
     {
-        private readonly ItemDetailViewModel _viewModel;
+        private readonly ReportItemViewModel _viewModel;
 
-        public ItemDetailPage(ItemDetailViewModel viewModel)
+        public ReportItemPage(ReportItemViewModel viewModel)
         {
             InitializeComponent();
             _viewModel = viewModel;

@@ -2,20 +2,317 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             xmlns:converters="clr-namespace:Market.Converters"
              x:Class="Market.Views.ItemDetailPage"
              x:DataType="viewmodels:ItemDetailViewModel"
              Title="{Binding Title}">
-    <!-- Rest of your XAML remains the same, but now binds to Item properties -->
-    <ScrollView>
-        <VerticalStackLayout Padding="20">
-            <Image Source="{Binding Item.PhotoUrl}"
-                   HeightRequest="200"
-                   Aspect="AspectFit"
-                   Margin="0,0,0,20"/>
-            <Label Text="{Binding Item.Title}"
-                   FontSize="24"
-                   FontAttributes="Bold"/>
-            <!-- Update other bindings similarly -->
-        </VerticalStackLayout>
-    </ScrollView>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
+            <Style x:Key="SectionHeaderStyle" TargetType="Label">
+                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="Margin" Value="0,15,0,5" />
+            </Style>
+            <Style x:Key="PropertyLabelStyle" TargetType="Label">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="TextColor" Value="Gray" />
+            </Style>
+            <Style x:Key="PropertyValueStyle" TargetType="Label">
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="Margin" Value="0,0,0,10" />
+            </Style>
+            <Style x:Key="InfoCardStyle" TargetType="Frame">
+                <Setter Property="Padding" Value="15" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="BorderColor" Value="#DDDDDD" />
+                <Setter Property="Margin" Value="0,10" />
+                <Setter Property="HasShadow" Value="True" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*,Auto">
+        <!-- Content -->
+        <ScrollView Grid.Row="0" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+            <VerticalStackLayout Padding="20">
+                <!-- Image Carousel for multiple photos -->
+                <Frame Padding="0" CornerRadius="10" BorderColor="#DDDDDD" IsClippedToBounds="True">
+                    <CarouselView ItemsSource="{Binding PhotoItems}" IndicatorView="indicatorView" HeightRequest="250">
+                        <CarouselView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Image Source="{Binding}" Aspect="AspectFill" />
+                                </Grid>
+                            </DataTemplate>
+                        </CarouselView.ItemTemplate>
+                    </CarouselView>
+
+                </Frame>
+
+                <IndicatorView x:Name="indicatorView"
+                               IndicatorColor="LightGray"
+                               SelectedIndicatorColor="DarkGray"
+                               HorizontalOptions="Center" 
+                               Margin="0,10,0,5"/>
+
+                <!-- Status badge -->
+                <HorizontalStackLayout HorizontalOptions="End" Margin="0,0,0,10">
+                    <Frame BackgroundColor="{Binding StatusColor}" 
+                           Padding="8,4" 
+                           CornerRadius="15">
+                        <Label Text="{Binding Item.Status}" 
+                               TextColor="White" 
+                               FontSize="12"
+                               FontAttributes="Bold" />
+                    </Frame>
+                </HorizontalStackLayout>
+
+                <!-- Basic Item Info -->
+                <Label Text="{Binding Item.Title}"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       Margin="0,0,0,5"/>
+
+                <Label Text="{Binding Item.Price, StringFormat='${0:N2}'}"
+                       FontSize="22"
+                       TextColor="#007BFF"
+                       FontAttributes="Bold"
+                       Margin="0,0,0,15"/>
+
+                <BoxView HeightRequest="1" BackgroundColor="#EEEEEE" Margin="0,5,0,15"/>
+
+                <!-- Seller Info Card -->
+                <Frame Style="{StaticResource InfoCardStyle}">
+                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+                        <!-- Seller Avatar -->
+                        <Frame Grid.RowSpan="2" 
+                               HeightRequest="50" 
+                               WidthRequest="50" 
+                               CornerRadius="25" 
+                               Padding="0" 
+                               IsClippedToBounds="True" 
+                               Margin="0,0,10,0">
+                            <Image Source="{Binding SellerProfilePicture}" 
+                                   Aspect="AspectFill" 
+                                   HeightRequest="50" 
+                                   WidthRequest="50" />
+                        </Frame>
+
+                        <!-- Seller Info -->
+                        <Label Grid.Column="1" 
+                               Text="Posted by" 
+                               Style="{StaticResource PropertyLabelStyle}" />
+
+                        <Label Grid.Column="1" 
+                               Grid.Row="1" 
+                               Text="{Binding SellerName}" 
+                               FontAttributes="Bold" />
+
+                        <!-- Contact button -->
+                        <Button Grid.Column="2" 
+                                Grid.RowSpan="2" 
+                                Text="Contact" 
+                                Command="{Binding ContactSellerCommand}" 
+                                VerticalOptions="Center" />
+                    </Grid>
+                </Frame>
+
+                <!-- Date listed -->
+                <HorizontalStackLayout Margin="0,10,0,15">
+                    <Label Text="Listed " Style="{StaticResource PropertyLabelStyle}" />
+                    <Label Text="{Binding Item.ListedDate, StringFormat='{0:MMM dd, yyyy}'}" Style="{StaticResource PropertyLabelStyle}" />
+                </HorizontalStackLayout>
+
+                <!-- Description Section -->
+                <Label Text="Description" Style="{StaticResource SectionHeaderStyle}" />
+                <Label Text="{Binding Item.Description}" Margin="0,0,0,15" />
+
+                <!-- Details Section -->
+                <Label Text="Details" Style="{StaticResource SectionHeaderStyle}" />
+                <Grid ColumnDefinitions="Auto,*" RowSpacing="8" Margin="0,0,0,15">
+                    <Label Grid.Column="0" Text="Category:" Style="{StaticResource PropertyLabelStyle}" />
+                    <Label Grid.Column="1" Text="{Binding Item.Category}" Style="{StaticResource PropertyValueStyle}" />
+
+                    <!-- For Sale Specific -->
+                    <StackLayout Grid.ColumnSpan="2" IsVisible="{Binding IsSaleItem}">
+                        <Label Text="Condition:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" />
+                        <Label Text="{Binding Item.ForSaleCategory}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}" />
+                    </StackLayout>
+
+                    <!-- For Rent Specific -->
+                    <StackLayout Grid.ColumnSpan="2" IsVisible="{Binding IsRentalItem}">
+                        <Label Text="Rental Period:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" />
+                        <Label Text="{Binding Item.RentalPeriod}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}" />
+
+                        <Label Text="Available From:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" 
+                               IsVisible="{Binding Item.AvailableFrom, Converter={StaticResource BoolConverter}}" />
+                        <Label Text="{Binding Item.AvailableFrom, StringFormat='{0:MMM dd, yyyy}'}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}"
+                               IsVisible="{Binding Item.AvailableFrom, Converter={StaticResource BoolConverter}}" />
+
+                        <Label Text="Available To:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" 
+                               IsVisible="{Binding Item.AvailableTo, Converter={StaticResource BoolConverter}}" />
+                        <Label Text="{Binding Item.AvailableTo, StringFormat='{0:MMM dd, yyyy}'}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}"
+                               IsVisible="{Binding Item.AvailableTo, Converter={StaticResource BoolConverter}}" />
+                    </StackLayout>
+
+                    <!-- Job Specific -->
+                    <StackLayout Grid.ColumnSpan="2" IsVisible="{Binding IsJobItem}">
+                        <Label Text="Job Type:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" />
+                        <Label Text="{Binding Item.JobType}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}" />
+
+                        <Label Text="Company:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" 
+                               IsVisible="{Binding Item.CompanyName, Converter={StaticResource StringNotEmptyConverter}}" />
+                        <Label Text="{Binding Item.CompanyName}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}"
+                               IsVisible="{Binding Item.CompanyName, Converter={StaticResource StringNotEmptyConverter}}" />
+
+                        <Label Text="Location:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" 
+                               IsVisible="{Binding Item.JobLocation, Converter={StaticResource StringNotEmptyConverter}}" />
+                        <Label Text="{Binding Item.JobLocation}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}"
+                               IsVisible="{Binding Item.JobLocation, Converter={StaticResource StringNotEmptyConverter}}" />
+                    </StackLayout>
+
+                    <!-- Service Specific -->
+                    <StackLayout Grid.ColumnSpan="2" IsVisible="{Binding IsServiceItem}">
+                        <Label Text="Service Type:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" />
+                        <Label Text="{Binding Item.ServiceType}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}" />
+
+                        <Label Text="Experience:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" 
+                               IsVisible="{Binding Item.YearsOfExperience, Converter={StaticResource GreaterThanZeroConverter}}" />
+                        <Label Text="{Binding Item.YearsOfExperience, StringFormat='{0} years'}" Grid.Column="1" Style="{StaticResource PropertyValueStyle}"
+                               IsVisible="{Binding Item.YearsOfExperience, Converter={StaticResource GreaterThanZeroConverter}}" />
+
+                        <Label Text="Rating:" Grid.Column="0" Style="{StaticResource PropertyLabelStyle}" 
+                               IsVisible="{Binding Item.AverageRating, Converter={StaticResource GreaterThanZeroConverter}}" />
+                        <HorizontalStackLayout Grid.Column="1" 
+                                              IsVisible="{Binding Item.AverageRating, Converter={StaticResource GreaterThanZeroConverter}}">
+                            <Label Text="{Binding Item.AverageRating, StringFormat='{0:F1}'}" Style="{StaticResource PropertyValueStyle}" />
+                            <Label Text=" / 5.0" Style="{StaticResource PropertyValueStyle}" />
+                        </HorizontalStackLayout>
+                    </StackLayout>
+                </Grid>
+
+                <!-- Location Section -->
+                <Label Text="Location" Style="{StaticResource SectionHeaderStyle}" 
+                       IsVisible="{Binding Item.HasLocation}" />
+                <Frame Padding="0" 
+                       HeightRequest="200" 
+                       BorderColor="#DDDDDD" 
+                       CornerRadius="10" 
+                       IsVisible="{Binding Item.HasLocation}" 
+                       Margin="0,0,0,15">
+                    <Grid>
+                        <Image Source="map_placeholder.png" Aspect="AspectFill" />
+                        <Button Text="View on Map" 
+                                Command="{Binding ViewOnMapCommand}" 
+                                VerticalOptions="End" 
+                                Margin="10" />
+                    </Grid>
+                </Frame>
+
+                <!-- Actions Section -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,15,0,15">
+                    <!-- Left side actions -->
+                    <VerticalStackLayout Grid.Column="0" Spacing="10">
+                        <Button Text="View Seller Profile" 
+                                Command="{Binding ViewSellerProfileCommand}"
+                                BackgroundColor="#007BFF" 
+                                TextColor="White" />
+
+                        <Button Text="Report Item" 
+                                Command="{Binding ReportItemCommand}"
+                                BackgroundColor="#dc3545" 
+                                TextColor="White" />
+                    </VerticalStackLayout>
+
+                    <!-- Right side actions -->
+                    <VerticalStackLayout Grid.Column="1" Spacing="10">
+                        <Button Text="Save to Favorites" 
+                                Command="{Binding ToggleFavoriteCommand}"
+                                BackgroundColor="{Binding IsFavorite, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#ff6b6b|#6c757d'}" 
+                                TextColor="White" />
+
+                        <Button Text="Share Item" 
+                                Command="{Binding ShareItemCommand}"
+                                BackgroundColor="#6c757d" 
+                                TextColor="White" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- Item Management Section (Only for owner) -->
+                <StackLayout IsVisible="{Binding IsOwner}" Margin="0,15,0,0">
+                    <Label Text="Item Management" Style="{StaticResource SectionHeaderStyle}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
+                        <Button Text="Manage Photos" 
+                                Command="{Binding ManagePhotosCommand}" 
+                                Grid.Column="0"
+                                BackgroundColor="#17a2b8" 
+                                TextColor="White" />
+                        <Button Text="Change Status" 
+                                Command="{Binding ManageStatusCommand}" 
+                                Grid.Column="1"
+                                BackgroundColor="#ffc107" 
+                                TextColor="Black" />
+                    </Grid>
+                </StackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Loading Skeleton -->
+        <ScrollView Grid.Row="0" IsVisible="{Binding IsLoading}">
+            <VerticalStackLayout Padding="20">
+                <!-- Image Skeleton -->
+                <Frame BackgroundColor="#EEEEEE" HeightRequest="250" CornerRadius="10" HasShadow="False" Margin="0,0,0,20"/>
+
+                <!-- Title Skeleton -->
+                <Frame BackgroundColor="#EEEEEE" HeightRequest="30" CornerRadius="5" HasShadow="False" Margin="0,0,0,10" WidthRequest="300" HorizontalOptions="Start"/>
+
+                <!-- Price Skeleton -->
+                <Frame BackgroundColor="#EEEEEE" HeightRequest="25" CornerRadius="5" HasShadow="False" Margin="0,0,0,20" WidthRequest="150" HorizontalOptions="Start"/>
+
+                <!-- Divider -->
+                <BoxView HeightRequest="1" BackgroundColor="#EEEEEE" Margin="0,5,0,15"/>
+
+                <!-- Seller Info Skeleton -->
+                <Frame BackgroundColor="#F8F9FA" Padding="15" CornerRadius="10" Margin="0,0,0,20">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Frame BackgroundColor="#EEEEEE" HeightRequest="50" WidthRequest="50" CornerRadius="25" Margin="0,0,10,0" HasShadow="False"/>
+                        <StackLayout Grid.Column="1" Spacing="5">
+                            <Frame BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False" WidthRequest="80" HorizontalOptions="Start"/>
+                            <Frame BackgroundColor="#EEEEEE" HeightRequest="20" CornerRadius="5" HasShadow="False" WidthRequest="120" HorizontalOptions="Start"/>
+                        </StackLayout>
+                        <Frame Grid.Column="2" BackgroundColor="#EEEEEE" HeightRequest="40" WidthRequest="80" CornerRadius="5" HasShadow="False"/>
+                    </Grid>
+                </Frame>
+
+                <!-- Description Skeleton -->
+                <Frame BackgroundColor="#EEEEEE" HeightRequest="20" CornerRadius="5" HasShadow="False" Margin="0,0,0,10" WidthRequest="150" HorizontalOptions="Start"/>
+                <Frame BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False" Margin="0,0,0,5" />
+                <Frame BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False" Margin="0,0,0,5" />
+                <Frame BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False" Margin="0,0,0,20" WidthRequest="250" HorizontalOptions="Start"/>
+
+                <!-- Details Skeleton -->
+                <Frame BackgroundColor="#EEEEEE" HeightRequest="20" CornerRadius="5" HasShadow="False" Margin="0,0,0,10" WidthRequest="100" HorizontalOptions="Start"/>
+                <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="15">
+                    <Frame Grid.Column="0" BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False" Margin="0,0,10,0"/>
+                    <Frame Grid.Column="1" BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False"/>
+
+                    <Frame Grid.Row="1" Grid.Column="0" BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False" Margin="0,0,10,0"/>
+                    <Frame Grid.Row="1" Grid.Column="1" BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False"/>
+
+                    <Frame Grid.Row="2" Grid.Column="0" BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False" Margin="0,0,10,0"/>
+                    <Frame Grid.Row="2" Grid.Column="1" BackgroundColor="#EEEEEE" HeightRequest="15" CornerRadius="5" HasShadow="False"/>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Loading Animation -->
+        <ActivityIndicator Grid.Row="0" 
+                           IsRunning="{Binding IsLoading}" 
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center" 
+                           Color="#007BFF" />
+    </Grid>
 </ContentPage>

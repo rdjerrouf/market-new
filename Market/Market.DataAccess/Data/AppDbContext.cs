@@ -9,6 +9,9 @@ namespace Market.DataAccess.Data
 {
     public class AppDbContext : DbContext
     {
+
+        public DbSet<Report> Reports { get; set; } = null!;
+        public DbSet<BlockedUser> BlockedUsers { get; set; } = null!;
         public DbSet<ItemLocation> ItemLocations { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Item> Items { get; set; }
@@ -320,7 +323,38 @@ namespace Market.DataAccess.Data
                 .WithOne()
                 .HasForeignKey<ItemLocation>(il => il.ItemId);
 
-        
+            // Configure the Report entity
+            modelBuilder.Entity<Report>()
+                .HasOne(r => r.ReportedItem)
+                .WithMany()
+                .HasForeignKey(r => r.ReportedItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Report>()
+                .HasOne(r => r.ReportedByUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReportedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure the BlockedUser entity
+            modelBuilder.Entity<BlockedUser>()
+                .HasOne(bu => bu.User)
+                .WithMany()
+                .HasForeignKey(bu => bu.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BlockedUser>()
+                .HasOne(bu => bu.BlockedUserProfile)
+                .WithMany()
+                .HasForeignKey(bu => bu.BlockedUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Ensure a user can only block another user once
+            modelBuilder.Entity<BlockedUser>()
+                .HasIndex(bu => new { bu.UserId, bu.BlockedUserId })
+                .IsUnique();
+
+
             Debug.WriteLine("Database model configuration completed");
         }
 

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Market.DataAccess.Models;
 using Market.Market.DataAccess.Models.Dtos;
 using Market.Services;
+using Market.Views;
 using System.Diagnostics;
 
 namespace Market.ViewModels
@@ -11,9 +12,11 @@ namespace Market.ViewModels
     {
         private readonly IAuthService _authService;
         private readonly IItemService _itemService;
+        private readonly SecurityService _securityService;
 
         [ObservableProperty]
         private UserProfileDto _profile;
+
 
         [ObservableProperty]
         private bool _isBusy;
@@ -60,13 +63,17 @@ namespace Market.ViewModels
         [ObservableProperty]
         private bool _isLoggedIn;
 
-        public ProfileViewModel(IAuthService authService, IItemService itemService)
+        // Added property for average rating
+        [ObservableProperty]
+        private double _averageRating;
+
+        public ProfileViewModel(IAuthService authService, IItemService itemService, SecurityService securityService)
         {
             _authService = authService;
             _itemService = itemService;
+            _securityService = securityService;
             Profile = new UserProfileDto();
         }
-
         public async Task InitializeAsync()
         {
             try
@@ -121,6 +128,7 @@ namespace Market.ViewModels
                     var stats = await _itemService.GetUserProfileStatisticsAsync(userId);
                     PostedItemsCount = stats.PostedItemsCount;
                     FavoriteItemsCount = stats.FavoriteItemsCount;
+                    AverageRating = stats.AverageRating;
                 }
                 else
                 {
@@ -276,6 +284,17 @@ namespace Market.ViewModels
             await Shell.Current.GoToAsync("//FavoritesPage");
         }
 
+        // Add the ViewRatings command
+        [RelayCommand]
+        private async Task ViewRatings()
+        {
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser != null)
+            {
+                await Shell.Current.GoToAsync($"{nameof(UserRatingsPage)}?UserId={currentUser.Id}");
+            }
+        }
+
         [RelayCommand]
         private async Task ChangePassword()
         {
@@ -332,5 +351,15 @@ namespace Market.ViewModels
                 await Shell.Current.DisplayAlert("Error", "Failed to upload profile picture", "OK");
             }
         }
+
+        // Add this to your ProfileViewModel.cs
+        [RelayCommand]
+        private async Task ManageBlockedUsers()
+        {
+            await Shell.Current.GoToAsync($"{nameof(BlockedUsersPage)}");
+        }
+
+
+
     }
 }

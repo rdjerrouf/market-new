@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:Market.ViewModels"
+             xmlns:models="clr-namespace:Market.Market.DataAccess.Models"
+             x:Class="Market.Views.PhotoManagementPage"
+             Title="Manage Photos">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Photo frame style -->
+            <Style x:Key="PhotoFrameStyle" TargetType="Frame">
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="5" />
+                <Setter Property="BorderColor" Value="LightGray" />
+                <Setter Property="HasShadow" Value="True" />
+                <Setter Property="HeightRequest" Value="150" />
+                <Setter Property="WidthRequest" Value="150" />
+            </Style>
+
+            <!-- Primary photo badge style -->
+            <Style x:Key="PrimaryBadgeStyle" TargetType="Label">
+                <Setter Property="BackgroundColor" Value="#AA000000" />
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="5,2" />
+                <Setter Property="HorizontalOptions" Value="Start" />
+                <Setter Property="VerticalOptions" Value="Start" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="15">
+        <!-- Header with item info -->
+        <StackLayout Grid.Row="0" Margin="0,0,0,15">
+            <Label Text="{Binding ItemTitle}" FontSize="20" FontAttributes="Bold" />
+            <Label Text="{Binding ItemStatus}" TextColor="DarkBlue" />
+        </StackLayout>
+
+        <!-- Photo grid -->
+        <RefreshView Grid.Row="1" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Photos}" SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical" 
+                                    Span="2" 
+                                    HorizontalItemSpacing="10" 
+                                    VerticalItemSpacing="10" />
+                </CollectionView.ItemsLayout>
+
+                <!-- Empty state -->
+                <CollectionView.EmptyView>
+                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                        <Label Text="No photos yet" FontSize="18" TextColor="Gray" HorizontalTextAlignment="Center" />
+                        <Label Text="Tap 'Add Photo' to upload images" FontSize="14" TextColor="Gray" HorizontalTextAlignment="Center" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
+
+                <!-- Photo item template -->
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ItemPhoto">
+                        <Grid Padding="5">
+                            <Frame Style="{StaticResource PhotoFrameStyle}">
+                                <Grid>
+                                    <!-- Photo image -->
+                                    <Image Source="{Binding PhotoUrl}" Aspect="AspectFill" />
+
+                                    <!-- Primary indicator -->
+                                    <Label Text="PRIMARY" Style="{StaticResource PrimaryBadgeStyle}" 
+                                           IsVisible="{Binding IsPrimaryPhoto}" />
+
+                                    <!-- Tap overlay -->
+                                    <Grid BackgroundColor="Transparent">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:PhotoManagementViewModel}}, Path=PhotoTappedCommand}" 
+                                                                  CommandParameter="{Binding .}" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
+                                </Grid>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Action buttons -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,15,0,0" ColumnSpacing="10">
+            <Button Text="Add Photo" 
+                    Command="{Binding AddPhotoCommand}" 
+                    Grid.Column="0" />
+
+            <Button Text="Back" 
+                    Command="{Binding GoBackCommand}" 
+                    Grid.Column="1" />
+        </Grid>
+
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.RowSpan="3" 
+                           IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}" 
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

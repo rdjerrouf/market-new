@@ -153,6 +153,7 @@ namespace Market
             // Add ItemService registration
             builder.Services.AddScoped<IItemService, ItemService>();
             builder.Services.AddScoped<IMessageService, MessageService>();
+            builder.Services.AddSingleton<SecurityService>();
 
             // add GeoLocationService registration
             builder.Services.AddTransient<IGeolocationService, GeolocationService>();
@@ -162,6 +163,10 @@ namespace Market
 
             // Email Service Verification
             builder.Services.AddTransient<VerifyEmailPage>();
+
+            builder.Services.AddSingleton<IMediaService, LocalMediaService>();
+            builder.Services.AddSingleton<PhotoService>();
+            builder.Services.AddSingleton<ItemStatusService>();
 
 
             // Converter Registrations (Add these lines HERE)
@@ -199,6 +204,11 @@ namespace Market
             builder.Services.AddTransient<ItemMapViewModel>();
             builder.Services.AddTransient<SetLocationViewModel>();
             builder.Services.AddTransient<NearbyItemsViewModel>();
+            builder.Services.AddTransient<UserRatingsViewModel>();
+            builder.Services.AddTransient<CreateRatingViewModel>();
+            builder.Services.AddTransient<ReportItemViewModel>();
+            builder.Services.AddTransient<BlockedUsersViewModel>();
+            builder.Services.AddTransient<UserProfileViewModel>();
 
 
         }
@@ -228,8 +238,12 @@ namespace Market
             builder.Services.AddTransient<ItemMapPage>();
             builder.Services.AddTransient<SetLocationPage>();
             builder.Services.AddTransient<NearbyItemsPage>();
-
-
+            builder.Services.AddTransient<UserRatingsPage>();
+            builder.Services.AddTransient<CreateRatingPage>();
+            builder.Services.AddTransient<ReportItemPage>();
+            builder.Services.AddTransient<BlockedUsersPage>();
+            builder.Services.AddTransient<UserProfilePage>();
+          
         }
 
         // Configures debug settings for development

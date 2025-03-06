@@ -15,6 +15,11 @@
             <!-- Add converters -->
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <converters:StringNotNullOrEmptyBoolConverter x:Key="StringNotNullOrEmptyBoolConverter"/>
+
+            <!-- New rating converters -->
+            <converters:RatingColorConverter x:Key="RatingColorConverter"/>
+            <converters:RatingTextConverter x:Key="RatingTextConverter"/>
+            <converters:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -15,6 +15,12 @@
                            HorizontalOptions="Center" 
                            VerticalOptions="Center" />
 
+        <!-- Report button -->
+        <Button Text="Report Item" 
+        Command="{Binding ReportItemCommand}"
+        Margin="0,10,0,0" />
+        
+        
         <!-- Map view -->
         <maps:Map Grid.Row="1"
                   x:Name="LocationMap"

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:Market.ViewModels"
+             x:Class="Market.Views.StatusManagementPage"
+             Title="Manage Item Status">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="20">
+        <!-- Item Title -->
+        <StackLayout Grid.Row="0" Margin="0,0,0,15">
+            <Label Text="{Binding ItemTitle}" FontSize="22" FontAttributes="Bold" />
+
+            <!-- Status Badge -->
+            <Frame BackgroundColor="{Binding StatusColor}" 
+                   Padding="8,4" CornerRadius="12" 
+                   HorizontalOptions="Start" Margin="0,5,0,0">
+                <Label Text="{Binding StatusText}" 
+                       TextColor="White" FontSize="14" FontAttributes="Bold" />
+            </Frame>
+        </StackLayout>
+
+        <!-- Main Photo -->
+        <Frame Grid.Row="1" HeightRequest="200" Padding="0" Margin="0,0,0,20"
+               BorderColor="LightGray" HasShadow="True" IsVisible="{Binding HasPhoto}">
+            <Image Source="{Binding PhotoUrl}" Aspect="AspectFill" />
+        </Frame>
+
+        <!-- Status Selection -->
+        <StackLayout Grid.Row="2" Spacing="15">
+            <Label Text="Change Item Status" FontSize="18" FontAttributes="Bold" />
+
+            <Button Text="Mark as Active" 
+                    Command="{Binding MarkAsActiveCommand}"
+                    IsEnabled="{Binding CanMarkAsActive}"
+                    BackgroundColor="#28a745" TextColor="White" />
+
+            <Button Text="Mark as Sold" 
+                    Command="{Binding MarkAsSoldCommand}"
+                    IsEnabled="{Binding CanMarkAsSold}"
+                    BackgroundColor="#dc3545" TextColor="White" />
+
+            <Button Text="Mark as Rented" 
+                    Command="{Binding MarkAsRentedCommand}"
+                    IsEnabled="{Binding CanMarkAsRented}"
+                    BackgroundColor="#fd7e14" TextColor="White" />
+
+            <Button Text="Mark as Unavailable" 
+                    Command="{Binding MarkAsUnavailableCommand}"
+                    IsEnabled="{Binding CanMarkAsUnavailable}"
+                    BackgroundColor="#6c757d" TextColor="White" />
+
+            <Label Text="Note: Changing the status will update how your item appears to others." 
+                   TextColor="Gray" FontSize="12" Margin="0,15,0,0" />
+        </StackLayout>
+
+        <!-- Navigation Buttons -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,*" Margin="0,20,0,0" ColumnSpacing="15">
+            <Button Text="Manage Photos" 
+                    Command="{Binding ManagePhotosCommand}" 
+                    Grid.Column="0" />
+
+            <Button Text="Back" 
+                    Command="{Binding GoBackCommand}" 
+                    Grid.Column="1" />
+        </Grid>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.RowSpan="4" 
+                           IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}"
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

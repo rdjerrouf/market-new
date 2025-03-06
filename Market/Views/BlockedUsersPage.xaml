@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Market.ViewModels"
+             xmlns:models="clr-namespace:Market.DataAccess.Models"
+             x:Class="Market.Views.BlockedUsersPage"
+             x:DataType="viewmodels:BlockedUsersViewModel"
+             Title="Blocked Users">
+
+    <Grid RowDefinitions="Auto,*" Padding="15">
+        <Label Grid.Row="0" 
+               Text="Users you've blocked won't be able to see your listings or contact you."
+               TextColor="Gray"
+               Margin="0,0,0,15" />
+
+        <RefreshView Grid.Row="1" 
+                     Command="{Binding RefreshCommand}"
+                     IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding BlockedUsers}"
+                           SelectionMode="None">
+
+                <!-- Empty state -->
+                <CollectionView.EmptyView>
+                    <StackLayout VerticalOptions="Center"
+                                Margin="20">
+                        <Label Text="You haven't blocked any users yet"
+                               HorizontalTextAlignment="Center"
+                               FontSize="18"
+                               TextColor="Gray" />
+                        <Label Text="When you block someone, they'll appear here"
+                               HorizontalTextAlignment="Center"
+                               FontSize="14"
+                               TextColor="Gray" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:User">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Unblock"
+                                              BackgroundColor="#28a745"
+                                              Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BlockedUsersViewModel}}, Path=UnblockUserCommand}"
+                                              CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Grid Padding="5" ColumnDefinitions="Auto,*,Auto">
+                                <!-- User avatar -->
+                                <Frame Grid.Column="0"
+                                       HeightRequest="50"
+                                       WidthRequest="50"
+                                       CornerRadius="25"
+                                       Padding="0"
+                                       IsClippedToBounds="True"
+                                       Margin="0,0,10,0">
+                                    <Image Source="{Binding ProfilePicture}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="50"
+                                           WidthRequest="50" />
+                                </Frame>
+
+                                <!-- User info -->
+                                <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="{Binding DisplayName}"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding Email}"
+                                           FontSize="14"
+                                           TextColor="Gray" />
+                                </StackLayout>
+
+                                <!-- Unblock button -->
+                                <Button Grid.Column="2"
+                                        Text="Unblock"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BlockedUsersViewModel}}, Path=UnblockUserCommand}"
+                                        CommandParameter="{Binding .}"
+                                        VerticalOptions="Center" />
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.RowSpan="2" 
+                          IsRunning="{Binding IsBusy}" 
+                          IsVisible="{Binding IsBusy}"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

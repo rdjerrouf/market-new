@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Market.Views.UserProfilePage"
+             Title="UserProfilePage">
+    <VerticalStackLayout>
+        <StackLayout IsVisible="{Binding IsCurrentUser, Converter={StaticResource InvertedBoolConverter}}">
+            <Button Text="{Binding IsUserBlocked, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Unblock User|Block User'}"
+            Command="{Binding IsUserBlocked, Converter={StaticResource BoolToICommandConverter}, ConverterParameter='{Binding UnblockUserCommand}|{Binding BlockUserCommand}'}"
+            BackgroundColor="{Binding IsUserBlocked, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#28a745|#dc3545'}"
+            TextColor="White"
+            Margin="0,10,0,0" />
+        </StackLayout>
+    </VerticalStackLayout>
+</ContentPage>

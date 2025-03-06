@@ -79,7 +79,13 @@
        <MauiXaml Update="Views\AddItemPage.xaml">
          <Generator>MSBuild:Compile</Generator>
        </MauiXaml>
+       <MauiXaml Update="Views\BlockedUsersPage.xaml">
+         <Generator>MSBuild:Compile</Generator>
+       </MauiXaml>
        <MauiXaml Update="Views\ConfirmEmailPage.xaml">
+         <Generator>MSBuild:Compile</Generator>
+       </MauiXaml>
+       <MauiXaml Update="Views\CreateRatingPage.xaml">
          <Generator>MSBuild:Compile</Generator>
        </MauiXaml>
        <MauiXaml Update="Views\ForSaleItemPage.xaml">
@@ -103,6 +109,9 @@
        <MauiXaml Update="Views\NearbyItemPage.xaml">
          <Generator>MSBuild:Compile</Generator>
        </MauiXaml>
+       <MauiXaml Update="Views\PhotoManagementPage.xaml">
+         <Generator>MSBuild:Compile</Generator>
+       </MauiXaml>
        <MauiXaml Update="Views\PostItemPage.xaml">
          <Generator>MSBuild:Compile</Generator>
        </MauiXaml>
@@ -112,10 +121,22 @@
        <MauiXaml Update="Views\RentalItemPage.xaml">
          <Generator>MSBuild:Compile</Generator>
        </MauiXaml>
+       <MauiXaml Update="Views\ReportItemPage.xaml">
+         <Generator>MSBuild:Compile</Generator>
+       </MauiXaml>
        <MauiXaml Update="Views\SearchPage.xaml">
            <Generator>MSBuild:Compile</Generator>
        </MauiXaml>
        <MauiXaml Update="Views\ServiceItemPage.xaml">
+         <Generator>MSBuild:Compile</Generator>
+       </MauiXaml>
+       <MauiXaml Update="Views\StatusManagementPage.xaml">
+         <Generator>MSBuild:Compile</Generator>
+       </MauiXaml>
+       <MauiXaml Update="Views\UserProfilePage.xaml">
+         <Generator>MSBuild:Compile</Generator>
+       </MauiXaml>
+       <MauiXaml Update="Views\UserRatingsPage.xaml">
          <Generator>MSBuild:Compile</Generator>
        </MauiXaml>
        <MauiXaml Update="Views\VerifyEmailPage.xaml">

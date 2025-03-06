@@ -34,6 +34,11 @@ namespace Market
                 Routing.RegisterRoute(nameof(ItemMapPage), typeof(ItemMapPage));
                 Routing.RegisterRoute(nameof(SetLocationPage), typeof(SetLocationPage));
                 Routing.RegisterRoute(nameof(NearbyItemsPage), typeof(NearbyItemsPage));
+                Routing.RegisterRoute(nameof(UserRatingsPage), typeof(UserRatingsPage));
+                Routing.RegisterRoute(nameof(CreateRatingPage), typeof(CreateRatingPage));
+                Routing.RegisterRoute(nameof(ReportItemPage), typeof(ReportItemPage));
+                Routing.RegisterRoute(nameof(BlockedUsersPage), typeof(BlockedUsersPage));
+                Routing.RegisterRoute(nameof(UserProfilePage), typeof(UserProfilePage));
                 // Log registered routes
                 Debug.WriteLine("Successfully registered routes:");
                 Debug.WriteLine($"- {nameof(ServiceItemPage)}");
