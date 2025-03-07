@@ -32,7 +32,7 @@ namespace Market.ViewModels.AddItem
 
         #region Properties
 
-        public static List<ForSaleCategory> Categories => Enum.GetValues<ForSaleCategory>().ToList();
+        public  List<ForSaleCategory> Categories => Enum.GetValues<ForSaleCategory>().ToList();
 
         private ForSaleCategory? selectedCategory;
         public ForSaleCategory? SelectedCategory
@@ -56,8 +56,7 @@ namespace Market.ViewModels.AddItem
         }
 
         public bool HasCategoryError => !string.IsNullOrEmpty(CategoryError);
-        public static  List<AlState> States => Enum.GetValues<AlState>().ToList();
-
+        public List<AlState> States => Enum.GetValues<AlState>().ToList();
         private AlState? selectedState;
         public AlState? SelectedState
         {

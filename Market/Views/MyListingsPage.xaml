@@ -27,28 +27,95 @@
                                                CommandParameter="{Binding .}"/>
                                 </SwipeItems>
                             </SwipeView.RightItems>
-                            <Grid Padding="10">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <!-- Added new row for Price -->
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <Label Grid.Row="0" Grid.Column="0"
-                                       Text="{Binding Title}"
-                                       FontAttributes="Bold"/>
-                                <Label Grid.Row="1" Grid.Column="0"
-                                       Text="{Binding Description}"
-                                       FontSize="Small"/>
-                                <Entry Grid.Row="2" Grid.Column="0"
-                                       Text="{Binding Price}"
-                                       Keyboard="Numeric"
-                                       VerticalOptions="Center"/>
-                            </Grid>
+                            <Frame Margin="10" BorderColor="LightGray" Padding="10">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Item Image with Multiple Fallback Options -->
+                                    <Frame Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
+                                           HeightRequest="90" WidthRequest="90"
+                                           Padding="0" IsClippedToBounds="True"
+                                           CornerRadius="8" BorderColor="LightGray"
+                                           Margin="0,0,10,0">
+                                        <!-- Try PhotoUrl first -->
+                                        <Image Source="{Binding PhotoUrl}"
+                                               Aspect="AspectFill"
+                                               VerticalOptions="Fill"
+                                               HorizontalOptions="Fill">
+                                            <Image.Triggers>
+                                                <!-- If PhotoUrl is null, try ImageUrl -->
+                                                <DataTrigger TargetType="Image" 
+                                                            Binding="{Binding PhotoUrl}" 
+                                                            Value="{x:Null}">
+                                                    <Setter Property="Source" Value="{Binding ImageUrl}" />
+                                                </DataTrigger>
+                                                <!-- Fallback to a placeholder if both are null -->
+                                                <MultiTrigger TargetType="Image">
+                                                    <MultiTrigger.Conditions>
+                                                        <BindingCondition Binding="{Binding PhotoUrl}" Value="{x:Null}" />
+                                                        <BindingCondition Binding="{Binding ImageUrl}" Value="{x:Null}" />
+                                                    </MultiTrigger.Conditions>
+                                                    <Setter Property="Source" Value="placeholder.png" />
+                                                </MultiTrigger>
+                                            </Image.Triggers>
+                                        </Image>
+                                    </Frame>
+
+                                    <!-- Item Title -->
+                                    <Label Grid.Row="0" Grid.Column="1"
+                                           Text="{Binding Title}"
+                                           FontAttributes="Bold"
+                                           FontSize="16"/>
+
+                                    <!-- Item Description -->
+                                    <Label Grid.Row="1" Grid.Column="1"
+                                           Text="{Binding Description}"
+                                           FontSize="14"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="2"
+                                           TextColor="DimGray"/>
+
+                                    <!-- Item Price -->
+                                    <Label Grid.Row="2" Grid.Column="1"
+                                           Text="{Binding Price, StringFormat='{0:C}'}"
+                                           FontAttributes="Bold"
+                                           TextColor="#007BFF"
+                                           FontSize="15"
+                                           VerticalOptions="Center"/>
+
+                                    <!-- Category and State Info -->
+                                    <StackLayout Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
+                                                Spacing="4" Margin="0,0,0,5">
+                                        <Label Text="{Binding Category}"
+                                               FontSize="12" TextColor="Gray"
+                                               HorizontalOptions="End"/>
+                                        <Label Text="{Binding State}"
+                                               FontSize="12" TextColor="Gray"
+                                               HorizontalOptions="End"/>
+                                    </StackLayout>
+
+                                    <!-- Status Indicator -->
+                                    <Frame Grid.Row="2" Grid.Column="2"
+                                           BackgroundColor="#28A745"
+                                           CornerRadius="12"
+                                           Padding="8,4"
+                                           VerticalOptions="End"
+                                           HorizontalOptions="End">
+                                        <Label Text="Active"
+                                               TextColor="White"
+                                               FontSize="12"/>
+                                    </Frame>
+                                </Grid>
+                            </Frame>
                         </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

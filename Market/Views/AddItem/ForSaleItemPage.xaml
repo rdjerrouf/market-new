@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:Market.ViewModels.AddItem"
+             xmlns:models="clr-namespace:Market.Market.DataAccess.Models"
              x:Class="Market.Views.AddItem.ForSaleItemPage"
              x:DataType="viewmodels:ForSaleItemViewModel"
              Title="Sell an Item">
@@ -19,34 +20,19 @@
                        IsVisible="{Binding HasTitleError}"/>
             </VerticalStackLayout>
 
-            <!-- State Selection -->
-            <VerticalStackLayout Spacing="5">
-                <Label Text="Item Location (Required)" 
-                       FontSize="14" 
-                       FontAttributes="Bold"/>
-                <Picker ItemsSource="{Binding States}"
-                        SelectedItem="{Binding SelectedState}"
-                        Title="Select State"/>
-                <Label Text="{Binding StateError}"
-                       TextColor="Red"
-                       FontSize="12"
-                       IsVisible="{Binding HasStateError}"/>
-            </VerticalStackLayout>
-
-
             <!-- Category Selection -->
             <Frame BorderColor="LightGray" Padding="15">
                 <VerticalStackLayout Spacing="5">
                     <Label Text="Category" 
-               FontSize="16"
-               FontAttributes="Bold"/>
+                           FontSize="16"
+                           FontAttributes="Bold"/>
                     <Picker ItemsSource="{Binding Categories}"
-                SelectedItem="{Binding SelectedCategory}"
-                Title="Select Category"/>
+                            SelectedItem="{Binding SelectedCategory}"
+                            Title="Select Category"/>
                     <Label Text="{Binding CategoryError}"
-               TextColor="Red"
-               FontSize="12"
-               IsVisible="{Binding HasCategoryError}"/>
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding HasCategoryError}"/>
                 </VerticalStackLayout>
             </Frame>
 
@@ -54,18 +40,17 @@
             <Frame BorderColor="LightGray" Padding="15">
                 <VerticalStackLayout Spacing="5">
                     <Label Text="Location" 
-               FontSize="16"
-               FontAttributes="Bold"/>
+                           FontSize="16"
+                           FontAttributes="Bold"/>
                     <Picker ItemsSource="{Binding States}"
-                SelectedItem="{Binding SelectedState}"
-                Title="Select State"/>
+                            SelectedItem="{Binding SelectedState}"
+                            Title="Select State"/>
                     <Label Text="{Binding StateError}"
-               TextColor="Red"
-               FontSize="12"
-               IsVisible="{Binding HasStateError}"/>
+                           TextColor="Red"
+                           FontSize="12"
+                           IsVisible="{Binding HasStateError}"/>
                 </VerticalStackLayout>
             </Frame>
-
 
             <!-- Price Input with Validation -->
             <VerticalStackLayout Spacing="5">

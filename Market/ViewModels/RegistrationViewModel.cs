@@ -123,7 +123,7 @@ namespace Market.ViewModels
                     await _emailService.SendEmailVerificationAsync(user.Email, confirmationLink);
 
                     await ShowMessage("Success", "Registration successful! Please check your email for verification instructions.");
-                    await Shell.Current.GoToAsync("//LoginPage");
+                    await Shell.Current.GoToAsync("//SignInPage");
                 }
                 else
                 {

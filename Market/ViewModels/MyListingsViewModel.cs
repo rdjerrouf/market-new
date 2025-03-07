@@ -81,6 +81,7 @@ namespace Market.ViewModels
                 Items.Clear();
                 foreach (var item in userItems)
                 {
+                    Debug.WriteLine($"Item: {item.Title}, PhotoUrl: {item.PhotoUrl ?? "null"}");
                     Items.Add(item);
                 }
             }
