@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Market.Market.DataAccess.Models
+namespace Market.DataAccess.Models
 {
     public enum AlState
     {

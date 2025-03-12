@@ -453,8 +453,10 @@ namespace Market.ViewModels.AddItem
                 }
 
                 Debug.WriteLine("Photo saved successfully");
-                return localPath;
-            }
+                
+                // Consider returning a proper URI format for MAUI
+                return $"file://{localPath}";            }
+            
             catch (Exception ex)
             {
                 Debug.WriteLine($"Photo save error: {ex.Message}");

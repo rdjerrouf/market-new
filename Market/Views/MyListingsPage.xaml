@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Market.Views.MyListingsPage"
              xmlns:viewmodel="clr-namespace:Market.ViewModels"
              xmlns:models="clr-namespace:Market.DataAccess.Models"
+             xmlns:converters="clr-namespace:Market.Converters"
+             x:Class="Market.Views.MyListingsPage"
              x:DataType="viewmodel:MyListingsViewModel"
-             Title="My Listings">
+             Title="My Listings"
+             BackgroundColor="#f5fffa">
+
+    <ContentPage.Resources>
+        <converters:FilePathConverter x:Key="FilePathConverter"/>
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*">
         <Button Grid.Row="0" 
                 Text="Refresh Listings" 
@@ -40,32 +47,25 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Item Image with Multiple Fallback Options -->
+                                    <!-- Item Image with Fallback -->
                                     <Frame Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
                                            HeightRequest="90" WidthRequest="90"
                                            Padding="0" IsClippedToBounds="True"
                                            CornerRadius="8" BorderColor="LightGray"
                                            Margin="0,0,10,0">
-                                        <!-- Try PhotoUrl first -->
-                                        <Image Source="{Binding PhotoUrl}"
+
+                                        <!-- Image with proper path conversion -->
+                                        <Image Source="{Binding PhotoUrl, Converter={StaticResource FilePathConverter}}"
                                                Aspect="AspectFill"
                                                VerticalOptions="Fill"
                                                HorizontalOptions="Fill">
                                             <Image.Triggers>
-                                                <!-- If PhotoUrl is null, try ImageUrl -->
+                                                <!-- Fallback to a placeholder if PhotoUrl is null -->
                                                 <DataTrigger TargetType="Image" 
                                                             Binding="{Binding PhotoUrl}" 
                                                             Value="{x:Null}">
-                                                    <Setter Property="Source" Value="{Binding ImageUrl}" />
+                                                    <Setter Property="Source" Value="dotnet_bot.png" />
                                                 </DataTrigger>
-                                                <!-- Fallback to a placeholder if both are null -->
-                                                <MultiTrigger TargetType="Image">
-                                                    <MultiTrigger.Conditions>
-                                                        <BindingCondition Binding="{Binding PhotoUrl}" Value="{x:Null}" />
-                                                        <BindingCondition Binding="{Binding ImageUrl}" Value="{x:Null}" />
-                                                    </MultiTrigger.Conditions>
-                                                    <Setter Property="Source" Value="placeholder.png" />
-                                                </MultiTrigger>
                                             </Image.Triggers>
                                         </Image>
                                     </Frame>

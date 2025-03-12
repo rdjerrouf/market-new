@@ -1,0 +1,184 @@
+A cross platform .net maui app named “Market” using visual studio,at the start of the app, a simple sign in with email and password.
+ top of the main page has a search bar and small image button account icon at the end.’
+the image button account when clicked consist of :
+    • saved items
+    • search alert
+    • account setttings
+    • premium account ( for futur implementation)
+    • terms and polocy
+The next line four horizontal image buttons:  “for sale”, “Services”, “Jobs”, “for rent”.
+ At the very button four horizontal image button: “home”, “inbox”, “add” , “my listings”. I am using Sqlite for now, users of the app cannot make payment through the app. Users communicate via messaging in the app. These  four image buttons, if clicked user is prompted to login with credentials, 
+    1) home button 
+    2) inbox is for all the sent and received messages.
+    3) post is for selling, renting, posting jobs or selling a service.
+    4) My listings are all what the user posted.
+       
+For landlords renting and service providers full name addresses phone number is required. 
+
+posting an item. When user clicks on the post button can have a choice to add an item for sell or rent or offer services or post a job.  you see, I have four categories
+
+  for sell, this one has 
+    • title
+    • location
+    • max 3 upload Pictures
+    • description
+    • price
+    • user can be rated by customers plus reviews
+    
+
+for rent, this one has
+    • title
+    • Description
+    • location
+    • max 5 upload pictures
+    • Date availability
+    • price 
+    • user can be rated by customers plus reviews
+    • Jobs, this one does not have pictures
+    • Job location
+    • Job title
+    • job description
+    • job categories
+   	 1. accounting
+   	 2. administration
+   	 3. advertising
+   	 4. customer services
+  	  5. cleaning
+   	 6. construction
+  	  7. consulting
+  	  8. education
+  	  9. engineering
+    	10. farming and agriculture
+    	11. finance
+   	 12. Gig
+    	13. hospitality
+    	14. Human resources
+    	15. insurance
+    	16. IT
+    	17. Legal
+    	18. Management
+    	19. Manufacturing
+    	20. Marketing
+    	21. Retail
+    	22. Sales
+    	23. Security
+    	24. Sport and Fitness
+    	25. Transportation
+    	26. Travel
+    	27. Mechanic/electrical/body work
+    	28. Others
+    • Company name
+    • Apply method email or phone number or URL
+      
+    
+
+ Services, this one consists of 
+      
+    1. post number of years in the job,
+    2. availability, 
+    3. number of employees, 
+    4. location 
+    5. user can be rated + reviews. 
+    6. Categories:
+                a. cleaning 
+                b. senior care
+                c. gardening
+                d. car wash
+                e. Transportation
+                f. Deliveries
+                g. Courier
+
+    
+Market/
+├── Platforms/                    
+│   ├── Android/
+│   ├── iOS/
+│   ├── MacCatalyst/
+│   └── Windows/
+│                 
+│                 
+│                 
+├── Converters/                     
+│   ├── BoolToColorConverter.cs                 
+│   ├── BoolToFontAttributesConverter.cs               
+│   ├── InverseBoolConverter.cs               
+│   ├── ReadStatusConverter.cs              
+│   ├── StrigEqualityConverter.cs               
+│   ├── StringToBoolConverter.cs              
+│                 
+├── Helpers/                     
+│   ├── InputValiator.cs                 
+│                 
+├── Services/                     
+│   ├── AuthService.cs                 
+│   ├── IAuthService.cs                 
+│   ├── IItemService.cs                 
+│   ├── IMessageService.cs                 
+│   ├── ItemService.cs                 
+│   ├── IUserSessioService.cs                 
+│   ├── MessageService.cs                 
+│   ├── PasswordHasher.cs                 
+│   ├── UserSessionService.cs                 
+│                   
+├── Resources/                     
+│   ├── AppIcon/                 
+│   ├── Fonts/                    
+│   ├── Images/                   
+│   │   ├── icons/               
+│   │   └── placeholders/        
+│   └── Styles/                  
+│       └── Colors.xaml          
+│
+├── Market.DataAccess/                         
+│   ├── Data/                    
+│   │   ├── AppDbContext.cs     
+│   │   └── AppDbContextFactory.cs         
+│   │
+│   ├── Models/                  
+│   │   ├── User.cs
+│   │   ├── Item.cs
+│   │   ├── Message.cs
+│   │   ├── Job.cs
+│   │   ├── Service.cs
+│   │   ├── Message.cs
+│   │   
+│   │
+│   ├── ViewModels/             
+│   │   ├── AddItem/
+│   │   │   ├── AddItemViewModel.cs
+│   │   │   ├── JobItemViewModel.cs
+│   │   │   ├── RentalItemViewModel.cs
+│   │   │   └── ServiceItemViewModel.cs
+│   │   │
+│   │   ├── InboxViewModel.cs
+│   │   ├── ItemDetailViewModel.cs
+│   │   ├── MainViewModel.cs
+│   │   ├── MyListingsViewModel.cs
+│   │   ├── PasswordResetViewModel.cs   
+│   │   ├── RegistrationViewModel.cs   
+│   │   ├── SignInViewModel.cs
+│   │
+│   └── Views/                  
+│       ├── AddItem/
+│       │   ├── AddItemPage.xaml
+│       │   ├── ForSaleItemPage.xaml
+│       │   ├── JobItemPage.xaml
+│       │   ├── RentalItemPage.xaml
+│       │   └── ServiceItemPage.xaml
+│       │
+│       ├── InboxPage.xaml
+│       ├── ItemDetailPage.xaml
+│       ├── MainPage.xaml
+│       ├── MyListingsPage.xaml
+│       ├── RegistrationPage.xaml
+│       ├── SearchPage.xaml
+│       ├── SignInPage.xaml
+│       │   
+│       │   
+│       ├── App.xaml
+│       ├── AppShell.xaml
+│
+└── MauiProgram.cs                      
+
+All what you in the structure are implemented. PLEASE WHEN YOU GIVE ME CODE, don't forget to document it. I need the comments with the code. please ask for code to share before making suggestions. Look in detail at the structure, it's crucial. 
+

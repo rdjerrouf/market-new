@@ -8,9 +8,13 @@ using System.Text;
 
 namespace Market.ViewModels.AddItem
 {
+    /// <summary>
+    /// ViewModel for managing rental items.
+    /// </summary>
     public partial class RentalItemViewModel : ObservableObject
     {
         #region Fields and Constants
+
         private readonly IItemService _itemService;
         private readonly IAuthService _authService;
 
@@ -33,9 +37,11 @@ namespace Market.ViewModels.AddItem
 
         // Collection to store selected photo paths
         private List<string> _selectedPhotos = new();
+
         #endregion
 
         #region Observable Properties
+
         private string _title = string.Empty;
         public string Title
         {
@@ -92,6 +98,7 @@ namespace Market.ViewModels.AddItem
         }
 
         public bool HasCategoryError => !string.IsNullOrEmpty(CategoryError);
+
         public static List<AlState> States => Enum.GetValues<AlState>().ToList();
 
         private AlState? selectedState;
@@ -180,6 +187,7 @@ namespace Market.ViewModels.AddItem
         public bool CanAddPhoto => PhotoCount < MAX_PHOTOS;
 
         #region Error Properties
+
         private string? _titleError;
         public string? TitleError
         {
@@ -187,14 +195,12 @@ namespace Market.ViewModels.AddItem
             set => SetProperty(ref _titleError, value);
         }
 
-
         private string? stateError;
         public string? StateError
         {
             get => stateError;
             set => SetProperty(ref stateError, value);
         }
-
 
         private string? _descriptionError;
         public string? DescriptionError
@@ -237,12 +243,12 @@ namespace Market.ViewModels.AddItem
             get => _isBusy;
             set => SetProperty(ref _isBusy, value);
         }
+
         #endregion
 
         #region Computed Properties
 
         public bool HasStateError => !string.IsNullOrEmpty(StateError);
-
         public bool HasTitleError => !string.IsNullOrEmpty(TitleError);
         public bool HasDescriptionError => !string.IsNullOrEmpty(DescriptionError);
         public bool HasPriceError => !string.IsNullOrEmpty(PriceError);
@@ -271,9 +277,9 @@ namespace Market.ViewModels.AddItem
                 Debug.WriteLine($"- HasDateError: {HasDateError}");
                 Debug.WriteLine($"- HasPhotoError: {HasPhotoError}");
                 Debug.WriteLine($"- PhotoCount: {PhotoCount} (minimum: {MIN_PHOTOS})");
-                Debug.WriteLine($"Final CanSave value: {canSave}");
                 Debug.WriteLine($"- HasStateError: {HasStateError}");
                 Debug.WriteLine($"- SelectedState: {SelectedState}");
+                Debug.WriteLine($"Final CanSave value: {canSave}");
 
                 return canSave;
             }
@@ -281,6 +287,11 @@ namespace Market.ViewModels.AddItem
 
         #endregion
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RentalItemViewModel"/> class.
+        /// </summary>
+        /// <param name="itemService">The item service.</param>
+        /// <param name="authService">The authentication service.</param>
         public RentalItemViewModel(IItemService itemService, IAuthService authService)
         {
             try
@@ -295,7 +306,7 @@ namespace Market.ViewModels.AddItem
                     RentalPeriod = RentalPeriods[0];
                 }
 
-                // Add these lines to perform initial validation
+                // Perform initial validation
                 ValidateTitle();
                 ValidateDescription();
                 ValidatePrice();
@@ -325,6 +336,7 @@ namespace Market.ViewModels.AddItem
             Debug.WriteLine("Category validated");
             return true;
         }
+
         private bool ValidateState()
         {
             if (!SelectedState.HasValue)
@@ -337,7 +349,6 @@ namespace Market.ViewModels.AddItem
             Debug.WriteLine("State validated");
             return true;
         }
-
 
         private bool ValidateTitle()
         {
@@ -501,16 +512,18 @@ namespace Market.ViewModels.AddItem
                            descriptionValid &&
                            priceValid &&
                            datesValid &&
-                           photosValid&&
+                           photosValid &&
                            categoryValid &&
                            stateValid;
             Debug.WriteLine($"ValidateAll result: {allValid}");
 
             return allValid;
         }
+
         #endregion
 
         #region Commands
+
         [RelayCommand]
         public async Task AddPhoto()
         {
@@ -572,6 +585,7 @@ namespace Market.ViewModels.AddItem
                 Debug.WriteLine($"Photo removed: {photo}");
             }
         }
+
         private static async Task<string?> SavePhoto(FileResult photo)
         {
             try
@@ -603,7 +617,6 @@ namespace Market.ViewModels.AddItem
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
-        // In RentalItemViewModel.cs
         private async Task Save()
         {
             if (IsBusy || !CanSave) return;
@@ -661,9 +674,11 @@ namespace Market.ViewModels.AddItem
                 IsBusy = false;
             }
         }
+
         #endregion
 
         #region Helper Methods
+
         private string BuildFullDescription()
         {
             var fullDescription = new StringBuilder();
@@ -677,6 +692,7 @@ namespace Market.ViewModels.AddItem
 
             return fullDescription.ToString();
         }
+
         #endregion
     }
 }

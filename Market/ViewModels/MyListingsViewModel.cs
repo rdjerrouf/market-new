@@ -79,11 +79,20 @@ namespace Market.ViewModels
 
                 // Clear existing items and add fetched items
                 Items.Clear();
+                // In the LoadMyListingsAsync method
                 foreach (var item in userItems)
                 {
-                    Debug.WriteLine($"Item: {item.Title}, PhotoUrl: {item.PhotoUrl ?? "null"}");
+                    string photoInfo = $"Item: {item.Title}, PhotoUrl: {item.PhotoUrl ?? "null"}";
+                    if (!string.IsNullOrEmpty(item.PhotoUrl))
+                    {
+                        photoInfo += $", Path exists: {File.Exists(item.PhotoUrl)}";
+                    }
+                    Debug.WriteLine(photoInfo);
+                    Debug.WriteLine($"AppDataDirectory: {FileSystem.AppDataDirectory}");
+                    Debug.WriteLine($"CacheDirectory: {FileSystem.CacheDirectory}");
                     Items.Add(item);
                 }
+
             }
             catch (Exception ex)
             {

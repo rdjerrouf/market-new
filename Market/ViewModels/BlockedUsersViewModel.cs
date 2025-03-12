@@ -21,14 +21,26 @@ namespace Market.ViewModels
             BlockedUsers = new ObservableCollection<User>();
         }
 
-        [ObservableProperty]
-        private ObservableCollection<User> blockedUsers;
+        private ObservableCollection<User> _blockedUsers;
+        public ObservableCollection<User> BlockedUsers
+        {
+            get => _blockedUsers;
+            set => SetProperty(ref _blockedUsers, value);
+        }
 
-        [ObservableProperty]
-        private bool isBusy;
+        private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set => SetProperty(ref _isBusy, value);
+        }
 
-        [ObservableProperty]
-        private bool isRefreshing;
+        private bool _isRefreshing;
+        public bool IsRefreshing
+        {
+            get => _isRefreshing;
+            set => SetProperty(ref _isRefreshing, value);
+        }
 
         [RelayCommand]
         private async Task Refresh()

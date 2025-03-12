@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Market.Services;
 using System.Diagnostics;
 using System.Windows.Input;
+using Microsoft.Maui.Graphics;
 
 namespace Market.ViewModels
 {

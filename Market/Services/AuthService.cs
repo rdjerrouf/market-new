@@ -242,7 +242,13 @@ namespace Market.Services
                 if (isPasswordValid)
                 {
                     // If password is valid, get the full user object
-                    return await _context.Users.FindAsync(user.Id);
+                    var fullUser = await _context.Users.FindAsync(user.Id);
+
+                    // Store the user ID in secure storage for session persistence
+                    await SecureStorage.SetAsync("userId", user.Id.ToString());
+                    Debug.WriteLine($"Stored user ID {user.Id} in SecureStorage");
+
+                    return fullUser;
                 }
 
                 return null;

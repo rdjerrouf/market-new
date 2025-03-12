@@ -3,8 +3,10 @@
 	<PropertyGroup>
 		<TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst;net8.0-windows10.0.19041.0</TargetFrameworks>
 
-		<!-- Specify RuntimeIdentifier conditionally for each target framework -->
-		<RuntimeIdentifier Condition="'$(TargetFramework)' == 'net8.0-android'">android-arm64</RuntimeIdentifier>
+		<!-- Use RuntimeIdentifiers (plural) for multiple architectures -->
+		<RuntimeIdentifiers Condition="'$(TargetFramework)' == 'net8.0-android'">android-arm64;android-arm</RuntimeIdentifiers>
+
+		<!-- Keep the singular for other platforms -->
 		<RuntimeIdentifier Condition="'$(TargetFramework)' == 'net8.0-ios'">ios-arm64</RuntimeIdentifier>
 		<RuntimeIdentifier Condition="'$(TargetFramework)' == 'net8.0-maccatalyst'">maccatalyst-x64</RuntimeIdentifier>
 		<RuntimeIdentifier Condition="'$(TargetFramework)' == 'net8.0-windows10.0.19041.0'">win10-x64</RuntimeIdentifier>

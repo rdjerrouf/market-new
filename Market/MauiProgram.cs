@@ -13,13 +13,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
+
 namespace Market
 {
-    // Static class responsible for MAUI application setup and configuration
+    /// <summary>
+    /// Static class responsible for MAUI application setup and configuration.
+    /// </summary>
     public static class MauiProgram
     {
-
-        // Initializes the database with required schema
+        /// <summary>
+        /// Initializes the database with the required schema.
+        /// </summary>
+        /// <param name="app">The MAUI application instance.</param>
         private static async Task InitializeDatabase(MauiApp app)
         {
             Debug.WriteLine("Initializing database...");
@@ -71,7 +76,10 @@ namespace Market
             }
         }
 
-        // Creates and configures the MAUI app to handle the async operation
+        /// <summary>
+        /// Creates and configures the MAUI app.
+        /// </summary>
+        /// <returns>The configured MAUI app instance.</returns>
         public static MauiApp CreateMauiApp()
         {
             Debug.WriteLine("Starting application initialization...");
@@ -105,19 +113,25 @@ namespace Market
             return app;
         }
 
-        // Configures basic MAUI application settings
+        /// <summary>
+        /// Configures basic MAUI application settings.
+        /// </summary>
+        /// <param name="builder">The MAUI app builder.</param>
         private static void ConfigureBasicSettings(MauiAppBuilder builder)
         {
             builder
                 .UseMauiApp<App>()
-                .UseMauiCommunityToolkit()  // Add this line
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
         }
 
-        // Configures database settings and connection
+        /// <summary>
+        /// Configures database settings and connection.
+        /// </summary>
+        /// <param name="builder">The MAUI app builder.</param>
         private static void ConfigureDatabase(MauiAppBuilder builder)
         {
             var dbPath = Path.Combine(FileSystem.AppDataDirectory, "market.db");
@@ -131,45 +145,39 @@ namespace Market
                 options.EnableSensitiveDataLogging();
                 options.LogTo(message => Debug.WriteLine($"EF Core: {message}"));
 #else
-        // Release mode settings
-        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                // Release mode settings
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 #endif
             }, ServiceLifetime.Scoped);
         }
 
-        // Registers application services with dependency injection
+        /// <summary>
+        /// Registers application services with dependency injection.
+        /// </summary>
+        /// <param name="builder">The MAUI app builder.</param>
         private static void RegisterServices(MauiAppBuilder builder)
         {
             Debug.WriteLine("Registering services...");
             builder.Services.AddScoped<IVerificationService, VerificationService>();
-            // Register AuthService with both dependencies
-            builder.Services.AddScoped<IAuthService>(provider => {
+            builder.Services.AddScoped<IAuthService>(provider =>
+            {
                 var context = provider.GetRequiredService<AppDbContext>();
                 var verificationService = provider.GetRequiredService<IVerificationService>();
                 var service = new AuthService(context, verificationService);
                 service.InitializeAsync().GetAwaiter().GetResult();
                 return service;
             });
-            // Add ItemService registration
             builder.Services.AddScoped<IItemService, ItemService>();
             builder.Services.AddScoped<IMessageService, MessageService>();
             builder.Services.AddSingleton<SecurityService>();
-
-            // add GeoLocationService registration
             builder.Services.AddTransient<IGeolocationService, GeolocationService>();
-
-            // Add EmailService registration
             builder.Services.AddSingleton<IEmailService, SendGridEmailService>();
-
-            // Email Service Verification
             builder.Services.AddTransient<VerifyEmailPage>();
-
             builder.Services.AddSingleton<IMediaService, LocalMediaService>();
             builder.Services.AddSingleton<PhotoService>();
             builder.Services.AddSingleton<ItemStatusService>();
 
-
-            // Converter Registrations (Add these lines HERE)
+            // Converter Registrations
             builder.Services.AddTransient<StringToBoolConverter>();
             builder.Services.AddTransient<StringEqualityConverter>();
             builder.Services.AddTransient<InverseBoolConverter>();
@@ -177,15 +185,17 @@ namespace Market
             builder.Services.AddTransient<BoolToColorConverter>();
             builder.Services.AddTransient<BoolToFontAttributesConverter>();
             builder.Services.AddTransient<BoolToStringConverter>();
-            Debug.WriteLine("Converters registered."); // Add a debug log for verification.
-        }   // Registers view models with dependency injection
+            Debug.WriteLine("Converters registered.");
+        }
+
+        /// <summary>
+        /// Registers view models with dependency injection.
+        /// </summary>
+        /// <param name="builder">The MAUI app builder.</param>
         private static void RegisterViewModels(MauiAppBuilder builder)
         {
             Debug.WriteLine("Registering ViewModels...");
-            // In ConfigureServices or similar method
-#if WINDOWS
-    builder.Services.AddTransient<RentalItemViewModel>();
-#endif
+            builder.Services.AddTransient<RentalItemViewModel>(); // Now registered for all platforms
             builder.Services.AddTransient<AddItemViewModel>();
             builder.Services.AddTransient<ForSaleItemViewModel>();
             builder.Services.AddTransient<JobItemViewModel>();
@@ -209,16 +219,15 @@ namespace Market
             builder.Services.AddTransient<ReportItemViewModel>();
             builder.Services.AddTransient<BlockedUsersViewModel>();
             builder.Services.AddTransient<UserProfileViewModel>();
-
-
         }
 
-        // Registers pages with dependency injection
-        // Registers pages with dependency injection
+        /// <summary>
+        /// Registers pages with dependency injection.
+        /// </summary>
+        /// <param name="builder">The MAUI app builder.</param>
         private static void RegisterPages(MauiAppBuilder builder)
         {
             Debug.WriteLine("Registering Pages...");
-            // In ConfigureServices or similar method
             builder.Services.AddTransient<SignInPage>();
             builder.Services.AddTransient<AddItemPage>();
             builder.Services.AddTransient<ForSaleItemPage>();
@@ -243,18 +252,17 @@ namespace Market
             builder.Services.AddTransient<ReportItemPage>();
             builder.Services.AddTransient<BlockedUsersPage>();
             builder.Services.AddTransient<UserProfilePage>();
-          
         }
 
-        // Configures debug settings for development
+        /// <summary>
+        /// Configures debug settings for development.
+        /// </summary>
+        /// <param name="builder">The MAUI app builder.</param>
         private static void ConfigureDebugSettings(MauiAppBuilder builder)
         {
 #if DEBUG
             builder.Logging.AddDebug().SetMinimumLevel(LogLevel.Debug);
 #endif
         }
-
-        
-
     }
 }

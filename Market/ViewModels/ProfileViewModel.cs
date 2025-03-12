@@ -14,66 +14,134 @@ namespace Market.ViewModels
         private readonly IItemService _itemService;
         private readonly SecurityService _securityService;
 
-        [ObservableProperty]
         private UserProfileDto _profile;
+        public UserProfileDto Profile
+        {
+            get => _profile;
+            set => SetProperty(ref _profile, value);
+        }
 
-
-        [ObservableProperty]
         private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set => SetProperty(ref _isBusy, value);
+        }
 
-        [ObservableProperty]
         private string _statusMessage;
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set => SetProperty(ref _statusMessage, value);
+        }
 
-        [ObservableProperty]
+
         private bool _isEmailVerificationNeeded;
+        public bool IsEmailVerificationNeeded
+        {
+            get => _isEmailVerificationNeeded;
+            set => SetProperty(ref _isEmailVerificationNeeded, value);
+        }
 
-        [ObservableProperty]
         private string _displayName;
+        public string DisplayName
+        {
+            get => _displayName;
+            set => SetProperty(ref _displayName, value);
+        }
 
-        [ObservableProperty]
         private string _bio;
+        public string Bio
+        {
+            get => _bio;
+            set => SetProperty(ref _bio, value);
+        }
 
-        [ObservableProperty]
         private string _phoneNumber;
+        public string PhoneNumber
+        {
+            get => _phoneNumber;
+            set => SetProperty(ref _phoneNumber, value);
+        }
 
-        [ObservableProperty]
         private string _city;
+        public string City
+        {
+            get => _city;
+            set => SetProperty(ref _city, value);
+        }
 
-        [ObservableProperty]
         private string _province;
+        public string Province
+        {
+            get => _province;
+            set => SetProperty(ref _province, value);
+        }
 
-        [ObservableProperty]
         private bool _showEmail;
+        public bool ShowEmail
+        {
+            get => _showEmail;
+            set => SetProperty(ref _showEmail, value);
+        }
 
-        [ObservableProperty]
         private bool _showPhoneNumber;
+        public bool ShowPhoneNumber
+        {
+            get => _showPhoneNumber;
+            set => SetProperty(ref _showPhoneNumber, value);
+        }
 
-        [ObservableProperty]
         private int _postedItemsCount;
+        public int PostedItemsCount
+        {
+            get => _postedItemsCount;
+            set => SetProperty(ref _postedItemsCount, value);
+        }
 
-        [ObservableProperty]
         private int _favoriteItemsCount;
+        public int FavoriteItemsCount
+        {
+            get => _favoriteItemsCount;
+            set => SetProperty(ref _favoriteItemsCount, value);
+        }
 
-        [ObservableProperty]
         private string _profilePicture;
+        public string ProfilePicture
+        {
+            get => _profilePicture;
+            set => SetProperty(ref _profilePicture, value);
+        }
 
-        [ObservableProperty]
         private bool _isEditing;
+        public bool IsEditing
+        {
+            get => _isEditing;
+            set => SetProperty(ref _isEditing, value);
+        }
 
-        [ObservableProperty]
         private bool _isLoggedIn;
+        public bool IsLoggedIn
+        {
+            get => _isLoggedIn;
+            set => SetProperty(ref _isLoggedIn, value);
+        }
 
-        // Added property for average rating
-        [ObservableProperty]
         private double _averageRating;
+        public double AverageRating
+        {
+            get => _averageRating;
+            set => SetProperty(ref _averageRating, value);
+        }
 
         public ProfileViewModel(IAuthService authService, IItemService itemService, SecurityService securityService)
         {
-            _authService = authService;
-            _itemService = itemService;
-            _securityService = securityService;
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
+            _securityService = securityService ?? throw new ArgumentNullException(nameof(securityService));
             Profile = new UserProfileDto();
         }
+
         public async Task InitializeAsync()
         {
             try
@@ -142,18 +210,11 @@ namespace Market.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void EditProfile() => IsEditing = true;
 
         [RelayCommand]
-        private void EditProfile()
-        {
-            IsEditing = true;
-        }
-
-        [RelayCommand]
-        private async Task SignIn()
-        {
-            await Shell.Current.GoToAsync("///SignInPage");
-        }
+        private async Task SignIn() => await Shell.Current.GoToAsync("SignInPage");
 
         [RelayCommand]
         private async Task SaveProfile()
@@ -272,19 +333,11 @@ namespace Market.ViewModels
         }
 
         [RelayCommand]
-        private async Task ViewPostedItems()
-        {
-            await Shell.Current.GoToAsync("//MyListingsPage");
-        }
+        private async Task ViewPostedItems() => await Shell.Current.GoToAsync("//MyListingsPage");
 
         [RelayCommand]
-        private async Task ViewFavoriteItems()
-        {
-            // Navigate to favorites page
-            await Shell.Current.GoToAsync("//FavoritesPage");
-        }
+        private async Task ViewFavoriteItems() => await Shell.Current.GoToAsync("//FavoritesPage");
 
-        // Add the ViewRatings command
         [RelayCommand]
         private async Task ViewRatings()
         {
@@ -296,11 +349,7 @@ namespace Market.ViewModels
         }
 
         [RelayCommand]
-        private async Task ChangePassword()
-        {
-            // Navigate to password change page
-            await Shell.Current.GoToAsync("PasswordChangePage");
-        }
+        private async Task ChangePassword() => await Shell.Current.GoToAsync("PasswordChangePage");
 
         [RelayCommand]
         private async Task SignOut()
@@ -352,14 +401,7 @@ namespace Market.ViewModels
             }
         }
 
-        // Add this to your ProfileViewModel.cs
         [RelayCommand]
-        private async Task ManageBlockedUsers()
-        {
-            await Shell.Current.GoToAsync($"{nameof(BlockedUsersPage)}");
-        }
-
-
-
+        private async Task ManageBlockedUsers() => await Shell.Current.GoToAsync($"{nameof(BlockedUsersPage)}");
     }
 }

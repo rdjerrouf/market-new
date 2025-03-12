@@ -2,11 +2,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Market.DataAccess.Models;
-using Market.Market.DataAccess.Models;
 using Market.DataAccess.Models.Filters;
 using Market.Services;
+using Market.Views;
 using System.Diagnostics;
 using System.Windows.Input;
+using Microsoft.Maui.Graphics;
 
 namespace Market.ViewModels
 {
@@ -15,6 +16,7 @@ namespace Market.ViewModels
         private readonly IItemService _itemService;
 
         #region Properties
+
         private readonly List<AlState> _states;
         private bool _showFilters;
         public bool ShowFilters
@@ -36,7 +38,8 @@ namespace Market.ViewModels
             get => _selectedCategories;
             set => SetProperty(ref _selectedCategories, value);
         }
-        private readonly ObservableCollection<Item> _items = [];
+
+        private readonly ObservableCollection<Item> _items = new();
         public ObservableCollection<Item> Items
         {
             get => _items;
@@ -54,7 +57,7 @@ namespace Market.ViewModels
             }
         }
 
-        private readonly List<SortOption> _sortOptions = [.. Enum.GetValues<SortOption>()];
+        private readonly List<SortOption> _sortOptions = Enum.GetValues<SortOption>().ToList();
         public List<SortOption> SortOptions
         {
             get => _sortOptions;
@@ -68,6 +71,7 @@ namespace Market.ViewModels
                 OnPropertyChanged(nameof(SortOptions));
             }
         }
+
         private decimal _minPrice;
         public decimal MinPrice
         {
@@ -164,8 +168,9 @@ namespace Market.ViewModels
             }
         }
 
+        public List<AlState> States => Enum.GetValues<AlState>().OrderBy(s => s.ToString()).ToList();
 
-        public List<AlState> States => Enum.GetValues<AlState>().OrderBy(s => s.ToString()).ToList(); private ICommand? _searchCommand;
+        private ICommand? _searchCommand;
         public ICommand SearchCommand => _searchCommand ??= new Command<string>(async (query) =>
         {
             if (query is not null)
@@ -180,7 +185,10 @@ namespace Market.ViewModels
             PriceLowToHigh,
             PriceHighToLow
         }
+
         #endregion
+
+        #region Constructor
 
         public MainViewModel(IItemService itemService)
         {
@@ -192,7 +200,10 @@ namespace Market.ViewModels
             LoadItemsAsync().ConfigureAwait(false);
         }
 
+        #endregion
+
         #region Loading Methods
+
         private async Task LoadItemsAsync()
         {
             if (IsLoading) return;
@@ -222,17 +233,19 @@ namespace Market.ViewModels
                 Debug.WriteLine("Finished loading items");
             }
         }
+
         private void InitializeCategories()
         {
             _availableCategories = new ObservableCollection<CategoryOption>
-    {
-        new() { Name = "For Sale" },
-        new() { Name = "Jobs" },
-        new() { Name = "Services" },
-        new() { Name = "Rentals" }
-    };
+            {
+                new() { Name = "For Sale" },
+                new() { Name = "Jobs" },
+                new() { Name = "Services" },
+                new() { Name = "Rentals" }
+            };
             OnPropertyChanged(nameof(AvailableCategories));
         }
+
         [RelayCommand]
         private void ToggleFilters()
         {
@@ -252,10 +265,11 @@ namespace Market.ViewModels
             }
             await LoadItemsAsync();
         }
-        
+
         #endregion
 
         #region Sorting Methods
+
         private void SortItems()
         {
             if (Items.Count == 0) return;
@@ -274,9 +288,11 @@ namespace Market.ViewModels
                 Items.Add(item);
             }
         }
+
         #endregion
 
         #region Search Methods
+
         private async Task SearchItemsAsync(string query)
         {
             if (IsLoading) return;
@@ -309,9 +325,11 @@ namespace Market.ViewModels
                 IsLoading = false;
             }
         }
+
         #endregion
 
         #region Filter Commands
+
         [RelayCommand]
         private async Task FilterByState(AlState? state)
         {
@@ -370,9 +388,11 @@ namespace Market.ViewModels
                 IsLoading = false;
             }
         }
+
         #endregion
 
         #region Category Commands
+
         [RelayCommand]
         private async Task ForSale()
         {
@@ -438,9 +458,11 @@ namespace Market.ViewModels
                 IsLoading = false;
             }
         }
+
         #endregion
 
         #region Navigation Commands
+
         [RelayCommand]
         private static async Task Post()
         {
@@ -468,27 +490,16 @@ namespace Market.ViewModels
         [RelayCommand]
         private async Task MyListings()
         {
-            Debug.WriteLine("MyListings function has started");
+            Debug.WriteLine("Navigating to My Listings page");
             try
             {
-                var currentUserId = 1; // TODO: Replace with actual user ID retrieval
-                Items.Clear();
-
-                var userItems = await _itemService.GetItemsByUserAsync(currentUserId);
-                Debug.WriteLine($"MyListings: Retrieved {userItems.Count()} items from service");
-
-                foreach (var item in userItems)
-                {
-                    Items.Add(item);
-                    Debug.WriteLine($"MyListings: Added item: ID={item.Id}, Title={item.Title}");
-                }
-
-                Title = "My Listings";
+                // Navigate to the MyListingsPage, which will use its own ViewModel
+                await Shell.Current.GoToAsync("MyListingsPage");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error fetching my listings: {ex.Message}");
-                await Shell.Current.DisplayAlert("Error", "Unable to load your listings", "OK");
+                Debug.WriteLine($"Error navigating to My Listings: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to open My Listings page", "OK");
             }
         }
 
@@ -513,9 +524,11 @@ namespace Market.ViewModels
                 await Shell.Current.DisplayAlert("Error", "Unable to navigate to account page", "OK");
             }
         }
+
         #endregion
 
         #region Refresh Command
+
         [RelayCommand]
         private async Task Refresh()
         {
@@ -534,7 +547,10 @@ namespace Market.ViewModels
                 IsRefreshing = false;
             }
         }
+
         #endregion
+
+        #region Filter Methods
 
         [RelayCommand]
         private async Task ApplyFilters()
@@ -596,6 +612,9 @@ namespace Market.ViewModels
             }
         }
 
+        #endregion
+
+        #region PhotoViewModel
 
         public class PhotoViewModel
         {
@@ -604,5 +623,7 @@ namespace Market.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<PhotoViewModel> photoItems = new();
+
+        #endregion
     }
 }
